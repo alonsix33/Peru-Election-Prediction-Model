@@ -10,11 +10,23 @@ const { scrapePolymarket } = require('../scraper/polymarket');
 const db = require('../db');
 
 // ─── GET /api/status ────────────────────────────────────────
-router.get('/status', (req, res) => {
+router.get('/status', async (req, res) => {
   const now = nowPeru();
   const phase = electoralPhase();
   const countdown = timeToElection();
-  const α = getPolymarketWeight();
+
+  // Use the actual PM volume from the latest snapshot so α matches what the
+  // pipeline uses — fallback to default only when there are no snapshots yet.
+  let pmVolume;
+  try {
+    const { rows } = await db.query(
+      `SELECT volume_usd FROM polymarket_snapshots
+       ORDER BY captured_at_lima DESC LIMIT 1`
+    );
+    pmVolume = rows.length > 0 ? parseFloat(rows[0].volume_usd) : undefined;
+  } catch (_) { /* fallback to default */ }
+
+  const α = getPolymarketWeight(pmVolume);
 
   res.json({
     time_lima: now.toFormat('dd/MM/yyyy HH:mm:ss'),

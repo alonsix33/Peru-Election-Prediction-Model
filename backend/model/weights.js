@@ -3,12 +3,16 @@ const { nowPeru, electoralPhase, timeToElection } = require('./clock');
 
 /**
  * Calcula el peso de Polymarket (α) en tiempo real basado en hora Lima.
- * R2: rango 20-60%. Encuestas empatadas (50/50) vs PM (65/33) → PM tiene sesgo
+ * R2: rango 25-60%. Encuestas empatadas (50/50) vs PM (65/33) → PM tiene sesgo
  * histórico en R2 (Keiko sobre-representada), por eso cap más conservador.
  *
  * PRE_VEDA  (hasta 31 may 8am):  α = 0.20–0.25  → encuestas dominan fuertemente
- * VEDA      (31 may – 6 jun):    α crece 0.20→0.60  → PM sube gradualmente
+ * VEDA      (31 may – 6 jun):    α crece 0.25→0.60  → parte del nivel pre-veda
  * ELECTION  (7 jun):             α = 0.60  → encuestas mantienen 40% de peso
+ *
+ * La veda arranca en 0.25 (no 0.20) para evitar la caída en el momento en que
+ * las encuestas se congelan — en ese punto PM debería tener al menos el mismo
+ * peso que tenía el día anterior, no menos.
  */
 function getPolymarketWeight(volumeUSD = 5_100_000) {
   const phase = electoralPhase();
@@ -21,9 +25,11 @@ function getPolymarketWeight(volumeUSD = 5_100_000) {
 
     case 'veda': {
       const vedaHours = 7 * 24; // 168 horas de veda
-      const hoursInVeda = vedaHours - Math.max(0, totalHours);
-      const vedaProgress = Math.min(1, hoursInVeda / vedaHours);
-      return Math.min(0.60, 0.20 + (Math.pow(vedaProgress, 0.6) * 0.42));
+      const hoursElapsed = vedaHours - Math.max(0, totalHours);
+      const vedaProgress = Math.min(1, hoursElapsed / vedaHours);
+      // Parte desde 0.25 (igual al techo de pre_veda) y crece a 0.60.
+      // Exponente 0.6: crecimiento cóncavo — sube rápido los primeros días.
+      return Math.min(0.60, 0.25 + (Math.pow(vedaProgress, 0.6) * 0.35));
     }
 
     case 'election_day':
