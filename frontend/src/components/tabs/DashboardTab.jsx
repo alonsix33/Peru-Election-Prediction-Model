@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getPartyColor } from '../../config/partyColors';
-import { Activity, TrendingUp, BarChart3, X, ExternalLink, Loader2, Play, RefreshCcw, Info, AlertTriangle, ShieldAlert, ChevronDown } from 'lucide-react';
+import { Activity, TrendingUp, X, ExternalLink, Loader2, AlertTriangle, ShieldAlert, ChevronDown } from 'lucide-react';
 import WinProbabilityNeedle from '../WinProbabilityNeedle';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend } from 'chart.js';
@@ -20,40 +20,19 @@ const ABBREV = {
 };
 function abbrev(name) { return ABBREV[name] || name.split(' ').map(w => w[0]).join(''); }
 
-const POLLSTER_COLORS = {
-  IEP: '#1D4ED8', Datum: '#059669', Ipsos: '#7C3AED', CPI: '#D97706', CIT: '#6B7280'
-};
-
-function weightBlocks(w, color) {
-  const filled = w >= 0.8 ? 5 : w >= 0.6 ? 4 : w >= 0.4 ? 3 : w >= 0.2 ? 2 : 1;
-  return Array.from({ length: 5 }, (_, i) => (
-    <span key={i} style={{
-      display: 'inline-block', width: 10, height: 10, marginRight: 2, borderRadius: 2,
-      background: i < filled ? color : '#F0EDE8',
-      border: i < filled ? 'none' : '1px solid #E5E0D8'
-    }} />
-  ));
-}
-
-function daysAgo(dateStr) {
-  const d = new Date(dateStr);
-  const now = new Date();
-  return Math.floor((now - d) / 86400000);
-}
-
-// ─── Compact Candidate Row ──────────────────────────────────
+// ─── Compact Candidate Row (R1 only) ────────────────────────
 function CompactRow({ c }) {
   const party = getPartyColor(c.candidate);
-  const initials = c.candidate.split(' ').map(w => w[0]).filter((_, i, a) => i === 0 || i === a.length - 1).join('').toUpperCase();
   const barW = Math.min(100, (c.mean / 30) * 100);
-  const probColor = c.prob_win >= 50 ? '#059669' : c.prob_win >= 10 ? '#D97706' : '#A8A29E';
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid #E5E0D8' }}>
       <div style={{
         width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center',
         justifyContent: 'center', flexShrink: 0, background: party.bg, color: party.text,
         border: `2px solid ${party.primary}`, fontWeight: 600, fontSize: 11
-      }}>{initials}</div>
+      }}>
+        {c.candidate.split(' ').map(w => w[0]).filter((_, i, a) => i === 0 || i === a.length - 1).join('').toUpperCase()}
+      </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ color: '#1C1917', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.candidate}</div>
         <div style={{ color: '#78716C', fontSize: 11 }}>{party.party}</div>
@@ -65,150 +44,233 @@ function CompactRow({ c }) {
         <div style={{ color: party.primary, fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{c.mean.toFixed(1)}%</div>
         <div style={{ color: '#A8A29E', fontSize: 10 }}>% v.v.</div>
         <div style={{ color: '#8C877F', fontSize: 11, marginTop: 2 }}>P(Ganar)</div>
-        <div style={{ color: probColor, fontSize: 12, fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>{c.prob_win.toFixed(1)}%</div>
+        <div style={{ color: party.primary, fontSize: 12, fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>{c.prob_win.toFixed(1)}%</div>
       </div>
     </div>
   );
 }
 
-// ─── History Card ───────────────────────────────────────────
-function HistoryCard() {
+// ─── R2 Candidates Head-to-Head ─────────────────────────────
+function CandidatesHeadToHead({ keiko, sanchez }) {
+  if (!keiko || !sanchez) return null;
+  const kParty = getPartyColor('Keiko Fujimori');
+  const rParty = getPartyColor('Roberto Sánchez Palomino');
+  const total = keiko.mean + sanchez.mean;
+  const sides = [
+    { c: keiko,  party: kParty, align: 'left'  },
+    { c: sanchez, party: rParty, align: 'right' },
+  ];
+  return (
+    <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 20 }}>
+      <h3 style={{ color: '#1C1917', fontSize: 14, fontWeight: 600, margin: '0 0 20px' }}>Candidatos</h3>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        {sides.map(({ c, party, align }) => (
+          <div key={c.candidate} style={{ textAlign: align }}>
+            <div style={{ color: party.primary, fontSize: 12, fontWeight: 600, marginBottom: 6, lineHeight: 1.3 }}>
+              {c.candidate}
+            </div>
+            <div style={{ color: party.primary, fontSize: 38, fontWeight: 700, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+              {c.mean.toFixed(1)}%
+            </div>
+            <div style={{ color: '#A8A29E', fontSize: 10, margin: '3px 0 16px' }}>% votos válidos</div>
+            <div style={{ color: party.primary, fontSize: 22, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+              {c.prob_win.toFixed(1)}%
+            </div>
+            <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 2 }}>P(Ganar)</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 20, height: 5, borderRadius: 3, overflow: 'hidden', display: 'flex' }}>
+        <div style={{ width: `${(keiko.mean / total) * 100}%`, background: kParty.primary, transition: 'width 0.8s ease' }} />
+        <div style={{ flex: 1, background: rParty.primary }} />
+      </div>
+    </div>
+  );
+}
+
+// ─── Model Trend Chart ───────────────────────────────────────
+function ModelTrendChart({ isR2 }) {
   const [history, setHistory] = useState(null);
+
   useEffect(() => {
-    fetch(`${API}/api/model-history`).then(r => r.json()).then(setHistory).catch(() => {});
+    const load = () =>
+      fetch(`${API}/api/model-history`).then(r => r.json()).then(setHistory).catch(() => {});
+    load();
+    const iv = setInterval(load, 30 * 60 * 1000);
+    return () => clearInterval(iv);
   }, []);
 
   if (!history?.history?.length) return null;
 
-  const latest = new Date(history.history[0].generated_at_lima);
-  const minsAgo = Math.floor((Date.now() - latest) / 60000);
-  const dotColor = minsAgo < 35 ? '#059669' : minsAgo < 90 ? '#D97706' : '#DC2626';
+  const runs = [...history.history].reverse().slice(-24);
+  const labels = runs.map(r => {
+    const d = new Date(r.generated_at_lima);
+    return d.toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit', hour12: false });
+  });
 
-  // Always show the last few runs so the card doesn't look empty.
-  // Mark entries where top1 changed >= 0.1% vs previous.
-  const allRuns = history.history;
-  const totalRuns = allRuns.length;
-
-  // Show up to 8: always include latest 3, plus any where a change happened
-  const visible = [];
-  for (let i = 0; i < allRuns.length && visible.length < 8; i++) {
-    const entry = allRuns[i];
-    const prev = allRuns[i + 1];
-    const changed = prev ? Math.abs(entry.top3[0].pct_mean - prev.top3[0].pct_mean) >= 0.1 : false;
-    entry._changed = changed;
-    // Always show first 3 (most recent), plus any that changed
-    if (i < 3 || changed) visible.push(entry);
+  let datasets;
+  if (isR2) {
+    const kColor = getPartyColor('Keiko Fujimori').primary;
+    const rColor = getPartyColor('Roberto Sánchez Palomino').primary;
+    datasets = [
+      {
+        label: 'Keiko Fujimori',
+        data: runs.map(r => r.top3.find(c => c.candidate.includes('Keiko') || c.candidate.includes('Fujimori'))?.pct_mean ?? null),
+        borderColor: kColor, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.3, spanGaps: true,
+      },
+      {
+        label: 'Roberto Sánchez',
+        data: runs.map(r => r.top3.find(c => c.candidate.includes('Sánchez') || c.candidate.includes('Roberto'))?.pct_mean ?? null),
+        borderColor: rColor, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, tension: 0.3, spanGaps: true,
+      },
+    ];
+  } else {
+    const candNames = [...new Set(runs.flatMap(r => r.top3.map(c => c.candidate)))];
+    datasets = candNames.slice(0, 5).map(name => {
+      const color = getPartyColor(name);
+      return {
+        label: abbrev(name),
+        data: runs.map(r => r.top3.find(c => c.candidate === name)?.pct_mean ?? null),
+        borderColor: color.primary, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, tension: 0.3, spanGaps: true,
+      };
+    });
   }
 
+  // 50% reference dashed line
+  datasets.push({
+    label: '_ref50',
+    data: runs.map(() => 50),
+    borderColor: '#C9C4BB',
+    borderWidth: 1,
+    borderDash: [4, 4],
+    pointRadius: 0,
+    tension: 0,
+  });
+
+  const allVals = datasets.filter(d => d.label !== '_ref50').flatMap(d => d.data).filter(v => v != null);
+  const yMin = allVals.length ? Math.max(0,   Math.floor(Math.min(...allVals)) - 3) : 35;
+  const yMax = allVals.length ? Math.min(100, Math.ceil(Math.max(...allVals))  + 3) : 65;
+
+  const chartData = { labels, datasets };
+  const chartOpts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          color: '#78716C', usePointStyle: true, font: { size: 11 },
+          filter: item => !item.text.startsWith('_'),
+        },
+      },
+      tooltip: {
+        backgroundColor: '#FFFFFF', titleColor: '#1C1917', bodyColor: '#78716C',
+        borderColor: '#E5E0D8', borderWidth: 1,
+        filter: item => !item.dataset.label.startsWith('_'),
+        callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}%` },
+      },
+    },
+    scales: {
+      x: {
+        grid: { color: '#E5E0D854' },
+        ticks: { color: '#8C877F', font: { size: 10 }, maxRotation: 0, maxTicksLimit: 8 },
+      },
+      y: {
+        min: yMin, max: yMax,
+        grid: { color: '#E5E0D854' },
+        ticks: { color: '#8C877F', callback: v => v + '%', font: { size: 11 } },
+      },
+    },
+    animation: { duration: 400 },
+  };
+
+  const latest = history.history[0];
+  const minsAgo = Math.floor((Date.now() - new Date(latest.generated_at_lima)) / 60000);
+  const dotColor = minsAgo < 35 ? '#059669' : minsAgo < 90 ? '#D97706' : '#DC2626';
+
   return (
-    <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+    <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Activity size={14} style={{ color: '#8C877F' }} />
-          <span style={{ color: '#1C1917', fontSize: 14, fontWeight: 600 }}>Historial del modelo</span>
+          <span style={{ color: '#1C1917', fontSize: 14, fontWeight: 600 }}>Evolución del pronóstico</span>
         </div>
-        <span style={{
-          width: 8, height: 8, borderRadius: '50%', background: dotColor,
-          display: 'inline-block', boxShadow: minsAgo < 35 ? `0 0 6px ${dotColor}` : 'none'
-        }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ color: '#8C877F', fontSize: 11 }}>
+            {minsAgo < 60 ? `hace ${minsAgo} min` : `hace ${Math.round(minsAgo / 60)}h`}
+          </span>
+          <span style={{
+            width: 8, height: 8, borderRadius: '50%', background: dotColor,
+            display: 'inline-block', boxShadow: minsAgo < 35 ? `0 0 6px ${dotColor}` : 'none',
+          }} />
+        </div>
       </div>
-      <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 10 }}>Auto-actualiza cada 30 min</div>
-
-      {visible.map((h, i) => {
-        const t = new Date(h.generated_at_lima);
-        const timeStr = t.toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit', hour12: false });
-        const isLatest = i === 0;
-        const top3Str = h.top3.map(c => `${abbrev(c.candidate)} ${c.pct_mean.toFixed(1)}%`).join(' \u00B7 ');
-        return (
-          <div key={i} style={{
-            padding: '5px 0', borderBottom: '1px solid #E5E0D8',
-            fontFamily: 'monospace', fontSize: 12, display: 'flex', alignItems: 'center', gap: 6,
-            color: isLatest ? '#1C1917' : '#78716C', fontWeight: isLatest ? 500 : 400
-          }}>
-            {isLatest
-              ? <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#059669', flexShrink: 0 }} />
-              : <span style={{ width: 6, flexShrink: 0 }} />
-            }
-            <span style={{ color: '#8C877F', flexShrink: 0 }}>{timeStr}</span>
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{top3Str}</span>
-          </div>
-        );
-      })}
-
-      {totalRuns > visible.length && (
-        <div style={{ color: '#8C877F', fontSize: 11, marginTop: 6 }}>
-          Modelo estable en las últimas {totalRuns} corridas
-        </div>
-      )}
+      <div style={{ height: 160 }}>
+        <Line data={chartData} options={chartOpts} />
+      </div>
     </div>
   );
 }
 
-// ─── Sources Card ───────────────────────────────────────────
-function SourcesCard({ polls, polymarket, onOpenPolymarket }) {
-  const pollList = (polls?.polls || []).filter(p => p.effective_weight >= 0.1).slice(0, 15);
-  return (
-    <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <BarChart3 size={14} style={{ color: '#8C877F' }} />
-        <span style={{ color: '#1C1917', fontSize: 14, fontWeight: 600 }}>Fuentes de datos</span>
-      </div>
+// ─── Polymarket Card ─────────────────────────────────────────
+function PolymarketCard({ polymarket, predictions, onOpenSignals }) {
+  const modelMap = {};
+  for (const c of (predictions?.candidates || [])) modelMap[c.candidate] = c.prob_win;
+  const pmTop = (polymarket?.candidates || []).slice(0, 5);
 
-      {/* Encuestas — grid alineado */}
-      <div style={{ color: '#78716C', fontSize: 11, fontWeight: 500, marginBottom: 6 }}>ENCUESTAS</div>
-      <div style={{ display: 'grid', gridTemplateColumns: '42px 62px 56px 1fr', gap: '0', alignItems: 'center', fontSize: 12 }}>
-        {pollList.map((p, i) => {
-          const pColor = POLLSTER_COLORS[p.pollster] || '#6B7280';
-          const days = daysAgo(p.field_end);
-          const isSimulacro = p.poll_type === 'simulacro';
-          return [
-            <span key={`n${i}`} style={{ color: pColor, fontWeight: 600, padding: '5px 0', borderBottom: '1px solid #F0EDE8' }}>{p.pollster}</span>,
-            <span key={`t${i}`} style={{ padding: '5px 0', borderBottom: '1px solid #F0EDE8' }}>
-              <span style={{
-                fontSize: 11, borderRadius: 4, padding: '1px 5px',
-                background: isSimulacro ? '#ECFDF5' : '#EFF6FF',
-                color: isSimulacro ? '#065F46' : '#1E40AF'
-              }}>{isSimulacro ? 'Simulacro' : 'Intención'}</span>
-            </span>,
-            <span key={`d${i}`} style={{ color: '#8C877F', padding: '5px 0', borderBottom: '1px solid #F0EDE8', textAlign: 'right', paddingRight: 8 }}>
-              {days}d
-            </span>,
-            <span key={`w${i}`} style={{ display: 'flex', gap: 2, padding: '5px 0', borderBottom: '1px solid #F0EDE8' }}>
-              {weightBlocks(p.effective_weight, pColor)}
-            </span>
-          ];
+  return (
+    <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        <TrendingUp size={14} style={{ color: '#1D4ED8' }} />
+        <h3 style={{ color: '#1C1917', fontSize: 14, fontWeight: 600, margin: 0 }}>Monitor Polymarket</h3>
+      </div>
+      <div style={{ color: '#78716C', fontSize: 12, marginBottom: 12 }}>
+        Volumen: ${polymarket?.volume_usd ? (polymarket.volume_usd / 1e6).toFixed(1) + 'M' : '--'}
+      </div>
+      <div style={{ flex: 1 }}>
+        {pmTop.map(c => {
+          const party = getPartyColor(c.candidate);
+          const modelProb = modelMap[c.candidate];
+          const delta = modelProb != null ? c.probability - modelProb : null;
+          return (
+            <div key={c.candidate} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '8px 0', borderBottom: '1px solid #E5E0D8',
+            }}>
+              <span style={{ color: party.primary, fontWeight: 500, fontSize: 13 }}>{c.candidate}</span>
+              <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+                <span style={{ color: '#1C1917', fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>{c.probability.toFixed(1)}%</span>
+                {delta !== null && (
+                  <span style={{
+                    color: delta > 0 ? '#059669' : delta < 0 ? '#DC2626' : '#A8A29E',
+                    fontSize: 12, fontVariantNumeric: 'tabular-nums', fontWeight: 500, minWidth: 50, textAlign: 'right',
+                  }}>{delta > 0 ? '+' : ''}{delta.toFixed(1)}</span>
+                )}
+              </div>
+            </div>
+          );
         })}
       </div>
-      <div style={{ color: '#8C877F', fontSize: 11, marginTop: 8, fontStyle: 'italic' }}>
-        El peso disminuye con la antigüedad
+      <div style={{ color: '#8C877F', fontSize: 11, marginTop: 8, marginBottom: 12 }}>
+        PM = P(ganar) en mercado · Δ vs P(ganar) del modelo
       </div>
-
-      {/* Polymarket */}
-      <div style={{ color: '#78716C', fontSize: 11, fontWeight: 500, marginTop: 14, marginBottom: 6 }}>POLYMARKET</div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <TrendingUp size={14} style={{ color: '#1D4ED8' }} />
-          <span style={{ color: '#1C1917', fontSize: 13, fontWeight: 500 }}>Polymarket</span>
-          <span style={{ color: '#8C877F', fontSize: 11 }}>
-            ${polymarket?.volume_usd ? (polymarket.volume_usd / 1e6).toFixed(1) + 'M vol' : '--'}
-          </span>
-        </div>
-        <button onClick={onOpenPolymarket} style={{
-          background: 'transparent', border: '1px solid #E5E0D8', borderRadius: 6,
-          color: '#1D4ED8', fontSize: 11, padding: '8px 12px', minHeight: 44, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: 4
+      <button
+        onClick={onOpenSignals}
+        style={{
+          background: 'transparent', border: '1px solid #E5E0D8', borderRadius: 8,
+          color: '#1D4ED8', fontSize: 12, padding: '10px 14px', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          fontWeight: 500, transition: 'border-color 0.15s',
         }}
         onMouseEnter={e => e.currentTarget.style.borderColor = '#C9C4BB'}
         onMouseLeave={e => e.currentTarget.style.borderColor = '#E5E0D8'}
-        >
-          Ver señales <ExternalLink size={10} />
-        </button>
-      </div>
+      >
+        Ver señales en Polymarket <ExternalLink size={11} />
+      </button>
     </div>
   );
 }
 
-// ─── Polymarket Modal ───────────────────────────────────────
+// ─── Polymarket Modal ────────────────────────────────────────
 function PolymarketModal({ polymarket, onClose }) {
   const [history, setHistory] = useState(null);
   const candidates = polymarket?.candidates || [];
@@ -223,8 +285,6 @@ function PolymarketModal({ polymarket, onClose }) {
     fetch(`${API}/api/polymarket/history`).then(r => r.json()).then(setHistory).catch(() => {});
   }, []);
 
-  // Build chart from history snapshots
-  // Top 5 dinámico del último snapshot de Polymarket
   const TOP_CANDIDATES = (polymarket?.candidates || [])
     .sort((a, b) => b.probability - a.probability)
     .slice(0, 5)
@@ -237,7 +297,6 @@ function PolymarketModal({ polymarket, onClose }) {
       const d = new Date(s.time);
       return d.toLocaleString('es-PE', { timeZone: 'America/Lima', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
     });
-
     chartData = {
       labels,
       datasets: TOP_CANDIDATES.map(name => {
@@ -247,9 +306,9 @@ function PolymarketModal({ polymarket, onClose }) {
           data: snapshots.map(s => s.candidates[name] ?? null),
           borderColor: color.primary,
           backgroundColor: 'transparent',
-          borderWidth: 2, pointRadius: 2, tension: 0.4, spanGaps: true
+          borderWidth: 2, pointRadius: 2, tension: 0.4, spanGaps: true,
         };
-      })
+      }),
     };
   }
 
@@ -260,28 +319,27 @@ function PolymarketModal({ polymarket, onClose }) {
       tooltip: {
         backgroundColor: '#FFFFFF', titleColor: '#1C1917', bodyColor: '#78716C',
         borderColor: '#E5E0D8', borderWidth: 1,
-        callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}%` }
-      }
+        callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}%` },
+      },
     },
     scales: {
       x: { grid: { color: '#E5E0D8' }, ticks: { color: '#8C877F', font: { size: 9 }, maxRotation: 45, maxTicksLimit: 10 } },
-      y: { min: 0, grid: { color: '#E5E0D8' }, ticks: { color: '#8C877F', callback: v => v + '%', font: { size: 11 } } }
-    }
+      y: { min: 0, grid: { color: '#E5E0D8' }, ticks: { color: '#8C877F', callback: v => v + '%', font: { size: 11 } } },
+    },
   };
 
   return (
     <div onClick={onClose} style={{
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 50,
-      display: 'flex', alignItems: 'center', justifyContent: 'center'
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <div onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="pm-modal-title" style={{
         width: 'min(640px, 92vw)', maxHeight: '85vh', overflowY: 'auto',
-        background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 16, padding: 24,
-        position: 'relative'
+        background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 16, padding: 24, position: 'relative',
       }}>
         <button onClick={onClose} aria-label="Cerrar modal" style={{
           position: 'absolute', top: 12, right: 12, background: 'transparent',
-          border: 'none', color: '#8C877F', cursor: 'pointer'
+          border: 'none', color: '#8C877F', cursor: 'pointer',
         }}><X size={20} /></button>
 
         <h3 id="pm-modal-title" style={{ color: '#1C1917', fontSize: 18, fontWeight: 700, margin: '0 0 4px' }}>Señales de Polymarket</h3>
@@ -290,7 +348,6 @@ function PolymarketModal({ polymarket, onClose }) {
           {history?.snapshots && <span> · {history.snapshots.length} snapshots</span>}
         </p>
 
-        {/* Trend chart */}
         <div style={{ height: 200, marginBottom: 20 }}>
           {history?.snapshots?.length > 1
             ? <Line data={chartData} options={chartOpts} />
@@ -300,7 +357,6 @@ function PolymarketModal({ polymarket, onClose }) {
           }
         </div>
 
-        {/* Current prices table */}
         <div style={{ fontSize: 12 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px', gap: 4, padding: '6px 0', borderBottom: '1px solid #E5E0D8' }}>
             <span style={{ color: '#78716C', fontWeight: 500 }}>Candidato</span>
@@ -311,7 +367,7 @@ function PolymarketModal({ polymarket, onClose }) {
             return (
               <div key={c.candidate} style={{
                 display: 'grid', gridTemplateColumns: '1fr 80px', gap: 4, padding: '5px 0',
-                borderBottom: '1px solid #E5E0D8', background: i % 2 ? '#F7F4EF' : 'transparent'
+                borderBottom: '1px solid #E5E0D8', background: i % 2 ? '#F7F4EF' : 'transparent',
               }}>
                 <span style={{ color: party.primary, fontWeight: 500 }}>{c.candidate}</span>
                 <span style={{ color: '#1C1917', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{c.probability.toFixed(1)}%</span>
@@ -324,139 +380,12 @@ function PolymarketModal({ polymarket, onClose }) {
   );
 }
 
-// ─── Simulation Card ────────────────────────────────────────
-function SimulationCard() {
-  const [state, setState] = useState('idle'); // idle | loading | done | error
-  const [simData, setSimData] = useState(null);
-
-  async function runSim() {
-    setState('loading');
-    try {
-      const res = await fetch(`${API}/api/run-model`);
-      if (!res.ok) throw new Error('Server error');
-      const data = await res.json();
-      setSimData(data);
-      setState('done');
-    } catch {
-      setState('error');
-    }
-  }
-
-  function reset() {
-    setState('idle');
-    setSimData(null);
-  }
-
-  const cardStyle = { background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 };
-
-  if (state === 'error') {
-    return (
-      <div style={cardStyle}>
-        <h3 style={{ color: '#1C1917', fontSize: 15, fontWeight: 600, margin: '0 0 12px' }}>Tu proyección personal</h3>
-        <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: 12 }}>
-          <p style={{ color: '#DC2626', fontSize: 13, margin: '0 0 10px' }}>
-            No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.
-          </p>
-          <button onClick={runSim} style={{
-            background: '#DC2626', color: '#fff', border: 'none', borderRadius: 6,
-            padding: '6px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 500
-          }}>Reintentar</button>
-        </div>
-      </div>
-    );
-  }
-
-  if (state === 'done' && simData) {
-    const top5 = (simData.candidates || []).sort((a, b) => b.mean - a.mean).slice(0, 5);
-    return (
-      <div style={cardStyle}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <h3 style={{ color: '#1C1917', fontSize: 15, fontWeight: 600, margin: 0 }}>Tu proyección personal</h3>
-          <button onClick={runSim} style={{
-            background: 'transparent', border: 'none', color: '#1D4ED8',
-            fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-            padding: '8px 12px', minHeight: 44
-          }}>
-            <RefreshCcw size={12} /> Nueva
-          </button>
-        </div>
-
-        {top5.map((c, i) => {
-          const party = getPartyColor(c.candidate);
-          const barW = Math.min(100, (c.mean / 30) * 100);
-          const probWin = c.prob_win ?? c.prob_win_overall ?? 0;
-          return (
-            <div key={c.candidate} style={{ padding: '10px 0', borderBottom: i < 4 ? '1px solid #E5E0D8' : 'none' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                <div>
-                  <span style={{ color: '#8C877F', fontSize: 12, marginRight: 6 }}>{i + 1}.</span>
-                  <span style={{ color: party.primary, fontSize: 14, fontWeight: 500 }}>{c.candidate}</span>
-                </div>
-                <span style={{ color: party.primary, fontSize: 14, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
-                  {c.mean.toFixed(1)}%
-                </span>
-              </div>
-              <div style={{ height: 6, borderRadius: 3, background: '#F0EDE8', marginBottom: 3 }}>
-                <div style={{ width: `${barW}%`, height: '100%', background: party.primary, borderRadius: 3 }} />
-              </div>
-              <div style={{ color: '#78716C', fontSize: 11, fontVariantNumeric: 'tabular-nums' }}>
-                P(Ganar) {probWin.toFixed(1)}%
-              </div>
-            </div>
-          );
-        })}
-
-        <div style={{
-          marginTop: 12, background: '#F0EDE8', borderRadius: 6, padding: '8px 10px',
-          display: 'flex', gap: 6, alignItems: 'flex-start'
-        }}>
-          <Info size={14} style={{ color: '#1D4ED8', flexShrink: 0, marginTop: 1 }} />
-          <span style={{ color: '#78716C', fontSize: 11, lineHeight: 1.5 }}>
-            Resultado de tu sesión — puede variar levemente del modelo oficial. Esto es completamente normal: el modelo usa aleatoriedad controlada en cada corrida.
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div style={cardStyle}>
-      <h3 style={{ color: '#1C1917', fontSize: 15, fontWeight: 600, margin: '0 0 10px' }}>Tu proyección personal</h3>
-      <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.6, margin: '0 0 16px' }}>
-        Ejecuta el modelo de predicción con tus propios 10,000 escenarios. El resultado puede variar levemente del dashboard oficial por la naturaleza estadística del modelo — eso es completamente normal y esperado.
-      </p>
-      <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.6, margin: '0 0 16px' }}>
-        El dashboard principal se actualiza automáticamente cada 30 minutos con datos frescos de Polymarket.
-      </p>
-      <button
-        onClick={runSim}
-        disabled={state === 'loading'}
-        style={{
-          width: '100%', padding: 10, border: 'none', borderRadius: 8,
-          fontSize: 14, fontWeight: 500, cursor: state === 'loading' ? 'not-allowed' : 'pointer',
-          background: state === 'loading' ? 'rgba(29, 78, 216, 0.7)' : '#1D4ED8',
-          color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          transition: 'background 0.15s'
-        }}
-      >
-        {state === 'loading'
-          ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Calculando 10,000 escenarios...</>
-          : <><Play size={16} /> Ejecutar mi simulación</>
-        }
-      </button>
-    </div>
-  );
-}
-
-// ─── Risk Scenarios ─────────────────────────────────────────
+// ─── Risk Scenarios ──────────────────────────────────────────
 function RiskScenarios({ risk, candidates }) {
   if (!risk) return null;
-  // Use candidates length as ground truth for R2 detection — risk_json in DB may be
-  // stale (old format had top2_not_expected:0 even for R2, not undefined).
   const isR2 = (candidates?.length ?? 0) <= 2;
-  const topCands = risk.candidates || [];
 
-  // R2: 3 escenarios analíticos claros
+  const blankPct = risk.expected_blank_null;
   const r2Cards = isR2 ? [
     {
       label: '¿Resultado reñido? (margen < 5 pts)',
@@ -466,21 +395,21 @@ function RiskScenarios({ risk, candidates }) {
       bg: risk.p_close_race > 40 ? '#FFFBEB' : '#F0FDF4',
     },
     {
-      label: 'Solo encuestas, sin Polymarket',
-      value: null,
-      desc: null,
-      isPolls: true,
+      label: 'Voto blanco/nulo esperado',
+      value: blankPct,
+      desc: `Estimado a partir del rechazo bilateral: ${blankPct != null ? blankPct.toFixed(1) + '%' : '—'} de votos válidos podrían anularse por rechazo a ambos candidatos. Histórico R2 2016/2021: ~2–4%.`,
+      color: blankPct > 6 ? '#D97706' : '#78716C',
+      bg: blankPct > 6 ? '#FFFBEB' : '#FAFAF9',
     },
     {
-      label: 'Si encuestas subestiman a Sánchez en +5 pts',
+      label: 'Si encuestas subestiman a Sánchez (+5 pts)',
       value: risk.bias_5pts_sanchez_win,
-      desc: `Patrón "voto vergüenza": en 2021 las encuestas subestimaron a Castillo sistemáticamente. Si se repite, Sánchez P(ganar) = ${risk.bias_5pts_sanchez_win ?? '—'}%.`,
-      color: risk.bias_5pts_sanchez_win > 50 ? '#16A34A' : '#78716C',
-      bg: risk.bias_5pts_sanchez_win > 50 ? '#F0FDF4' : '#FFFFFF',
+      desc: `Patrón "voto vergüenza" (2021: encuestas subestimaron a Castillo). Si se repitiera, Sánchez P(ganar) = ${risk.bias_5pts_sanchez_win ?? '—'}%. El modelo ya incorpora parte de este riesgo via Polymarket.`,
+      color: risk.bias_5pts_sanchez_win > 70 ? '#D97706' : '#78716C',
+      bg: '#FAFAF9',
     },
   ] : [];
 
-  // R1: escenarios clásicos de primera vuelta
   const r1Cards = !isR2 ? [
     {
       label: '¿Y si el top-2 no es el esperado?',
@@ -518,124 +447,23 @@ function RiskScenarios({ risk, candidates }) {
           ? '¿Qué tan probable es que el modelo se equivoque? Escenarios calculados en 10,000 simulaciones + análisis estadístico.'
           : '¿Qué tan probable es que el modelo se equivoque? Calculado en cada corrida de 10,000 simulaciones.'}
       </p>
-
-      {/* Hero risk cards */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-        {activeCards.map((r, i) => {
-          if (r.isPolls) {
-            // Card especial: encuestas solo
-            const kw = risk.polls_only_keiko_win;
-            const sw = risk.polls_only_sanchez_win;
-            return (
-              <div key={i} style={{
-                flex: 1, minWidth: 220, background: '#EFF6FF', border: '1px solid #BFDBFE22',
-                borderRadius: 10, padding: 14
-              }}>
-                <div style={{ color: '#78716C', fontSize: 12, marginBottom: 8 }}>{r.label}</div>
-                <div style={{ display: 'flex', gap: 16 }}>
-                  <div>
-                    <div style={{ color: getPartyColor('Keiko Fujimori').primary, fontSize: 22, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-                      {kw != null ? `${kw}%` : '—'}
-                    </div>
-                    <div style={{ color: '#8C877F', fontSize: 10 }}>Keiko</div>
-                  </div>
-                  <div>
-                    <div style={{ color: getPartyColor('Roberto Sánchez Palomino').primary, fontSize: 22, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-                      {sw != null ? `${sw}%` : '—'}
-                    </div>
-                    <div style={{ color: '#8C877F', fontSize: 10 }}>Sánchez</div>
-                  </div>
-                </div>
-                <div style={{ color: '#8C877F', fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>
-                  Las encuestas (IEP + Ipsos) solas, sin la señal de Polymarket. El mercado añade {risk.polls_only_keiko_win != null && risk.polls_only_sanchez_win != null ? Math.abs(Math.round((100 - risk.polls_only_keiko_win) - risk.polls_only_sanchez_win)) + ' pp de ventaja' : '—'} a Keiko.
-                </div>
-              </div>
-            );
-          }
-          return (
-            <div key={i} style={{
-              flex: 1, minWidth: 220, background: r.bg, border: `1px solid ${r.color}22`,
-              borderRadius: 10, padding: 14
-            }}>
-              <div style={{ color: '#78716C', fontSize: 12, marginBottom: 6 }}>{r.label}</div>
-              <div style={{ color: r.color, fontSize: 28, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-                {r.value != null ? `${r.value}%` : '—'}
-              </div>
-              <div style={{ color: '#8C877F', fontSize: 11, marginTop: 4, lineHeight: 1.5 }}>{r.desc}</div>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        {activeCards.map((r, i) => (
+          <div key={i} style={{
+            flex: 1, minWidth: 200, background: r.bg, border: `1px solid ${r.color}22`,
+            borderRadius: 10, padding: 14,
+          }}>
+            <div style={{ color: '#78716C', fontSize: 12, marginBottom: 6 }}>{r.label}</div>
+            <div style={{ color: r.color, fontSize: 28, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+              {r.value != null ? `${r.value}%` : '—'}
             </div>
-          );
-        })}
+            <div style={{ color: '#8C877F', fontSize: 11, marginTop: 4, lineHeight: 1.5 }}>{r.desc}</div>
+          </div>
+        ))}
       </div>
-
-      {/* Per-candidate risk table */}
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid #E5E0D8' }}>
-              <th style={{ color: '#78716C', fontWeight: 500, padding: '8px 10px', textAlign: 'left' }}>Candidato</th>
-              {isR2 ? (
-                <>
-                  <th style={{ color: '#78716C', fontWeight: 500, padding: '8px 10px', textAlign: 'center' }}>Pasa a 2da vuelta</th>
-                  <th style={{ color: '#78716C', fontWeight: 500, padding: '8px 10px', textAlign: 'center' }}>No pasa</th>
-                  <th style={{ color: '#78716C', fontWeight: 500, padding: '8px 10px', textAlign: 'center' }}>P(Ganar R2)</th>
-                </>
-              ) : (
-                <>
-                  <th style={{ color: '#78716C', fontWeight: 500, padding: '8px 10px', textAlign: 'center' }}>Pasa a 2da vuelta</th>
-                  <th style={{ color: '#78716C', fontWeight: 500, padding: '8px 10px', textAlign: 'center' }}>No pasa</th>
-                  <th style={{ color: '#78716C', fontWeight: 500, padding: '8px 10px', textAlign: 'center' }}>Gana 1ra vuelta</th>
-                </>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {topCands.map((c) => {
-              const party = getPartyColor(c.candidate);
-              if (isR2) {
-                const matchedCand = candidates?.find(cd => cd.candidate === c.candidate);
-                const probWin = c.prob_win ?? matchedCand?.prob_win ?? null;
-                return (
-                  <tr key={c.candidate} style={{ borderBottom: '1px solid #F0EDE8' }}>
-                    <td style={{ padding: '8px 10px' }}>
-                      <span style={{ color: party.primary, fontWeight: 500 }}>{c.candidate}</span>
-                    </td>
-                    <td style={{ padding: '8px 10px', textAlign: 'center', color: '#059669', fontWeight: 600 }}>100%</td>
-                    <td style={{ padding: '8px 10px', textAlign: 'center', color: '#78716C' }}>0%</td>
-                    <td style={{ padding: '8px 10px', textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
-                      <span style={{ color: party.primary, fontWeight: 700, fontSize: 14 }}>
-                        {probWin != null ? `${probWin.toFixed(1)}%` : '—'}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              }
-              const missColor = c.misses_runoff > 50 ? '#DC2626' : c.misses_runoff > 20 ? '#D97706' : '#78716C';
-              return (
-                <tr key={c.candidate} style={{ borderBottom: '1px solid #F0EDE8' }}>
-                  <td style={{ padding: '8px 10px' }}>
-                    <span style={{ color: party.primary, fontWeight: 500 }}>{c.candidate}</span>
-                  </td>
-                  <td style={{ padding: '8px 10px', textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
-                    <span style={{ color: c.in_top2 > 50 ? '#059669' : '#78716C', fontWeight: 600 }}>{c.in_top2}%</span>
-                  </td>
-                  <td style={{ padding: '8px 10px', textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
-                    <span style={{ color: missColor, fontWeight: 500 }}>{c.misses_runoff}%</span>
-                  </td>
-                  <td style={{ padding: '8px 10px', textAlign: 'center', fontVariantNumeric: 'tabular-nums' }}>
-                    <span style={{ color: c.wins_first_round > 10 ? '#1C1917' : '#8C877F', fontWeight: c.wins_first_round > 10 ? 600 : 400 }}>
-                      {c.wins_first_round}%
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
       <div style={{
-        marginTop: 14, padding: '10px 12px', background: '#FFFBEB', borderRadius: 8,
-        border: '1px solid #FDE68A', display: 'flex', gap: 8, alignItems: 'flex-start'
+        marginTop: 16, padding: '10px 12px', background: '#FFFBEB', borderRadius: 8,
+        border: '1px solid #FDE68A', display: 'flex', gap: 8, alignItems: 'flex-start',
       }}>
         <AlertTriangle size={14} style={{ color: '#D97706', flexShrink: 0, marginTop: 2 }} />
         <span style={{ color: '#78716C', fontSize: 12, lineHeight: 1.5 }}>
@@ -648,7 +476,7 @@ function RiskScenarios({ risk, candidates }) {
   );
 }
 
-// ─── Main Dashboard ─────────────────────────────────────────
+// ─── Main Dashboard ──────────────────────────────────────────
 export default function DashboardTab({ predictions, polymarket, polls, status }) {
   const [pmModalOpen, setPmModalOpen] = useState(false);
   const [showAllCandidates, setShowAllCandidates] = useState(false);
@@ -665,180 +493,124 @@ export default function DashboardTab({ predictions, polymarket, polls, status })
   }
 
   const sorted = [...predictions.candidates].sort((a, b) => b.mean - a.mean);
-  const top = sorted[0];
+  const top    = sorted[0];
   const second = sorted[1];
-  const topParty = getPartyColor(top.candidate);
+  const topParty    = getPartyColor(top.candidate);
   const secondParty = getPartyColor(second.candidate);
 
-  // R2 detection: use candidates.length as ground truth (DB risk_json may be stale format)
   const isR2 = (predictions.candidates?.length ?? 0) <= 2;
   const keiko      = isR2 ? predictions.candidates.find(c => c.candidate?.includes('Keiko') || c.candidate?.includes('Fujimori')) : null;
   const sanchezCand = isR2 ? predictions.candidates.find(c => c.candidate?.includes('Sánchez') || c.candidate?.includes('Roberto')) : null;
 
-  const modelMap = {};
-  for (const c of predictions.candidates) modelMap[c.candidate] = c.prob_win;
-  const pmTop = polymarket?.candidates?.slice(0, 5) || [];
-
-  // Runoff scenario for hero card
   const runoff = predictions.runoff_scenarios?.[0];
-  // expected_blank_null = poll-observed intent (IEP 24%, Ipsos 17%), more grounded than MC model
   const blankPct = predictions.risk_scenarios?.expected_blank_null ?? runoff?.avg_blank_pct;
-
-  // Runoff pair candidates for bicolor bar
   let runoffC1 = null, runoffC2 = null, runoffC1Party = null, runoffC2Party = null;
   if (runoff) {
     const winKeys = Object.keys(runoff.wins);
-    runoffC1 = winKeys[0];
-    runoffC2 = winKeys[1];
-    runoffC1Party = getPartyColor(runoffC1);
-    runoffC2Party = getPartyColor(runoffC2);
+    runoffC1 = winKeys[0]; runoffC2 = winKeys[1];
+    runoffC1Party = getPartyColor(runoffC1); runoffC2Party = getPartyColor(runoffC2);
   }
 
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <h2 style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0,0,0,0)' }}>Resumen del modelo</h2>
-          {/* Hero: Needle (R2) o KPI cards (R1) */}
-          {isR2 ? (
-            <WinProbabilityNeedle keiko={keiko} sanchez={sanchezCand} />
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
-              {/* Card 1: Favorito */}
-              <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
-                <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>Favorito · P(Ganar)</div>
-                <div style={{ color: topParty.primary, fontSize: 32, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{top.prob_win.toFixed(1)}%</div>
-                <div style={{ color: '#1C1917', fontSize: 13, marginTop: 2 }}>{top.candidate}</div>
-                <div style={{ color: '#78716C', fontSize: 11 }}>{topParty.party}</div>
-              </div>
+        <h2 style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0,0,0,0)' }}>Resumen del modelo</h2>
 
-              {/* Card 2: Segundo */}
-              <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
-                <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>Segundo · P(Ganar)</div>
-                <div style={{ color: secondParty.primary, fontSize: 32, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{second.prob_win.toFixed(1)}%</div>
-                <div style={{ color: '#1C1917', fontSize: 13, marginTop: 2 }}>{second.candidate}</div>
-                <div style={{ color: '#78716C', fontSize: 11 }}>{secondParty.party}</div>
-              </div>
-
-              {/* Card 3: Escenario probable */}
-              <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
-                <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>2da vuelta más probable</div>
-                {runoff && runoffC1 && runoffC2 ? (
-                  <>
-                    <div style={{ display: 'flex', height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 8, marginBottom: 6 }}>
-                      <div style={{ width: `${runoff.wins[runoffC1]}%`, background: runoffC1Party.primary, height: '100%' }} />
-                      <div style={{ width: `${runoff.wins[runoffC2]}%`, background: runoffC2Party.primary, height: '100%' }} />
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>
-                      <span style={{ color: '#1C1917' }}>{abbrev(runoffC1)} {runoff.wins[runoffC1].toFixed(0)}%</span>
-                      <span style={{ color: '#1C1917' }}>{abbrev(runoffC2)} {runoff.wins[runoffC2].toFixed(0)}%</span>
-                    </div>
-                    <div style={{ color: '#78716C', fontSize: 11, marginTop: 4 }}>{runoff.frequency}% de simulaciones</div>
-                  </>
-                ) : (
-                  <div style={{ color: '#1C1917', fontSize: 16, fontWeight: 600, marginTop: 4 }}>---</div>
-                )}
-              </div>
-
-              {/* Card 4: Voto blanco */}
-              <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
-                <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>Voto blanco esperado</div>
-                <div style={{ color: '#1C1917', fontSize: 30, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{blankPct ? `~${blankPct.toFixed(0)}%` : '---'}</div>
-                {runoff && <div style={{ color: '#78716C', fontSize: 11, marginTop: 2 }}>En {runoff.pair.split(' vs ').map(n => n.split(' ').pop()).join(' vs ')}</div>}
-              </div>
+        {/* Hero: Needle (R2) o KPI cards (R1) */}
+        {isR2 ? (
+          <WinProbabilityNeedle keiko={keiko} sanchez={sanchezCand} />
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 12 }}>
+            <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
+              <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>Favorito · P(Ganar)</div>
+              <div style={{ color: topParty.primary, fontSize: 32, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{top.prob_win.toFixed(1)}%</div>
+              <div style={{ color: '#1C1917', fontSize: 13, marginTop: 2 }}>{top.candidate}</div>
+              <div style={{ color: '#78716C', fontSize: 11 }}>{topParty.party}</div>
             </div>
-          )}
-
-          {/* 3-column layout: Candidatos | Polymarket+Simulación | Historial+Fuentes */}
-          <div className="dashboard-3col" style={{
-            display: 'flex', gap: 16, alignItems: 'flex-start'
-          }}>
-            {/* Col 1: Candidatos */}
-            <div style={{ flex: 1.2, minWidth: 0 }}>
-              <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
-                <h3 style={{ color: '#1C1917', fontSize: 15, fontWeight: 600, margin: '0 0 8px' }}>Candidatos</h3>
-                {sorted.slice(0, 10).map(c => <CompactRow key={c.candidate} c={c} />)}
-                {sorted.length > 10 && (
-                  <>
-                    {showAllCandidates && sorted.slice(10).map(c => <CompactRow key={c.candidate} c={c} />)}
-                    <button
-                      onClick={() => setShowAllCandidates(!showAllCandidates)}
-                      style={{
-                        width: '100%', padding: '10px 0', marginTop: 4,
-                        background: 'transparent', border: 'none', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                        color: '#78716C', fontSize: 12, minHeight: 44
-                      }}
-                    >
-                      <ChevronDown size={14} style={{
-                        transition: 'transform 0.2s',
-                        transform: showAllCandidates ? 'rotate(180deg)' : 'rotate(0deg)'
-                      }} />
-                      {showAllCandidates ? 'Ver menos' : `Ver ${sorted.length - 10} candidatos más`}
-                    </button>
-                  </>
-                )}
-              </div>
+            <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
+              <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>Segundo · P(Ganar)</div>
+              <div style={{ color: secondParty.primary, fontSize: 32, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{second.prob_win.toFixed(1)}%</div>
+              <div style={{ color: '#1C1917', fontSize: 13, marginTop: 2 }}>{second.candidate}</div>
+              <div style={{ color: '#78716C', fontSize: 11 }}>{secondParty.party}</div>
             </div>
-
-            {/* Col 2: Polymarket + Simulación */}
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16, alignSelf: 'flex-start' }}>
-              <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
-                <h3 style={{ color: '#1C1917', fontSize: 15, fontWeight: 600, margin: '0 0 8px' }}>Monitor Polymarket</h3>
-                <div style={{ color: '#78716C', fontSize: 12, marginBottom: 12 }}>
-                  Volumen: ${polymarket?.volume_usd ? (polymarket.volume_usd / 1e6).toFixed(1) + 'M' : '--'}
-                </div>
-                {pmTop.map(c => {
-                  const party = getPartyColor(c.candidate);
-                  const modelProb = modelMap[c.candidate];
-                  const delta = modelProb != null ? c.probability - modelProb : null;
-                  return (
-                    <div key={c.candidate} style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '8px 0', borderBottom: '1px solid #E5E0D8'
-                    }}>
-                      <span style={{ color: party.primary, fontWeight: 500, fontSize: 13 }}>{c.candidate}</span>
-                      <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                        <span style={{ color: '#1C1917', fontWeight: 600, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>{c.probability.toFixed(1)}%</span>
-                        {delta !== null && (
-                          <span style={{
-                            color: delta > 0 ? '#059669' : delta < 0 ? '#DC2626' : '#A8A29E',
-                            fontSize: 12, fontVariantNumeric: 'tabular-nums', fontWeight: 500, minWidth: 50, textAlign: 'right'
-                          }}>{delta > 0 ? '+' : ''}{delta.toFixed(1)}</span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-                <div style={{ color: '#8C877F', fontSize: 11, marginTop: 8 }}>
-                  PM = P(ganar) en mercado · Δ vs P(ganar) del modelo
-                </div>
-              </div>
-              <SimulationCard />
+            <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
+              <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>2da vuelta más probable</div>
+              {runoff && runoffC1 && runoffC2 ? (
+                <>
+                  <div style={{ display: 'flex', height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 8, marginBottom: 6 }}>
+                    <div style={{ width: `${runoff.wins[runoffC1]}%`, background: runoffC1Party.primary, height: '100%' }} />
+                    <div style={{ width: `${runoff.wins[runoffC2]}%`, background: runoffC2Party.primary, height: '100%' }} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>
+                    <span style={{ color: '#1C1917' }}>{abbrev(runoffC1)} {runoff.wins[runoffC1].toFixed(0)}%</span>
+                    <span style={{ color: '#1C1917' }}>{abbrev(runoffC2)} {runoff.wins[runoffC2].toFixed(0)}%</span>
+                  </div>
+                  <div style={{ color: '#78716C', fontSize: 11, marginTop: 4 }}>{runoff.frequency}% de simulaciones</div>
+                </>
+              ) : (
+                <div style={{ color: '#1C1917', fontSize: 16, fontWeight: 600, marginTop: 4 }}>---</div>
+              )}
             </div>
-
-            {/* Col 3: Historial + Fuentes */}
-            <div className="dashboard-sidebar" style={{
-              width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 16, alignSelf: 'flex-start'
-            }}>
-              <HistoryCard />
-              <SourcesCard polls={polls} polymarket={polymarket} onOpenPolymarket={() => setPmModalOpen(true)} />
+            <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
+              <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>Voto blanco esperado</div>
+              <div style={{ color: '#1C1917', fontSize: 30, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{blankPct ? `~${blankPct.toFixed(0)}%` : '---'}</div>
+              {runoff && <div style={{ color: '#78716C', fontSize: 11, marginTop: 2 }}>En {runoff.pair.split(' vs ').map(n => n.split(' ').pop()).join(' vs ')}</div>}
             </div>
           </div>
+        )}
 
-          {/* Risk scenarios — debajo de col 1 + col 2, mismo ancho */}
-          <RiskScenarios risk={predictions.risk_scenarios} candidates={predictions.candidates} />
+        {/* Trend chart — full width */}
+        <ModelTrendChart isR2={isR2} />
+
+        {/* 2-col: Candidatos | Polymarket */}
+        <div className="dashboard-2col" style={{
+          display: 'grid',
+          gridTemplateColumns: isR2 ? '1fr 1.4fr' : '1.2fr 1fr',
+          gap: 16,
+          alignItems: 'start',
+        }}>
+          {isR2 ? (
+            <CandidatesHeadToHead keiko={keiko} sanchez={sanchezCand} />
+          ) : (
+            <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
+              <h3 style={{ color: '#1C1917', fontSize: 15, fontWeight: 600, margin: '0 0 8px' }}>Candidatos</h3>
+              {sorted.slice(0, 10).map(c => <CompactRow key={c.candidate} c={c} />)}
+              {sorted.length > 10 && (
+                <>
+                  {showAllCandidates && sorted.slice(10).map(c => <CompactRow key={c.candidate} c={c} />)}
+                  <button
+                    onClick={() => setShowAllCandidates(!showAllCandidates)}
+                    style={{
+                      width: '100%', padding: '10px 0', marginTop: 4,
+                      background: 'transparent', border: 'none', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      color: '#78716C', fontSize: 12, minHeight: 44,
+                    }}
+                  >
+                    <ChevronDown size={14} style={{ transition: 'transform 0.2s', transform: showAllCandidates ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                    {showAllCandidates ? 'Ver menos' : `Ver ${sorted.length - 10} candidatos más`}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+          <PolymarketCard
+            polymarket={polymarket}
+            predictions={predictions}
+            onOpenSignals={() => setPmModalOpen(true)}
+          />
+        </div>
+
+        {/* Risk Scenarios */}
+        <RiskScenarios risk={predictions.risk_scenarios} candidates={predictions.candidates} />
       </div>
 
-      {/* Responsive */}
       <style>{`
-        @media (max-width: 1023px) {
-          .dashboard-3col { flex-direction: column !important; }
-          .dashboard-3col > div { width: 100% !important; flex: unset !important; }
-          .dashboard-sidebar { width: 100% !important; }
+        @media (max-width: 768px) {
+          .dashboard-2col { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
-      {/* Polymarket Modal */}
       {pmModalOpen && <PolymarketModal polymarket={polymarket} onClose={() => setPmModalOpen(false)} />}
     </>
   );
