@@ -135,10 +135,17 @@ async function runFullPipeline({ saveToDB = false, trigger = 'auto_polymarket_up
     // Opción E: P(voto blanco/nulo) por rechazo bilateral calibrado.
     // P(blank) = [P(rechaza KF) × P(rechaza RSP) + ρ × σ_KF × σ_RSP] × franchise_factor
     // ρ ≈ -0.20: correlación negativa — izquierda rechaza KF, derecha rechaza RSP → grupos distintos.
-    // Tasas post-R1 (Ipsos 23-24 abr 2026): KF=48%, RSP=43%.
     // franchise_factor=0.75: encuestas sobreestiman blanqueo 1.3-1.5x históricamente.
-    const rejKF  = 48.0 / 100;
-    const rejRSP = 43.0 / 100;
+    // Tasas: última medición Ipsos disponible en antivoto_snapshots (Def. no votaría).
+    const { rows: antRows } = await db.query(`
+      SELECT candidate, pct_no FROM antivoto_snapshots
+      WHERE election_round = $1
+        AND field_end = (SELECT MAX(field_end) FROM antivoto_snapshots WHERE election_round = $1)
+    `, [electionRound]);
+    const antMap = {};
+    for (const r of antRows) antMap[r.candidate] = parseFloat(r.pct_no) / 100;
+    const rejKF  = antMap['Keiko Fujimori']           ?? 0.48; // fallback: Ipsos abr 2026
+    const rejRSP = antMap['Roberto Sánchez Palomino'] ?? 0.43; // fallback: Ipsos abr 2026
     const rhoBlank  = -0.20;
     const sigmaKF   = Math.sqrt(rejKF  * (1 - rejKF));
     const sigmaRSP  = Math.sqrt(rejRSP * (1 - rejRSP));
