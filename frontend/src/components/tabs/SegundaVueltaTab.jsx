@@ -484,6 +484,11 @@ function AntiVotoTrendChart({ antivoto }) {
   const WEEK_MS = 7 * 24 * 3600 * 1000;
   const fmtDate = (ts) => new Date(ts).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' });
 
+  // Dynamic Y axis so outlier points (e.g. Sánchez at 7% when barely known) are visible
+  const allVals = chartData.flatMap(d => [d.keiko, d.sanchez].filter(v => v != null));
+  const yMin = Math.max(0, Math.floor(Math.min(...allVals)) - 4);
+  const yMax = Math.min(100, Math.ceil(Math.max(...allVals)) + 4);
+
   return (
     <div style={{ marginTop: 16 }}>
       <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 8 }}>
@@ -498,7 +503,7 @@ function AntiVotoTrendChart({ antivoto }) {
             tickFormatter={fmtDate}
             tick={{ fontSize: 10, fill: '#A8A29E' }}
           />
-          <YAxis domain={[30, 70]} tickFormatter={v => `${v}%`} width={34} tick={{ fontSize: 10, fill: '#A8A29E' }} />
+          <YAxis domain={[yMin, yMax]} tickFormatter={v => `${v}%`} width={34} tick={{ fontSize: 10, fill: '#A8A29E' }} />
           <Tooltip
             labelFormatter={fmtDate}
             formatter={(val, key) => [`${val}%`, key === 'keiko' ? 'Keiko Fujimori' : 'Roberto Sánchez']}
@@ -519,7 +524,7 @@ function AntiVotoTrendChart({ antivoto }) {
         </LineChart>
       </ResponsiveContainer>
       <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 4 }}>
-        Fuentes: Ipsos (21-22 mar, 2 abr, 23-24 abr 2026) · CIT (20-23 mar 2026)
+        Fuentes: Ipsos (5 feb, 27 mar, 2 abr, 23-24 abr, 17 may 2026) · CIT (20-23 mar 2026)
       </div>
     </div>
   );
@@ -581,9 +586,9 @@ function AntiVotoSection({ antivoto }) {
           </div>
           <AntiVotoTrendChart antivoto={antivoto} />
           <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: '12px 0 8px' }}>
-            La trayectoria muestra la convergencia: Keiko cayó ~15pp desde su pico de campaña (62.7% CIT)
-            hasta 48% post-R1, mientras Sánchez sube a medida que fue conociéndose.
-            El "no sé quién es" de Sánchez bajó del 30% al 5% entre marzo y abril.
+            La trayectoria muestra la convergencia: Keiko bajó 20pp (def. no: 64%→44%) desde febrero 2026 a mayo,
+            mientras Sánchez pasó de 7% (68% no lo conocía en feb) a 40% a medida que fue conocido.
+            Ambos antivoto se acercan — brecha actual de solo 4pp — lo que refuerza el peso del voto blanco/nulo.
           </p>
           {(keiko || sanchez) && (
             <p style={{ color: '#8C877F', fontSize: 12, margin: 0 }}>
