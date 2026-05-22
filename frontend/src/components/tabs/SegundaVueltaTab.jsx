@@ -14,7 +14,7 @@ const KEIKO_ALLIANCES = [
   {
     name: 'Rafael López Aliaga',
     pct: 11.9,
-    status: 'parcial',
+    status: 'parcial_el',
     note: 'Renovación Popular. RLA rechazó dar apoyo personal a Keiko el 18/05 ("no tengo nada que hablar"). Parlamentarios del partido en diálogo con Fuerza Popular. Mayor bloque de votos en disputa.',
   },
   {
@@ -459,6 +459,7 @@ function AllianceSection() {
     incierto: { label: 'en negociaciones',    color: '#D97706', bg: '#FEF9C3' },
     ambiguo:  { label: 'posición ambigua',    color: '#78716C', bg: '#F3F4F6' },
     parcial:  { label: 'partido sí / ella no', color: '#78716C', bg: '#F3F4F6' },
+    parcial_el: { label: 'partido sí / él no',  color: '#78716C', bg: '#F3F4F6' },
   };
 
   return (
