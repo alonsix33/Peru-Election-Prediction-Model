@@ -826,32 +826,6 @@ export default function SegundaVueltaTab({ predictions, polymarket, r2polls, ant
         </p>
       </div>
 
-      {/* Conclusión dinámica */}
-      {predictions?.candidates?.length > 0 && (() => {
-        const keiko = predictions.candidates.find(c => c.candidate?.includes('Keiko') || c.candidate?.includes('Fujimori'));
-        const sanchez = predictions.candidates.find(c => c.candidate?.includes('Sánchez') || c.candidate?.includes('Roberto'));
-        if (!keiko || !sanchez) return null;
-        const margin = Math.abs(keiko.prob_win - sanchez.prob_win);
-        const leader = keiko.prob_win >= sanchez.prob_win ? keiko : sanchez;
-        const leaderName = leader.candidate.split(' ').pop();
-        let conclusion;
-        if (margin < 15) {
-          conclusion = `El modelo proyecta una carrera muy reñida: la diferencia de ${margin.toFixed(0)}pp entre ambos candidatos indica que el resultado está dentro del margen de incertidumbre del modelo. El antivoto, la geografía y la movilización serán determinantes.`;
-        } else {
-          conclusion = `Según el modelo, ${leaderName} tiene una ventaja de ${margin.toFixed(0)}pp en probabilidad de ganar. El historial de elecciones reñidas en Perú y los niveles de antivoto de ambos candidatos hacen que esa ventaja no sea garantía de resultado.`;
-        }
-        return (
-          <div style={{
-            background: '#F7F4EF', border: '1px solid #E5E0D8',
-            borderLeft: '4px solid #1D4ED8', borderRadius: '0 12px 12px 0', padding: '16px 20px',
-          }}>
-            <div style={{ color: '#1D4ED8', fontSize: 12, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Conclusión del modelo
-            </div>
-            <p style={{ color: '#1C1917', fontSize: 13, lineHeight: 1.7, margin: 0 }}>{conclusion}</p>
-          </div>
-        );
-      })()}
     </div>
   );
 }

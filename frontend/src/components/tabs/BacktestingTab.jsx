@@ -65,7 +65,6 @@ const DATA = {
       { name: 'Datum CR', mae: 2.0 },
     ],
     highlight: 'Dos fallos mayores. Primero: Keiko inflada +12.8pp. Con α=0.77, Polymarket (45.5% P(ganar la presidencia)) dominó el blend — y ese 45.5% no es el % de votos en primera vuelta, sino la probabilidad de ganar toda la elección incluyendo segunda vuelta. En una carrera de N candidatos ese número siempre sobreestima al líder. A α alto, ese sesgo se amplifica en proporción directa. Segundo: Sánchez en el #5 del modelo (8.9%), llegó #2 en ONPE (12.0%). Repitió el patrón Castillo 2021 exacto: base rural fuerte en zonas subrepresentadas en encuestas urbanas. Lo que salió bien: el orden Keiko #1, Aliaga #3, Nieto #4 son posiciones correctas; los errores en magnitud de esos tres están dentro del margen.',
-    note: 'Correcciones para R2: (1) conversión P(win)→voto share implícito: PM 75.5% P(ganar) no significa 75.5% de votos; con la incertidumbre histórica de ±3pp, eso implica ~52% de votos. Sin esta corrección, el modelo sobreestimaba a Keiko hasta 3pp cuando sube el alpha en la veda; (2) alpha cap 0.77→0.60 para evitar sobreponderación; (3) pesos encuestadoras calibrados por precisión R1: Ipsos 1.30×, Datum 1.05×.',
     conclusion: 'El error en Keiko (+12.8pp) fue estructural: Polymarket estaba midiendo P(ganar la presidencia), no el % de votos en primera vuelta. Ese defecto de conversión ya está corregido para segunda vuelta.',
   },
 };
@@ -213,11 +212,13 @@ export default function BacktestingTab() {
       </div>
 
       {/* Note */}
-      <div style={{
-        borderLeft: '3px solid #E5E0D8', padding: '12px 16px',
-      }}>
-        <p style={{ color: '#8C877F', fontSize: 12, lineHeight: 1.6, margin: 0 }}>{d.note}</p>
-      </div>
+      {d.note && (
+        <div style={{
+          borderLeft: '3px solid #E5E0D8', padding: '12px 16px',
+        }}>
+          <p style={{ color: '#8C877F', fontSize: 12, lineHeight: 1.6, margin: 0 }}>{d.note}</p>
+        </div>
+      )}
 
       {/* Conclusion */}
       {d.conclusion && (
