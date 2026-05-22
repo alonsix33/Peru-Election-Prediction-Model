@@ -80,25 +80,25 @@ export default function CandidateCard({ candidate: c, rank, expanded, onToggle, 
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', flexShrink: 0, textAlign: 'center', minWidth: 200 }}>
           <div>
-            <div style={{ color: '#1C1917', fontWeight: 600, fontSize: '16px', fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ color: '#78716C', fontWeight: 500, fontSize: '14px', fontVariantNumeric: 'tabular-nums' }}>
               {c.mean.toFixed(1)}%
             </div>
-            <div style={{ color: '#78716C', fontSize: '11px' }}>1ra vuelta</div>
+            <div style={{ color: '#A8A29E', fontSize: '11px' }}>1ra vuelta</div>
           </div>
           <div>
-            <div style={{ color: '#1C1917', fontWeight: 600, fontSize: '16px', fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ color: '#78716C', fontWeight: 500, fontSize: '13px', fontVariantNumeric: 'tabular-nums' }}>
               {c.prob_runoff.toFixed(0)}%
             </div>
-            <div style={{ color: '#78716C', fontSize: '11px' }}>P(2da)</div>
+            <div style={{ color: '#A8A29E', fontSize: '11px' }}>P(2da)</div>
           </div>
           <div>
             <div style={{
-              color: winColor(c.prob_win), fontWeight: 600, fontSize: '16px',
-              fontVariantNumeric: 'tabular-nums'
+              color: winColor(c.prob_win), fontWeight: 700, fontSize: '22px',
+              fontVariantNumeric: 'tabular-nums', lineHeight: 1.1
             }}>
               {c.prob_win.toFixed(1)}%
             </div>
-            <div style={{ color: '#78716C', fontSize: '11px' }}>P(Ganar)</div>
+            <div style={{ color: '#78716C', fontSize: '11px', fontWeight: 500 }}>P(Ganar)</div>
           </div>
         </div>
 
