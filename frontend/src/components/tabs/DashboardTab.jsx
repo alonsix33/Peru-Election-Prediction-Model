@@ -516,31 +516,9 @@ export default function DashboardTab({ predictions, polymarket, polls, status })
     runoffC1Party = getPartyColor(runoffC1); runoffC2Party = getPartyColor(runoffC2);
   }
 
-  // Dynamic headline
-  let headlineText = '';
-  if (isR2 && keiko && sanchezCand) {
-    const margin = Math.abs(keiko.prob_win - sanchezCand.prob_win);
-    const leader = keiko.prob_win >= sanchezCand.prob_win ? keiko : sanchezCand;
-    const leaderName = leader.candidate.split(' ').pop();
-    if (margin < 15) {
-      headlineText = `Carrera reñida: diferencia de ${margin.toFixed(0)}pp entre ambos candidatos`;
-    } else if (leader.prob_win >= 60) {
-      headlineText = `${leaderName} lidera con ${leader.prob_win.toFixed(0)}% de probabilidad de ganar`;
-    } else {
-      headlineText = `${leaderName} proyecta ventaja — ${leader.prob_win.toFixed(0)}% de P(Ganar) según el modelo`;
-    }
-  } else if (!isR2 && top) {
-    headlineText = `${top.candidate.split(' ').pop()} favorito con ${top.prob_win.toFixed(0)}% de P(Ganar)`;
-  }
-
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {headlineText && (
-          <h2 style={{ color: '#1C1917', fontSize: 18, fontWeight: 700, margin: 0, lineHeight: 1.3 }}>
-            {headlineText}
-          </h2>
-        )}
 
         {/* Hero: Needle (R2) o KPI cards (R1) */}
         {isR2 ? (

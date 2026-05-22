@@ -6,28 +6,34 @@ const KEIKO_COLOR = getPartyColor('Keiko Fujimori').primary;                // #
 const SANCHEZ_COLOR = getPartyColor('Roberto Sánchez Palomino').primary;   // #16A34A
 
 // Alliance context — editorial data (news-sourced, not from live polls)
-// Sources: communicados oficiales, declaraciones públicas, La República, RPP, Infobae
+// Sources: communicados oficiales, declaraciones públicas, La República, RPP, Infobae, Caretas
 const KEIKO_ALLIANCES = [
   {
     name: 'Rafael López Aliaga',
     pct: 11.9,
-    status: 'formal',
-    note: 'Renovación Popular. Apoyo formal confirmado. Mayor bloque de votos transferibles.',
+    status: 'parcial',
+    note: 'Renovación Popular. RLA rechazó dar apoyo personal a Keiko el 18/05 ("no tengo nada que hablar"). Parlamentarios del partido en diálogo con Fuerza Popular. Mayor bloque de votos en disputa.',
   },
   {
     name: 'Jorge Nieto',
     pct: 11.0,
-    status: 'incierto',
-    note: 'Partido del Buen Gobierno. En negociaciones al 19/05/2026.',
+    status: 'ambiguo',
+    note: 'Partido del Buen Gobierno. Delegó decisión a su comité ejecutivo. No descartó el voto blanco/viciado como opción del partido (18/05). Sin señal hacia ningún candidato.',
   },
 ];
 
 const SANCHEZ_ADJACENT = [
   {
+    name: 'Verónica Mendoza',
+    pct: 4.1,
+    status: 'formal',
+    note: 'Nuevo Perú. Apoyo formal anunciado por Sánchez el 15/05. Uno de los cinco partidos que confirmaron respaldo.',
+  },
+  {
     name: 'López Chau',
     pct: 7.3,
     status: 'ambiguo',
-    note: 'Ahora Nación. Descartó votar por Keiko. Sin anuncio formal de apoyo a Sánchez.',
+    note: 'Ahora Nación. Descartó votar por Keiko. Considera conversaciones con Juntos por el Perú en el Congreso. Sin anuncio formal de apoyo a Sánchez.',
   },
   {
     name: 'Marisol Pérez Tello',
@@ -413,8 +419,11 @@ function AllianceSection() {
 
 function GeographicSection() {
   const data = [
-    { region: 'Lima Metropolitana', keiko: 41, sanchez: 22, note: 'Keiko +19pp' },
-    { region: 'Interior / Rural', keiko: 26, sanchez: 55, note: 'Sánchez +29pp' },
+    { region: 'Lima / Callao', keiko: 48.8, sanchez: 25.6, note: 'Keiko +23pp' },
+    { region: 'Norte', keiko: 41.1, sanchez: 36.4, note: 'Keiko +5pp' },
+    { region: 'Centro', keiko: 30.1, sanchez: 47.3, note: 'Sánchez +17pp' },
+    { region: 'Sur', keiko: 27.9, sanchez: 44.7, note: 'Sánchez +17pp' },
+    { region: 'Oriente', keiko: 33.0, sanchez: 45.2, note: 'Sánchez +12pp' },
   ];
 
   return (
@@ -423,7 +432,7 @@ function GeographicSection() {
         Polarización geográfica
       </h3>
       <p style={{ color: '#A8A29E', fontSize: 12, margin: '0 0 14px' }}>
-        Intención de voto por región (IEP, abr 2026). Perfil similar al de Castillo 2021: Lima vs. el resto del país.
+        Intención de voto por región (Datum, 17-20 may 2026). Perfil similar al de Castillo 2021: Lima vs. el resto del país.
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {data.map(r => (
@@ -817,32 +826,6 @@ export default function SegundaVueltaTab({ predictions, polymarket, r2polls, ant
         </p>
       </div>
 
-      {/* Conclusión dinámica */}
-      {predictions?.candidates?.length > 0 && (() => {
-        const keiko = predictions.candidates.find(c => c.candidate?.includes('Keiko') || c.candidate?.includes('Fujimori'));
-        const sanchez = predictions.candidates.find(c => c.candidate?.includes('Sánchez') || c.candidate?.includes('Roberto'));
-        if (!keiko || !sanchez) return null;
-        const margin = Math.abs(keiko.prob_win - sanchez.prob_win);
-        const leader = keiko.prob_win >= sanchez.prob_win ? keiko : sanchez;
-        const leaderName = leader.candidate.split(' ').pop();
-        let conclusion;
-        if (margin < 15) {
-          conclusion = `El modelo proyecta una carrera muy reñida: la diferencia de ${margin.toFixed(0)}pp entre ambos candidatos indica que el resultado está dentro del margen de incertidumbre del modelo. El antivoto, la geografía y la movilización serán determinantes.`;
-        } else {
-          conclusion = `Según el modelo, ${leaderName} tiene una ventaja de ${margin.toFixed(0)}pp en probabilidad de ganar. El historial de elecciones reñidas en Perú y los niveles de antivoto de ambos candidatos hacen que esa ventaja no sea garantía de resultado.`;
-        }
-        return (
-          <div style={{
-            background: '#F7F4EF', border: '1px solid #E5E0D8',
-            borderLeft: '4px solid #1D4ED8', borderRadius: '0 12px 12px 0', padding: '16px 20px',
-          }}>
-            <div style={{ color: '#1D4ED8', fontSize: 12, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Conclusión del modelo
-            </div>
-            <p style={{ color: '#1C1917', fontSize: 13, lineHeight: 1.7, margin: 0 }}>{conclusion}</p>
-          </div>
-        );
-      })()}
     </div>
   );
 }

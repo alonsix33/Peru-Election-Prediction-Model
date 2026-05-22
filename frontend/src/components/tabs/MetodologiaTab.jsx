@@ -303,6 +303,7 @@ function SegundaVueltaContent({ r2polls }) {
             </div>
             {[
               { name: 'Ipsos', detail: '23-24 abr · 15-17 may 2026', weight: '1.30x' },
+              { name: 'Datum', detail: '17-20 may 2026', weight: '1.05x' },
               { name: 'IEP', detail: '21-25 abr 2026', weight: '1.00x' },
               { name: 'CIT', detail: '14-17 may 2026 (simulacro)', weight: '1.00x ×1.2 tipo' },
             ].map((s, i) => (
@@ -338,11 +339,14 @@ function SegundaVueltaContent({ r2polls }) {
           ¿Cuánto debes confiar en este modelo?
         </h3>
         <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: 0 }}>
-          El modelo tiene un historial verificable: en R1 2016 acertó el podio completo con MAE de 2.2pp;
-          en 2021 identificó a Castillo por encima de las encuestas individuales; en R1 2026 cometió
-          un error estructural en Keiko (+12.8pp) que ya está corregido para esta segunda vuelta.
-          El IC 90% es honesto: en 6 de cada 10 años, el resultado cayó dentro del intervalo predicho.
-          Úsalo como una brújula con margen de error conocido, no como una predicción exacta.
+          Este modelo no existió en años anteriores — lo que se hizo fue correrlo con las encuestas
+          disponibles para cada primera vuelta (justo antes de la veda) y comparar el resultado simulado
+          con los datos oficiales de la ONPE. En esa validación: en R1 2016 acertó el podio completo
+          con MAE de 2.2pp; en 2021 identificó a Castillo por encima de las encuestas individuales;
+          en R1 2026 cometió un error estructural en Keiko (+12.8pp) que ya está corregido para esta
+          segunda vuelta. El IC 90% es honesto: en 6 de cada 10 años, el resultado cayó dentro del
+          intervalo predicho. Úsalo como una brújula con margen de error conocido, no como una
+          predicción exacta.
         </p>
       </div>
     </div>
