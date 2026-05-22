@@ -342,7 +342,7 @@ export default function MetodologiaTab({ r2polls }) {
       {/* Sub-tabs */}
       <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid #E5E0D8', marginBottom: 32 }}>
         {[
-          { key: 'segunda', label: 'Segunda vuelta (activo)' },
+          { key: 'segunda', label: 'Segunda vuelta ★' },
           { key: 'primera', label: 'Primera vuelta' },
         ].map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)} style={{
