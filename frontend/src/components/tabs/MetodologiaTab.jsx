@@ -329,6 +329,22 @@ function SegundaVueltaContent({ r2polls }) {
           </div>
         </div>
       </div>
+
+      {/* Conclusión honesta */}
+      <div style={{
+        background: '#F7F4EF', border: '1px solid #E5E0D8', borderRadius: 12, padding: '20px 24px',
+      }}>
+        <h3 style={{ color: '#1C1917', fontSize: 15, fontWeight: 600, margin: '0 0 10px' }}>
+          ¿Cuánto debes confiar en este modelo?
+        </h3>
+        <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: 0 }}>
+          El modelo tiene un historial verificable: en R1 2016 acertó el podio completo con MAE de 2.2pp;
+          en 2021 identificó a Castillo por encima de las encuestas individuales; en R1 2026 cometió
+          un error estructural en Keiko (+12.8pp) que ya está corregido para esta segunda vuelta.
+          El IC 90% es honesto: en 6 de cada 10 años, el resultado cayó dentro del intervalo predicho.
+          Úsalo como una brújula con margen de error conocido, no como una predicción exacta.
+        </p>
+      </div>
     </div>
   );
 }
