@@ -102,7 +102,7 @@ function AppContent() {
               <SegundaVueltaTab predictions={predictions} polymarket={polymarket} r2polls={r2polls} antivoto={antivoto} />
             )}
             {activeTab === 'metodologia' && (
-              <MetodologiaTab />
+              <MetodologiaTab r2polls={r2polls} />
             )}
             {activeTab === 'backtesting' && (
               <BacktestingTab />

@@ -185,9 +185,15 @@ function PrimeraVueltaContent() {
 }
 
 // ─── SEGUNDA VUELTA ───────────────────────────────────────────
-function SegundaVueltaContent() {
+function SegundaVueltaContent({ r2polls }) {
+  const pollCount = r2polls?.length ?? null;
+  const houseCount = r2polls ? new Set(r2polls.map(p => p.pollster_name)).size : null;
+  const pollSublabel = pollCount !== null
+    ? `${pollCount} encuesta${pollCount !== 1 ? 's' : ''} · ${houseCount} casa${houseCount !== 1 ? 's' : ''}`
+    : 'Encuestas + Polymarket';
+
   const pipelineSteps = [
-    { icon: Database, label: 'Encuestas R2', sublabel: '4 encuestas · 2 casas' },
+    { icon: Database, label: 'Encuestas R2', sublabel: pollSublabel },
     { icon: Scale, label: 'Blend bayesiano', sublabel: 'Encuestas + Polymarket' },
     { icon: Shuffle, label: '10,000 simulaciones', sublabel: 'Monte Carlo' },
     { icon: TrendingUp, label: 'Resultado', sublabel: 'P(ganar) por candidato' },
@@ -219,13 +225,13 @@ function SegundaVueltaContent() {
         </div>
 
         <StepRow number={1} title="Las encuestas de segunda vuelta"
-          description="Hay 4 encuestas disponibles: Ipsos (23-24 abr, n=1200), IEP (21-25 abr, n=1600), Ipsos (15-17 may, n=1210) y CIT (14-17 may, n=1220). No pesan igual. Primero, las más recientes pesan más — una encuesta de hace 28 días vale mucho menos que una de hace 5. Segundo, Ipsos tiene el mayor peso porque tuvo el menor error en la primera vuelta de 2026 (0.28pp de diferencia con el resultado real). Tercero, la encuesta de CIT es un simulacro (pregunta 'si las elecciones fueran mañana') y por eso recibe un bonus de peso — simula el día D más directamente. El resultado: las dos encuestas de mayo dominan casi completamente el agregado." />
+          description={`Hay ${pollCount !== null ? pollCount : 'varias'} encuestas de segunda vuelta de ${houseCount !== null ? houseCount : 'distintas'} casas encuestadoras. No pesan igual. Las más recientes pesan más — una de hace 28 días vale mucho menos que una de hace 5. La encuestadora con mejor precisión en la primera vuelta de 2026 recibe mayor peso, y las encuestas tipo simulacro (que preguntan directamente por el día de la elección) reciben un bonus adicional. El resultado: las encuestas más recientes dominan casi completamente el agregado.`} />
 
         <StepRow number={2} title="Los house effects — corrección por sesgo de encuestadora"
           description="Algunas encuestadoras sobreestiman sistemáticamente a ciertos candidatos. Basados en su comportamiento en R1 2026, le restamos 1.5pp a CIT para Keiko (tendía a sobreestimarla) y 0.5pp a Ipsos para Keiko. A Sánchez no le aplicamos ninguna corrección porque no tenemos suficiente evidencia de sesgo en su caso. Estas correcciones son pequeñas pero evitan que los sesgos de encuestadora se acumulen." />
 
-        <StepRow number={3} title="Los que no deciden — redistribución de indecisos"
-          description="Entre el 24% y el 37% de los encuestados dice 'no sé', 'blanco' o 'nulo'. Ese grupo no desaparece — en la realidad terminan votando. El modelo toma el promedio de indecisos de las encuestas recientes (~29%) y los redistribuye proporcionalmente: si Keiko tiene 52% del voto decidido y Sánchez 48%, los indecisos se reparten en esa misma proporción. Es un supuesto simplificador — en la realidad los indecisos podrían romper de forma asimétrica, lo que sería el mayor riesgo no capturado del modelo." />
+        <StepRow number={3} title="Los que no deciden — incertidumbre, no redistribución"
+          description="Entre el 24% y el 37% de los encuestados no se compromete con ningún candidato: dicen 'no sé', declaran que votarán blanco/nulo, o simplemente no responden. El modelo no pretende saber cómo votará ese grupo — redistribuirlos proporcionalmente implicaría asumir que romperán igual que los que ya decidieron, y en Perú no hay evidencia de que eso sea cierto (en 2021 rompieron masivamente hacia Castillo). En cambio, el modelo trabaja directamente con la proporción declarada entre los dos candidatos: si Keiko aparece al 39% y Sánchez al 35%, el punto de partida es Keiko 52.7% vs Sánchez 47.3% en votos válidos. Toda la incertidumbre sobre cómo romperán los no comprometidos la absorben las 10,000 simulaciones del paso 6." />
 
         <StepRow number={4} title="Polymarket — por qué no se usa el número directo"
           description="Polymarket publica la probabilidad de que cada candidato gane la elección. Hoy Keiko aparece al 75.5%. Ese número no significa que Keiko va a sacar 75.5% de los votos — significa que los apostadores creen que hay 75.5% de chances de que gane. Para usar esa señal correctamente, el modelo hace el camino inverso: si hay 75.5% de probabilidad de ganar, y la incertidumbre histórica de una elección peruana es de ±3pp, ¿qué porcentaje de votos necesita Keiko para que eso tenga sentido? La respuesta es ~52%. Sin esta corrección, el modelo inflaría a Keiko artificialmente cada vez que el alpha sube durante la veda." />
@@ -328,7 +334,7 @@ function SegundaVueltaContent() {
 }
 
 // ─── MAIN ─────────────────────────────────────────────────────
-export default function MetodologiaTab() {
+export default function MetodologiaTab({ r2polls }) {
   const [activeTab, setActiveTab] = useState('segunda');
 
   return (
@@ -336,7 +342,7 @@ export default function MetodologiaTab() {
       {/* Sub-tabs */}
       <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid #E5E0D8', marginBottom: 32 }}>
         {[
-          { key: 'segunda', label: 'Segunda vuelta (activo)' },
+          { key: 'segunda', label: 'Segunda vuelta ★' },
           { key: 'primera', label: 'Primera vuelta' },
         ].map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)} style={{
@@ -351,7 +357,7 @@ export default function MetodologiaTab() {
         ))}
       </div>
 
-      {activeTab === 'segunda' ? <SegundaVueltaContent /> : <PrimeraVueltaContent />}
+      {activeTab === 'segunda' ? <SegundaVueltaContent r2polls={r2polls} /> : <PrimeraVueltaContent />}
     </div>
   );
 }

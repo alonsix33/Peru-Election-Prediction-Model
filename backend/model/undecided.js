@@ -1,7 +1,7 @@
 /**
  * Voto potencial — promedio ponderado CIT marzo (40%) + Ipsos abril (60%).
  * Piso = "Definitivamente sí", Techo = Potencial, Rechazo = "Definitivamente no".
- * Solo aplica en R1 (multi-candidato). En R2 se usa distribución proporcional simple.
+ * Solo aplica en R1 (multi-candidato). En R2 se normaliza a votos válidos sin redistribución.
  */
 const VOTE_POTENTIAL_CIT = {
   'Rafael López Aliaga': { ceiling: 25.5, floor:  9.2, rejection: 50.9 },  // CIT 27.7/14.6/50.8 + Ipsos 24/6/51
@@ -19,12 +19,13 @@ const VOTE_POTENTIAL_CIT = {
  *   espacio = (techo − estimado_actual) × (1 − rechazo/100)
  *   redistribucion = indecisos × (espacio_i / Σ espacios)
  *
- * R2 (2 candidatos): distribución proporcional simple.
- *   Los techos R1 no aplican — en R2 los dos candidatos capturan el voto válido.
- *   redistribucion = indecisos × (current_pct_i / Σ current_pct)
+ * R2 (2 candidatos): normalización a votos válidos.
+ *   No redistribuimos indecisos — no hay evidencia de cómo van a romper.
+ *   estimated_pct = current_pct / Σ current_pct × 100 (proporción declarada)
+ *   La incertidumbre sobre los no comprometidos la absorbe el MC (±5.7pp hoy).
  *
  * @param {Object} aggregated  - Salida de aggregatePolls(): { candidate: { weighted_pct, ... } }
- * @param {number} undecidedPct - % de indecisos a redistribuir
+ * @param {number} undecidedPct - % de indecisos (solo informativo en R2, no se usa)
  * @param {Object} [votePotential] - Override de voto potencial CIT (solo R1)
  * @param {number} [electionRound] - 1 (default) o 2
  * @returns {Object} - { candidate: { estimated_pct, redistribution, ceiling, floor, rejection } }
@@ -32,21 +33,24 @@ const VOTE_POTENTIAL_CIT = {
 function redistributeUndecided(aggregated, undecidedPct, votePotential = VOTE_POTENTIAL_CIT, electionRound = 1) {
   const result = {};
 
-  // ── R2: distribución proporcional simple ──────────────────────────────────
+  // ── R2: normalización a votos válidos ────────────────────────────────────
+  // En R2 no redistribuimos indecisos. No sabemos cómo van a romper (en 2021
+  // rompieron masivamente hacia Castillo). Trabajamos con la proporción
+  // declarada entre los dos candidatos y dejamos que el MC capture la
+  // incertidumbre sobre el comportamiento de los no comprometidos.
   if (electionRound === 2) {
     const totalPolled = Object.values(aggregated).reduce((s, d) => s + d.weighted_pct, 0);
     for (const [candidate, data] of Object.entries(aggregated)) {
       const current = data.weighted_pct;
       const share = totalPolled > 0 ? current / totalPolled : 0.5;
-      const redistribution = undecidedPct * share;
       result[candidate] = {
         current_pct: current,
         ceiling: 100,
         floor: 0,
         rejection: null,
-        space: undecidedPct * share,
-        redistribution,
-        estimated_pct: current + redistribution,
+        space: 0,
+        redistribution: 0,
+        estimated_pct: share * 100,
       };
     }
     return result;
