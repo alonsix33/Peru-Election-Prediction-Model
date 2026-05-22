@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getPartyColor } from '../../config/partyColors';
 import { History, BarChart3, CheckCircle, XCircle, TrendingUp, Info } from 'lucide-react';
+import TermTooltip from '../TermTooltip';
 
 const DATA = {
   2016: {
@@ -22,6 +23,7 @@ const DATA = {
     ],
     highlight: 'El modelo ubicó correctamente el orden del top-3: Keiko 1ra, PPK 2do, Mendoza 3ra. La disputa entre PPK y Mendoza por el segundo lugar fue la más cerrada del ciclo.',
     note: 'El error más grande fue Barnechea (+5.1 pts), probablemente por voto estratégico de última hora hacia PPK. Este tipo de movimiento ocurre después de la última encuesta y es difícil de anticipar con cualquier modelo basado en encuestas.',
+    conclusion: 'El modelo acertó el orden del podio y contuvo el error dentro del IC en 5 de 6 candidatos. Un resultado sólido para la primera aplicación del agregador.',
   },
   2021: {
     context: 'Primera vuelta con 4 encuestadoras activas (Ipsos, IEP, CPI, Datum). Agregador sin Polymarket — solo encuestas hasta antes de la veda electoral del 4 de abril.',
@@ -45,6 +47,7 @@ const DATA = {
     ],
     highlight: 'El modelo ubicó a Castillo en el #3 con 23.6% de probabilidad de pasar a segunda vuelta, una señal más clara que la de las encuestas individuales. El error de -6.2 pts refleja la misma subestimación del voto rural que afectó a todas las encuestadoras.',
     note: 'Lescano (+6.2) y Forsyth (+6.6) fueron los mayores errores, probablemente por migración de voto estratégico en las últimas horas, patrón similar al de Barnechea en 2016.',
+    conclusion: 'El modelo identificó a Castillo con mayor claridad que las encuestas individuales. El error rural fue comparable al de toda la industria: un problema estructural de cobertura, no del agregador.',
   },
   2026: {
     context: 'Primera vuelta 12 abril 2026. Blend bayesiano Polymarket + encuestas (α=0.77 día electoral). Primer ciclo incorporando mercados de predicción en tiempo real como señal complementaria. Nota: "Ipsos CR" y "Datum CR" son conteos rápidos (encuesta de salida el día de la elección), no encuestas pre-electorales, por eso su MAE es muy bajo y no es comparable con los MAE del modelo ni con los de años anteriores.',
@@ -63,6 +66,7 @@ const DATA = {
     ],
     highlight: 'Dos fallos mayores. Primero: Keiko inflada +12.8pp. Con α=0.77, Polymarket (45.5% P(ganar la presidencia)) dominó el blend — y ese 45.5% no es el % de votos en primera vuelta, sino la probabilidad de ganar toda la elección incluyendo segunda vuelta. En una carrera de N candidatos ese número siempre sobreestima al líder. A α alto, ese sesgo se amplifica en proporción directa. Segundo: Sánchez en el #5 del modelo (8.9%), llegó #2 en ONPE (12.0%). Repitió el patrón Castillo 2021 exacto: base rural fuerte en zonas subrepresentadas en encuestas urbanas. Lo que salió bien: el orden Keiko #1, Aliaga #3, Nieto #4 son posiciones correctas; los errores en magnitud de esos tres están dentro del margen.',
     note: 'Correcciones para R2: (1) conversión P(win)→voto share implícito: PM 75.5% P(ganar) no significa 75.5% de votos; con la incertidumbre histórica de ±3pp, eso implica ~52% de votos. Sin esta corrección, el modelo sobreestimaba a Keiko hasta 3pp cuando sube el alpha en la veda; (2) alpha cap 0.77→0.60 para evitar sobreponderación; (3) pesos encuestadoras calibrados por precisión R1: Ipsos 1.30×, Datum 1.05×.',
+    conclusion: 'El error en Keiko (+12.8pp) fue estructural: Polymarket estaba midiendo P(ganar la presidencia), no el % de votos en primera vuelta. Ese defecto de conversión ya está corregido para segunda vuelta.',
   },
 };
 
@@ -108,7 +112,7 @@ export default function BacktestingTab() {
         <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.6, margin: 0 }}>
           <strong style={{ color: '#1C1917' }}>Metodología:</strong> el modelo combina encuestas de cada ciclo con ponderación bayesiana,
           ajusta por sesgos conocidos de cada encuestadora, redistribuye indecisos y corre 10,000 simulaciones Monte Carlo.{' '}
-          <strong style={{ color: '#1C1917' }}>MAE</strong> (error absoluto medio) mide la distancia promedio entre predicción y resultado real en puntos porcentuales.
+          <strong style={{ color: '#1C1917' }}>MAE</strong><TermTooltip term="MAE" /> (error absoluto medio) mide la distancia promedio entre predicción y resultado real en puntos porcentuales.
         </p>
       </div>
 
@@ -214,6 +218,18 @@ export default function BacktestingTab() {
       }}>
         <p style={{ color: '#8C877F', fontSize: 12, lineHeight: 1.6, margin: 0 }}>{d.note}</p>
       </div>
+
+      {/* Conclusion */}
+      {d.conclusion && (
+        <div style={{
+          background: '#F0FDF4', border: '1px solid #86EFAC',
+          borderLeft: '4px solid #16A34A', borderRadius: '0 10px 10px 0', padding: '12px 16px',
+        }}>
+          <p style={{ color: '#15803D', fontSize: 13, lineHeight: 1.6, margin: 0 }}>
+            <strong>Conclusión:</strong> {d.conclusion}
+          </p>
+        </div>
+      )}
 
       {/* vs Pollsters */}
       <div>

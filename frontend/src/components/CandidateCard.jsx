@@ -1,5 +1,6 @@
 import { ChevronDown } from 'lucide-react';
 import { getPartyColor } from '../config/partyColors';
+import TermTooltip from './TermTooltip';
 
 function getInitials(name) {
   const parts = name.split(' ');
@@ -13,11 +14,11 @@ function winColor(prob) {
   return '#8C877F';
 }
 
-export default function CandidateCard({ candidate: c, rank, expanded, onToggle }) {
+export default function CandidateCard({ candidate: c, rank, expanded, onToggle, maxMean = 30 }) {
   const party = getPartyColor(c.candidate);
-  const barWidth = Math.min(100, (c.mean / 30) * 100);
-  const p10Width = Math.min(100, (c.p10 / 30) * 100);
-  const p90Width = Math.min(100, (c.p90 / 30) * 100);
+  const barWidth = Math.min(100, (c.mean / maxMean) * 100);
+  const p10Width = Math.min(100, (c.p10 / maxMean) * 100);
+  const p90Width = Math.min(100, (c.p90 / maxMean) * 100);
 
   return (
     <div
@@ -73,32 +74,32 @@ export default function CandidateCard({ candidate: c, rank, expanded, onToggle }
             }} />
           </div>
           <div style={{ fontSize: '11px', color: '#78716C', marginTop: 2 }}>
-            IC 90%: {c.p10.toFixed(1)}% - {c.p90.toFixed(1)}%
+            IC 90%<TermTooltip term="IC_90" />: {c.p10.toFixed(1)}% - {c.p90.toFixed(1)}%
           </div>
         </div>
 
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', flexShrink: 0, textAlign: 'center', minWidth: 200 }}>
           <div>
-            <div style={{ color: '#1C1917', fontWeight: 600, fontSize: '16px', fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ color: '#78716C', fontWeight: 500, fontSize: '14px', fontVariantNumeric: 'tabular-nums' }}>
               {c.mean.toFixed(1)}%
             </div>
-            <div style={{ color: '#78716C', fontSize: '11px' }}>1ra vuelta</div>
+            <div style={{ color: '#A8A29E', fontSize: '11px' }}>1ra vuelta</div>
           </div>
           <div>
-            <div style={{ color: '#1C1917', fontWeight: 600, fontSize: '16px', fontVariantNumeric: 'tabular-nums' }}>
+            <div style={{ color: '#78716C', fontWeight: 500, fontSize: '13px', fontVariantNumeric: 'tabular-nums' }}>
               {c.prob_runoff.toFixed(0)}%
             </div>
-            <div style={{ color: '#78716C', fontSize: '11px' }}>P(2da)</div>
+            <div style={{ color: '#A8A29E', fontSize: '11px' }}>P(2da)</div>
           </div>
           <div>
             <div style={{
-              color: winColor(c.prob_win), fontWeight: 600, fontSize: '16px',
-              fontVariantNumeric: 'tabular-nums'
+              color: winColor(c.prob_win), fontWeight: 700, fontSize: '22px',
+              fontVariantNumeric: 'tabular-nums', lineHeight: 1.1
             }}>
               {c.prob_win.toFixed(1)}%
             </div>
-            <div style={{ color: '#78716C', fontSize: '11px' }}>P(Ganar)</div>
+            <div style={{ color: '#78716C', fontSize: '11px', fontWeight: 500 }}>P(Ganar)<TermTooltip term="P_GANAR" /></div>
           </div>
         </div>
 

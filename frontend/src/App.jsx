@@ -96,7 +96,7 @@ function AppContent() {
               <DashboardTab predictions={predictions} polymarket={polymarket} polls={polls} status={status} />
             )}
             {activeTab === 'primera' && (
-              <PrimeraVueltaTab predictions={r1predictions} polls={polls} />
+              <PrimeraVueltaTab predictions={r1predictions} polls={polls} onNavigate={setActiveTab} />
             )}
             {activeTab === 'segunda' && (
               <SegundaVueltaTab predictions={predictions} polymarket={polymarket} r2polls={r2polls} antivoto={antivoto} />

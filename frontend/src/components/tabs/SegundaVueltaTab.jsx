@@ -1,5 +1,6 @@
 import { getPartyColor } from '../../config/partyColors';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import TermTooltip from '../TermTooltip';
 
 const KEIKO_COLOR = getPartyColor('Keiko Fujimori').primary;                // #F97316
 const SANCHEZ_COLOR = getPartyColor('Roberto Sánchez Palomino').primary;   // #16A34A
@@ -102,7 +103,7 @@ function PollsTable({ r2polls }) {
                   <td style={{ padding: '10px 12px', textAlign: 'right', color: KEIKO_COLOR, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
                     {keiko ? keiko.pct_raw.toFixed(0) + '%' : '—'}
                     {keiko && sanchez && (
-                      <div style={{ color: '#A8A29E', fontSize: 9, fontWeight: 400, marginTop: 1 }}>
+                      <div style={{ color: '#A8A29E', fontSize: 11, fontWeight: 400, marginTop: 1 }}>
                         {((keiko.pct_raw / (keiko.pct_raw + sanchez.pct_raw)) * 100).toFixed(1)}% v.v.
                       </div>
                     )}
@@ -110,7 +111,7 @@ function PollsTable({ r2polls }) {
                   <td style={{ padding: '10px 12px', textAlign: 'right', color: SANCHEZ_COLOR, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
                     {sanchez ? sanchez.pct_raw.toFixed(0) + '%' : '—'}
                     {keiko && sanchez && (
-                      <div style={{ color: '#A8A29E', fontSize: 9, fontWeight: 400, marginTop: 1 }}>
+                      <div style={{ color: '#A8A29E', fontSize: 11, fontWeight: 400, marginTop: 1 }}>
                         {((sanchez.pct_raw / (keiko.pct_raw + sanchez.pct_raw)) * 100).toFixed(1)}% v.v.
                       </div>
                     )}
@@ -130,7 +131,7 @@ function PollsTable({ r2polls }) {
           <strong>{p.pollster}:</strong> {p.notes}
         </div>
       ))}
-      <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 6 }}>
+      <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 6 }}>
         Los % principales son <strong>intención de voto bruta</strong> (incluye indecisos y B/N). v.v. = votos válidos calculados de los datos declarados, excluyendo B/N y NS/NP.
       </div>
       <div style={{
@@ -183,13 +184,13 @@ function HeadToHead({ predictions }) {
               </div>
               {data && (
                 <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 2 }}>
-                  IC 90% v.v.: [{data.p10.toFixed(1)}%, {data.p90.toFixed(1)}%]
+                  IC 90%<TermTooltip term="IC_90" /> v.v.: [{data.p10.toFixed(1)}%, {data.p90.toFixed(1)}%]
                 </div>
               )}
             </div>
 
             <div>
-              <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>P(ganar segunda vuelta)</div>
+              <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>P(ganar segunda vuelta)<TermTooltip term="P_GANAR" /></div>
               <div style={{ color, fontWeight: 600, fontSize: 18, fontVariantNumeric: 'tabular-nums' }}>
                 {data ? data.prob_win.toFixed(1) : '—'}%
               </div>
@@ -272,7 +273,7 @@ function PMvsPollsSection({ polymarket, r2polls }) {
             </div>
           </div>
           {polymarket?.captured_at_lima && (
-            <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 6 }}>
+            <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 6 }}>
               {new Date(polymarket.captured_at_lima).toLocaleString('es-PE', { timeZone: 'America/Lima', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </div>
           )}
@@ -296,7 +297,7 @@ function PMvsPollsSection({ polymarket, r2polls }) {
             </div>
           </div>
           {polls.length > 0 && (
-            <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 6 }}>
+            <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 6 }}>
               {polls.length} encuesta{polls.length > 1 ? 's' : ''} · ~{polls.reduce((s, p) => {
                 const bn = p.pct_blank_null || 0;
                 const nd = p.pct_undecided || 0;
@@ -321,10 +322,10 @@ function PMvsPollsSection({ polymarket, r2polls }) {
 
 function AllianceSection() {
   const statusLabel = {
-    formal: { label: 'apoyo formal', color: '#16A34A' },
-    incierto: { label: 'en negociaciones', color: '#D97706' },
-    ambiguo: { label: 'posición ambigua', color: '#78716C' },
-    parcial: { label: 'partido sí / ella no', color: '#78716C' },
+    formal:   { label: 'apoyo formal',        color: '#16A34A', bg: '#DCFCE7' },
+    incierto: { label: 'en negociaciones',    color: '#D97706', bg: '#FEF9C3' },
+    ambiguo:  { label: 'posición ambigua',    color: '#78716C', bg: '#F3F4F6' },
+    parcial:  { label: 'partido sí / ella no', color: '#78716C', bg: '#F3F4F6' },
   };
 
   return (
@@ -334,7 +335,7 @@ function AllianceSection() {
       </h3>
       <p style={{ color: '#A8A29E', fontSize: 12, margin: '0 0 14px' }}>
         Históricamente, entre el 40 y el 60% del voto de un candidato sigue la recomendación de su líder.
-        Las barras de opacidad reducida indican posiciones no confirmadas.
+        Badge verde = confirmado · amarillo = en negociación · gris = posición ambigua.
       </p>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         {/* Sánchez side */}
@@ -346,19 +347,19 @@ function AllianceSection() {
             const s = statusLabel[a.status];
             return (
               <div key={a.name} style={{ marginBottom: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, alignItems: 'center' }}>
                   <span style={{ color: '#1C1917', fontSize: 13 }}>{a.name}</span>
                   <span style={{ color: SANCHEZ_COLOR, fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>{a.pct}% en R1</span>
                 </div>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 3 }}>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
                   <span style={{
-                    background: s.color + '20', color: s.color,
-                    borderRadius: 4, padding: '1px 6px', fontSize: 10, fontWeight: 600
+                    background: s.bg, color: s.color,
+                    borderRadius: 4, padding: '3px 8px', fontSize: 12, fontWeight: 600
                   }}>{s.label}</span>
                 </div>
                 <div style={{ color: '#A8A29E', fontSize: 11 }}>{a.note}</div>
-                <div style={{ height: 4, borderRadius: 2, background: '#F0EDE8', marginTop: 4 }}>
-                  <div style={{ width: `${(a.pct / 15) * 100}%`, height: '100%', borderRadius: 2, background: SANCHEZ_COLOR, opacity: 0.25 }} />
+                <div style={{ height: 4, borderRadius: 2, background: '#F0EDE8', marginTop: 5 }}>
+                  <div style={{ width: `${(a.pct / 15) * 100}%`, height: '100%', borderRadius: 2, background: SANCHEZ_COLOR }} />
                 </div>
               </div>
             );
@@ -374,19 +375,19 @@ function AllianceSection() {
             const s = statusLabel[a.status];
             return (
               <div key={a.name} style={{ marginBottom: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, alignItems: 'center' }}>
                   <span style={{ color: '#1C1917', fontSize: 13 }}>{a.name}</span>
                   <span style={{ color: KEIKO_COLOR, fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>{a.pct}% en R1</span>
                 </div>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 3 }}>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
                   <span style={{
-                    background: s.color + '20', color: s.color,
-                    borderRadius: 4, padding: '1px 6px', fontSize: 10, fontWeight: 600
+                    background: s.bg, color: s.color,
+                    borderRadius: 4, padding: '3px 8px', fontSize: 12, fontWeight: 600
                   }}>{s.label}</span>
                 </div>
                 <div style={{ color: '#A8A29E', fontSize: 11 }}>{a.note}</div>
-                <div style={{ height: 4, borderRadius: 2, background: '#F0EDE8', marginTop: 4 }}>
-                  <div style={{ width: `${(a.pct / 15) * 100}%`, height: '100%', borderRadius: 2, background: KEIKO_COLOR, opacity: a.status === 'formal' ? 0.65 : 0.25 }} />
+                <div style={{ height: 4, borderRadius: 2, background: '#F0EDE8', marginTop: 5 }}>
+                  <div style={{ width: `${(a.pct / 15) * 100}%`, height: '100%', borderRadius: 2, background: KEIKO_COLOR }} />
                 </div>
               </div>
             );
@@ -590,11 +591,6 @@ function AntiVotoSection({ antivoto }) {
             mientras Sánchez subió de 7% a 40% a medida que fue conocido.
             La brecha entre ambos se redujo a 4pp, lo que podría ampliar el voto blanco/nulo el día de la elección.
           </p>
-          {(keiko || sanchez) && (
-            <p style={{ color: '#8C877F', fontSize: 12, margin: 0 }}>
-              Agrega nuevas mediciones en <code>antivoto_snapshots</code> para que el gráfico se actualice automáticamente.
-            </p>
-          )}
         </>
       )}
     </div>
@@ -609,8 +605,11 @@ export default function SegundaVueltaTab({ predictions, polymarket, r2polls, ant
         <h2 style={{ color: '#1C1917', fontSize: 20, fontWeight: 700, margin: '0 0 6px' }}>
           Segunda Vuelta · 7 de junio de 2026
         </h2>
-        <p style={{ color: '#78716C', fontSize: 14, margin: 0, lineHeight: 1.5 }}>
+        <p style={{ color: '#78716C', fontSize: 14, margin: '0 0 6px', lineHeight: 1.5 }}>
           Keiko Fujimori (17.2%) vs. Roberto Sánchez Palomino (12.0%). Clasificados por la ONPE con resultados al 100% proclamados el 17/05/2026.
+        </p>
+        <p style={{ color: '#78716C', fontSize: 14, margin: 0, lineHeight: 1.5 }}>
+          ¿Quién ganará el 7 de junio? El modelo combina encuestas, mercados de predicción y factores históricos para responder esta pregunta con datos actualizados automáticamente.
         </p>
       </div>
 
@@ -651,12 +650,27 @@ export default function SegundaVueltaTab({ predictions, polymarket, r2polls, ant
       {/* Antivoto — dynamic from API */}
       <AntiVotoSection antivoto={antivoto} />
 
+      {/* Narrative bridge */}
+      <div style={{
+        background: '#F7F4EF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 20,
+      }}>
+        <h3 style={{ color: '#1C1917', fontSize: 15, fontWeight: 600, margin: '0 0 10px' }}>
+          ¿Qué implican estos factores para el pronóstico?
+        </h3>
+        <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: 0 }}>
+          Las alianzas formales (RLA + otros) suman bloques de voto que históricamente transfieren entre 40% y 60% de sus electores.
+          La geografía muestra que Sánchez tiene ventaja fuera de Lima, replicando el perfil de Castillo en 2021.
+          El antivoto de ambos candidatos converge cerca del 40-44%, lo que podría elevar el voto blanco/nulo por encima del promedio histórico.
+          El modelo integra estos factores a través de la incertidumbre del Monte Carlo: los números de P(Ganar) reflejan todos estos escenarios ponderados por su probabilidad.
+        </p>
+      </div>
+
       {/* Historical pattern — expanded with anti-vote, polls vs result, margins */}
       <div style={{
         background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12,
-        borderLeft: '4px solid #78716C', padding: 20
+        borderLeft: '4px solid #DC2626', padding: 20
       }}>
-        <h3 style={{ color: '#78716C', fontSize: 15, fontWeight: 600, margin: '0 0 4px' }}>
+        <h3 style={{ color: '#DC2626', fontSize: 15, fontWeight: 600, margin: '0 0 4px' }}>
           Keiko en segunda vuelta: historial completo
         </h3>
         <p style={{ color: '#A8A29E', fontSize: 12, margin: '0 0 14px' }}>
@@ -790,7 +804,7 @@ export default function SegundaVueltaTab({ predictions, polymarket, r2polls, ant
               </tbody>
             </table>
           </div>
-          <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 6 }}>
+          <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 6 }}>
             Error = encuesta final − resultado oficial (en % votos válidos de Keiko). Positivo = sobreestimó a Keiko. * = solo un R2 disponible.
           </div>
         </div>
@@ -802,6 +816,33 @@ export default function SegundaVueltaTab({ predictions, polymarket, r2polls, ant
           Sánchez muestra un perfil geográfico similar al de Castillo (2021): dominante en sierra y selva, débil en Lima.
         </p>
       </div>
+
+      {/* Conclusión dinámica */}
+      {predictions?.candidates?.length > 0 && (() => {
+        const keiko = predictions.candidates.find(c => c.candidate?.includes('Keiko') || c.candidate?.includes('Fujimori'));
+        const sanchez = predictions.candidates.find(c => c.candidate?.includes('Sánchez') || c.candidate?.includes('Roberto'));
+        if (!keiko || !sanchez) return null;
+        const margin = Math.abs(keiko.prob_win - sanchez.prob_win);
+        const leader = keiko.prob_win >= sanchez.prob_win ? keiko : sanchez;
+        const leaderName = leader.candidate.split(' ').pop();
+        let conclusion;
+        if (margin < 15) {
+          conclusion = `El modelo proyecta una carrera muy reñida: la diferencia de ${margin.toFixed(0)}pp entre ambos candidatos indica que el resultado está dentro del margen de incertidumbre del modelo. El antivoto, la geografía y la movilización serán determinantes.`;
+        } else {
+          conclusion = `Según el modelo, ${leaderName} tiene una ventaja de ${margin.toFixed(0)}pp en probabilidad de ganar. El historial de elecciones reñidas en Perú y los niveles de antivoto de ambos candidatos hacen que esa ventaja no sea garantía de resultado.`;
+        }
+        return (
+          <div style={{
+            background: '#F7F4EF', border: '1px solid #E5E0D8',
+            borderLeft: '4px solid #1D4ED8', borderRadius: '0 12px 12px 0', padding: '16px 20px',
+          }}>
+            <div style={{ color: '#1D4ED8', fontSize: 12, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Conclusión del modelo
+            </div>
+            <p style={{ color: '#1C1917', fontSize: 13, lineHeight: 1.7, margin: 0 }}>{conclusion}</p>
+          </div>
+        );
+      })()}
     </div>
   );
 }
