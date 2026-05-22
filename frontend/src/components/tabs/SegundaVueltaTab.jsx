@@ -1,3 +1,6 @@
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { Info, X } from 'lucide-react';
 import { getPartyColor } from '../../config/partyColors';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import TermTooltip from '../TermTooltip';
@@ -66,8 +69,56 @@ function getPollTypLabel(pollType) {
   return pollType || '—';
 }
 
+function PollNoteModal({ poll, onClose }) {
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  return createPortal(
+    <div
+      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.25)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 14, padding: 24, maxWidth: 360, width: '100%', position: 'relative', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}
+      >
+        <button
+          onClick={onClose}
+          aria-label="Cerrar"
+          style={{ position: 'absolute', top: 10, right: 10, background: 'transparent', border: 'none', color: '#8C877F', cursor: 'pointer', padding: 4 }}
+        >
+          <X size={16} />
+        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <Info size={16} style={{ color: '#1D4ED8', flexShrink: 0 }} />
+          <h3 style={{ color: '#1C1917', fontSize: 14, fontWeight: 700, margin: 0 }}>
+            {poll.pollster} · {formatDate(poll.field_start)}–{formatDate(poll.field_end)}
+          </h3>
+        </div>
+        <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.6, margin: '0 0 16px' }}>
+          {poll.notes}
+        </p>
+        <button
+          onClick={onClose}
+          style={{ width: '100%', background: '#1D4ED8', color: '#FFFFFF', border: 'none', borderRadius: 8, padding: '10px 0', fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 40 }}
+        >
+          Entendido
+        </button>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 function PollsTable({ r2polls }) {
   const polls = r2polls?.polls || [];
+  const [openPollId, setOpenPollId] = useState(null);
+  const openPoll = polls.find(p => p.id === openPollId) || null;
 
   if (polls.length === 0) {
     return (
@@ -101,7 +152,25 @@ function PollsTable({ r2polls }) {
               const pub = p.published_date ? formatDate(p.published_date) : '—';
               return (
                 <tr key={p.id} style={{ borderBottom: '1px solid #F0EDE8' }}>
-                  <td style={{ padding: '10px 12px', color: '#1C1917', fontWeight: 600 }}>{p.pollster}</td>
+                  <td style={{ padding: '10px 12px', color: '#1C1917', fontWeight: 600 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {p.pollster}
+                      {p.notes && (
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Detalles de encuesta ${p.pollster}`}
+                          onClick={() => setOpenPollId(p.id)}
+                          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpenPollId(p.id); } }}
+                          style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', color: '#A8A29E', padding: 2, borderRadius: '50%', transition: 'color 0.15s', flexShrink: 0 }}
+                          onMouseEnter={e => { e.currentTarget.style.color = '#1D4ED8'; }}
+                          onMouseLeave={e => { e.currentTarget.style.color = '#A8A29E'; }}
+                        >
+                          <Info size={12} />
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td style={{ padding: '10px 12px', color: '#78716C', fontSize: 12 }}>
                     {fieldRange}<br />
                     <span style={{ color: '#A8A29E' }}>pub. {pub}</span>
@@ -132,11 +201,7 @@ function PollsTable({ r2polls }) {
           </tbody>
         </table>
       </div>
-      {polls.map(p => p.notes && (
-        <div key={p.id + '_note'} style={{ color: '#A8A29E', fontSize: 11, marginTop: 6 }}>
-          <strong>{p.pollster}:</strong> {p.notes}
-        </div>
-      ))}
+      {openPoll && <PollNoteModal poll={openPoll} onClose={() => setOpenPollId(null)} />}
       <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 6 }}>
         Los % principales son <strong>intención de voto bruta</strong> (incluye indecisos y B/N). v.v. = votos válidos calculados de los datos declarados, excluyendo B/N y NS/NP.
       </div>
