@@ -1,5 +1,6 @@
 import { getPartyColor } from '../../config/partyColors';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import TermTooltip from '../TermTooltip';
 
 const KEIKO_COLOR = getPartyColor('Keiko Fujimori').primary;                // #F97316
 const SANCHEZ_COLOR = getPartyColor('Roberto Sánchez Palomino').primary;   // #16A34A
@@ -183,13 +184,13 @@ function HeadToHead({ predictions }) {
               </div>
               {data && (
                 <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 2 }}>
-                  IC 90% v.v.: [{data.p10.toFixed(1)}%, {data.p90.toFixed(1)}%]
+                  IC 90%<TermTooltip term="IC_90" /> v.v.: [{data.p10.toFixed(1)}%, {data.p90.toFixed(1)}%]
                 </div>
               )}
             </div>
 
             <div>
-              <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>P(ganar segunda vuelta)</div>
+              <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>P(ganar segunda vuelta)<TermTooltip term="P_GANAR" /></div>
               <div style={{ color, fontWeight: 600, fontSize: 18, fontVariantNumeric: 'tabular-nums' }}>
                 {data ? data.prob_win.toFixed(1) : '—'}%
               </div>
@@ -646,12 +647,27 @@ export default function SegundaVueltaTab({ predictions, polymarket, r2polls, ant
       {/* Antivoto — dynamic from API */}
       <AntiVotoSection antivoto={antivoto} />
 
+      {/* Narrative bridge */}
+      <div style={{
+        background: '#F7F4EF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 20,
+      }}>
+        <h3 style={{ color: '#1C1917', fontSize: 15, fontWeight: 600, margin: '0 0 10px' }}>
+          ¿Qué implican estos factores para el pronóstico?
+        </h3>
+        <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: 0 }}>
+          Las alianzas formales (RLA + otros) suman bloques de voto que históricamente transfieren entre 40% y 60% de sus electores.
+          La geografía muestra que Sánchez tiene ventaja fuera de Lima, replicando el perfil de Castillo en 2021.
+          El antivoto de ambos candidatos converge cerca del 40-44%, lo que podría elevar el voto blanco/nulo por encima del promedio histórico.
+          El modelo integra estos factores a través de la incertidumbre del Monte Carlo: los números de P(Ganar) reflejan todos estos escenarios ponderados por su probabilidad.
+        </p>
+      </div>
+
       {/* Historical pattern — expanded with anti-vote, polls vs result, margins */}
       <div style={{
         background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12,
-        borderLeft: '4px solid #78716C', padding: 20
+        borderLeft: '4px solid #DC2626', padding: 20
       }}>
-        <h3 style={{ color: '#78716C', fontSize: 15, fontWeight: 600, margin: '0 0 4px' }}>
+        <h3 style={{ color: '#DC2626', fontSize: 15, fontWeight: 600, margin: '0 0 4px' }}>
           Keiko en segunda vuelta: historial completo
         </h3>
         <p style={{ color: '#A8A29E', fontSize: 12, margin: '0 0 14px' }}>

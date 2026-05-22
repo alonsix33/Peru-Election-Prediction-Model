@@ -1,5 +1,6 @@
 import { ChevronDown } from 'lucide-react';
 import { getPartyColor } from '../config/partyColors';
+import TermTooltip from './TermTooltip';
 
 function getInitials(name) {
   const parts = name.split(' ');
@@ -73,7 +74,7 @@ export default function CandidateCard({ candidate: c, rank, expanded, onToggle, 
             }} />
           </div>
           <div style={{ fontSize: '11px', color: '#78716C', marginTop: 2 }}>
-            IC 90%: {c.p10.toFixed(1)}% - {c.p90.toFixed(1)}%
+            IC 90%<TermTooltip term="IC_90" />: {c.p10.toFixed(1)}% - {c.p90.toFixed(1)}%
           </div>
         </div>
 
@@ -98,7 +99,7 @@ export default function CandidateCard({ candidate: c, rank, expanded, onToggle, 
             }}>
               {c.prob_win.toFixed(1)}%
             </div>
-            <div style={{ color: '#78716C', fontSize: '11px', fontWeight: 500 }}>P(Ganar)</div>
+            <div style={{ color: '#78716C', fontSize: '11px', fontWeight: 500 }}>P(Ganar)<TermTooltip term="P_GANAR" /></div>
           </div>
         </div>
 
