@@ -82,7 +82,7 @@ function PrimeraVueltaContent() {
         <p style={{ fontSize: 16, color: '#78716C', lineHeight: 1.7, margin: '0 0 28px' }}>
           Para la primera vuelta del 12 de abril de 2026, combinamos 27 encuestas de 6 casas
           encuestadoras con datos de Polymarket. Luego simulamos la elección 10,000 veces.
-          Esta página explica exactamente cómo lo hicimos — incluyendo los errores.
+          Esta página explica cómo lo hicimos, incluyendo los errores.
         </p>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
           {pipelineSteps.map((step, i) => (
@@ -102,11 +102,11 @@ function PrimeraVueltaContent() {
           </h3>
         </div>
         <StepRow number={1} title="Recopilamos las encuestas"
-          description="Tomamos 27 encuestas de 6 casas encuestadoras: IEP, Datum, Ipsos, CPI, CIT y CID Latinoamérica. Cada una preguntó a más de 1,200 personas en todo el Perú — urbano y rural — por quién votarían. La última encuesta incorporada es el estudio Datum del 1-4 de abril (n=3,000, la muestra más grande del ciclo), publicada el día de inicio de la veda electoral." />
+          description="Tomamos 27 encuestas de 6 casas encuestadoras: IEP, Datum, Ipsos, CPI, CIT y CID Latinoamérica. Cada una preguntó a más de 1,200 personas en todo el Perú (urbano y rural) por quién votarían. La última encuesta incorporada fue el estudio Datum del 1-4 de abril (n=3,000, la muestra más grande del ciclo), publicada el día de inicio de la veda electoral." />
         <StepRow number={2} title="Les damos peso según su historial"
-          description="No todas las encuestadoras aciertan igual. IEP tuvo el menor error absoluto medio en las elecciones de 2021, así que le damos más peso (1.25x). CID Latinoamérica es nueva en el modelo y tiene la muestra más grande (n=2,120) pero sin historial previo en elecciones peruanas (0.80x). Las encuestas más recientes también pesan más que las antiguas — el decaimiento es exponencial." />
+          description="No todas las encuestadoras aciertan igual. IEP tuvo el menor error absoluto medio en las elecciones de 2021, así que le damos más peso (1.25x). CID Latinoamérica es nueva en el modelo y tiene la muestra más grande (n=2,120) pero sin historial previo en elecciones peruanas (0.80x). Las encuestas más recientes también pesan más que las antiguas, con decaimiento exponencial." />
         <StepRow number={3} title="Incluimos lo que dice el mercado"
-          description="Polymarket es un mercado donde la gente apuesta dinero real sobre quién va a ganar. En primera vuelta le dimos un peso de ~28% al mercado y ~72% a las encuestas. Cuando empezó la veda electoral (5 de abril), el peso del mercado subió hasta 77% el día de la elección. En retrospectiva, ese 77% fue demasiado alto — Polymarket publicaba probabilidad de ganar la presidencia entera, no el porcentaje de votos en primera vuelta, lo que infló a Keiko +12.8pp." />
+          description="Polymarket es un mercado donde la gente apuesta dinero real sobre quién va a ganar. En primera vuelta le dimos un peso de ~28% al mercado y ~72% a las encuestas. Cuando empezó la veda electoral (5 de abril), el peso del mercado subió hasta 77% el día de la elección. En retrospectiva, ese 77% fue demasiado alto: Polymarket publicaba probabilidad de ganar la presidencia entera, no el porcentaje de votos en primera vuelta, lo que infló a Keiko +12.8pp." />
         <StepRow number={4} title="Simulamos 10,000 elecciones"
           description="Corremos la elección 10,000 veces con variaciones aleatorias calibradas para la volatilidad peruana. Usamos distribuciones de cola pesada (t-Student) para capturar eventos extremos. En el 35% de las simulaciones incluimos shocks: el líder puede colapsar -5 a -15 puntos (15% de las sims), el segundo puede caer (10%), o un candidato menor puede subir fuerte como Castillo en 2021 (10%)." />
         <StepRow number={5} title="Simulamos la segunda vuelta" isLast
@@ -115,13 +115,13 @@ function PrimeraVueltaContent() {
 
       <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderLeft: '4px solid #DC2626', borderRadius: '0 12px 12px 0', padding: '20px 24px' }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: '#DC2626', marginBottom: 8 }}>
-          Qué salió mal en primera vuelta — y qué corregimos
+          Qué salió mal en primera vuelta, y qué corregimos
         </div>
         <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: '0 0 8px' }}>
           El mayor error fue Keiko +12.8pp. Con α=0.77 en el día electoral, Polymarket (45.5% P(ganar la presidencia)) dominó el blend. El problema es estructural: P(ganar la presidencia) no es el % de votos en primera vuelta. En carreras de N candidatos ese número siempre sobreestima al líder.
         </p>
         <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: 0 }}>
-          Sánchez llegó #2 en ONPE (12%) cuando el modelo lo tenía #5 (8.9%) — repitió el patrón Castillo 2021: base rural fuerte en zonas subrepresentadas en encuestas urbanas. Para segunda vuelta corregimos ambos problemas.
+          Sánchez llegó #2 en ONPE (12%) cuando el modelo lo tenía #5 (8.9%). Siguió el mismo patrón de Castillo 2021: base rural fuerte en zonas subrepresentadas en encuestas urbanas. Para segunda vuelta corregimos ambos problemas.
         </p>
       </div>
 
@@ -144,7 +144,7 @@ function PrimeraVueltaContent() {
               { name: 'CID', via: 'CID Latinoamérica', weight: '0.80x' },
             ].map((s, i) => (
               <div key={i} style={{ fontSize: 13, lineHeight: 2, display: 'flex', justifyContent: 'space-between' }}>
-                <span><span style={{ fontWeight: 600, color: '#1C1917' }}>{s.name}</span><span style={{ color: '#8C877F' }}> — {s.via}</span></span>
+                <span><span style={{ fontWeight: 600, color: '#1C1917' }}>{s.name}</span><span style={{ color: '#8C877F' }}>, {s.via}</span></span>
                 <span style={{ color: '#1D4ED8', fontWeight: 500, fontSize: 12 }}>{s.weight}</span>
               </div>
             ))}
@@ -160,7 +160,7 @@ function PrimeraVueltaContent() {
             ].map((s, i) => (
               <div key={i} style={{ fontSize: 13, lineHeight: 2 }}>
                 <span style={{ fontWeight: 600, color: '#1C1917' }}>{s.name}</span>
-                <span style={{ color: '#8C877F' }}> — {s.detail}</span>
+                <span style={{ color: '#8C877F' }}>, {s.detail}</span>
               </div>
             ))}
           </div>
@@ -173,7 +173,7 @@ function PrimeraVueltaContent() {
           <h4 style={{ fontSize: 15, fontWeight: 600, color: '#1C1917', margin: 0 }}>Sesgo geográfico en las encuestas</h4>
         </div>
         <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: '0 0 8px' }}>
-          Los datos de IEP (28-31 marzo) por macrozona revelan que Roberto Sánchez lideraba en Perú rural con 16.3% — superando a Keiko (9.3%) y Aliaga (3.0%) — y en el Oriente con 14.6%. Sin embargo, en Lima Metropolitana solo alcanzaba 1.7%. Como las muestras están ponderadas hacia Lima, su intención de voto total aparecía en 6.7%.
+          Los datos de IEP (28-31 marzo) por macrozona revelan que Roberto Sánchez lideraba en Perú rural con 16.3% (superando a Keiko con 9.3% y Aliaga con 3.0%) y en el Oriente con 14.6%. Sin embargo, en Lima Metropolitana solo alcanzaba 1.7%. Como las muestras están ponderadas hacia Lima, su intención de voto total aparecía en 6.7%.
         </p>
         <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: '0 0 8px' }}>
           Este perfil geográfico es casi idéntico al de Castillo en 2021, quien llegó al 18.9% real. El 24.1% de indecisos en zonas rurales representó la mayor bolsa de volatilidad no capturada.
@@ -186,8 +186,8 @@ function PrimeraVueltaContent() {
 
 // ─── SEGUNDA VUELTA ───────────────────────────────────────────
 function SegundaVueltaContent({ r2polls }) {
-  const pollCount = r2polls?.length ?? null;
-  const houseCount = r2polls ? new Set(r2polls.map(p => p.pollster_name)).size : null;
+  const pollCount = r2polls?.polls?.length ?? null;
+  const houseCount = r2polls?.polls ? new Set(r2polls.polls.map(p => p.pollster)).size : null;
   const pollSublabel = pollCount !== null
     ? `${pollCount} encuesta${pollCount !== 1 ? 's' : ''} · ${houseCount} casa${houseCount !== 1 ? 's' : ''}`
     : 'Encuestas + Polymarket';
@@ -307,7 +307,7 @@ function SegundaVueltaContent({ r2polls }) {
               { name: 'CIT', detail: '14-17 may 2026 (simulacro)', weight: '1.00x ×1.2 tipo' },
             ].map((s, i) => (
               <div key={i} style={{ fontSize: 13, lineHeight: 2.2, display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F0EDE8' }}>
-                <span><span style={{ fontWeight: 600, color: '#1C1917' }}>{s.name}</span><span style={{ color: '#8C877F' }}> — {s.detail}</span></span>
+                <span><span style={{ fontWeight: 600, color: '#1C1917' }}>{s.name}</span><span style={{ color: '#8C877F' }}>, {s.detail}</span></span>
                 <span style={{ color: '#1D4ED8', fontWeight: 500, fontSize: 12 }}>{s.weight}</span>
               </div>
             ))}
@@ -323,7 +323,7 @@ function SegundaVueltaContent({ r2polls }) {
             ].map((s, i) => (
               <div key={i} style={{ fontSize: 13, lineHeight: 2 }}>
                 <span style={{ fontWeight: 600, color: '#1C1917' }}>{s.name}</span>
-                <span style={{ color: '#8C877F' }}> — {s.detail}</span>
+                <span style={{ color: '#8C877F' }}>, {s.detail}</span>
               </div>
             ))}
           </div>
