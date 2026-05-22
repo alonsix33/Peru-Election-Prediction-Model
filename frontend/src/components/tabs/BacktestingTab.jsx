@@ -62,7 +62,7 @@ const DATA = {
       { name: 'Datum CR', mae: 2.0 },
     ],
     highlight: 'El mayor error fue Keiko +12.8pp. Polymarket la tenía al 45.5%, pero eso refleja P(ganar la presidencia) incluyendo segunda vuelta — no el % de votos en primera. En una carrera con N candidatos, ese sesgo es sistemático y corrompe el blend. Correcto: detectar el ascenso de Belmont, Aliaga en el top-3, y la posición del candidato #1 (Keiko). Fallo crítico: Sánchez en el #5 del modelo, llegó #2 en ONPE.',
-    note: 'Correcciones para R2: (1) solo 2 candidatos — desaparece el problema P(win)≠%voto, PM sí refleja la probabilidad directa; (2) cap alpha 0.77→0.65 para evitar sobreponderación (gap 27pp entre PM y encuestas); (3) pesos encuestadoras calibrados por precisión R1: Ipsos 1.30×, Datum 1.05×.',
+    note: 'Correcciones para R2: (1) conversión P(win)→voto share implícito — PM 75.5% P(ganar) no significa 75.5% de votos; con la incertidumbre histórica de ±3pp, eso implica ~52% de votos. Sin esta corrección, el modelo sobreestimaba a Keiko hasta 3pp cuando sube el alpha en la veda; (2) alpha cap 0.77→0.60 para evitar sobreponderación; (3) pesos encuestadoras calibrados por precisión R1: Ipsos 1.30×, Datum 1.05×.',
   },
 };
 
@@ -264,12 +264,14 @@ export default function BacktestingTab() {
         <h4 style={{ color: '#1C1917', fontSize: 15, fontWeight: 600, margin: '0 0 10px' }}>Qué cambiamos para la segunda vuelta</h4>
         <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: '0 0 10px' }}>
           El mayor aprendizaje de 2026 R1: Polymarket cotiza <strong style={{ color: '#1C1917' }}>P(ganar la presidencia)</strong>,
-          no el porcentaje en primera vuelta. En una carrera de N candidatos, eso crea un sesgo sistemático para los líderes (Keiko
-          +12.8pp). En segunda vuelta con 2 candidatos, P(win) ≈ % votos — el sesgo desaparece.
+          no el porcentaje de votos. En primera vuelta eso distorsionó a Keiko +12.8pp. En segunda vuelta el problema persiste —
+          PM 75.5% P(ganar) no equivale a 75.5% de los votos. Con ±3pp de incertidumbre histórica, ese 75.5% implica solo ~52% de votos.
+          Sin corrección, el posterior se inflaría hasta 3pp al subir el alpha durante la veda.
         </p>
         <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: 0 }}>
-          Ajustes para R2: <strong style={{ color: '#1C1917' }}>alpha cap 0.65</strong> (era 0.77) para moderar la señal PM ante el
-          gap de 27pp con las encuestas; <strong style={{ color: '#1C1917' }}>Ipsos 1.30×</strong> (mejor MAE R1) y{' '}
+          Ajustes para R2: <strong style={{ color: '#1C1917' }}>conversión P(ganar)→voto share implícito</strong> antes de integrar;{' '}
+          <strong style={{ color: '#1C1917' }}>alpha cap 0.60</strong> (era 0.77 en R1);{' '}
+          <strong style={{ color: '#1C1917' }}>Ipsos 1.30×</strong> (mejor MAE R1) y{' '}
           <strong style={{ color: '#1C1917' }}>Datum 1.05×</strong> basados en performance real del conteo rápido.
         </p>
       </div>
