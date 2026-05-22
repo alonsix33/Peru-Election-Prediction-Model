@@ -419,8 +419,11 @@ function AllianceSection() {
 
 function GeographicSection() {
   const data = [
-    { region: 'Lima Metropolitana', keiko: 41, sanchez: 22, note: 'Keiko +19pp' },
-    { region: 'Interior / Rural', keiko: 26, sanchez: 55, note: 'Sánchez +29pp' },
+    { region: 'Lima / Callao', keiko: 48.8, sanchez: 25.6, note: 'Keiko +23pp' },
+    { region: 'Norte', keiko: 41.1, sanchez: 36.4, note: 'Keiko +5pp' },
+    { region: 'Centro', keiko: 30.1, sanchez: 47.3, note: 'Sánchez +17pp' },
+    { region: 'Sur', keiko: 27.9, sanchez: 44.7, note: 'Sánchez +17pp' },
+    { region: 'Oriente', keiko: 33.0, sanchez: 45.2, note: 'Sánchez +12pp' },
   ];
 
   return (
@@ -429,7 +432,7 @@ function GeographicSection() {
         Polarización geográfica
       </h3>
       <p style={{ color: '#A8A29E', fontSize: 12, margin: '0 0 14px' }}>
-        Intención de voto por región (IEP, abr 2026). Perfil similar al de Castillo 2021: Lima vs. el resto del país.
+        Intención de voto por región (Datum, 17-20 may 2026). Perfil similar al de Castillo 2021: Lima vs. el resto del país.
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {data.map(r => (

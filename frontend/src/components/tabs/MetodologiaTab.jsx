@@ -303,6 +303,7 @@ function SegundaVueltaContent({ r2polls }) {
             </div>
             {[
               { name: 'Ipsos', detail: '23-24 abr · 15-17 may 2026', weight: '1.30x' },
+              { name: 'Datum', detail: '17-20 may 2026', weight: '1.05x' },
               { name: 'IEP', detail: '21-25 abr 2026', weight: '1.00x' },
               { name: 'CIT', detail: '14-17 may 2026 (simulacro)', weight: '1.00x ×1.2 tipo' },
             ].map((s, i) => (

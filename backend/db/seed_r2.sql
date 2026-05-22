@@ -306,6 +306,38 @@ BEGIN
   END IF;
 END $$;
 
+-- ── Datum segunda vuelta: mayo 2026 ────────────────────────
+-- Datum / El Comercio. Intención de voto segunda vuelta.
+-- Keiko 39.5%, Sánchez 36.1%, Blanco/viciado 15.9%, NS/NP 8.5%.
+-- Campo: 17-20 mayo 2026. Publicado: 22 mayo 2026. n=1200, ±2.8%, nivel confianza 95%.
+-- Geográfico: Lima/Callao (K 48.8 vs S 25.6), Norte (41.1 vs 36.4),
+-- Centro (30.1 vs 47.3), Sur (27.9 vs 44.7), Oriente (33.0 vs 45.2).
+DO $$
+DECLARE
+  p_id INT;
+  poll_id INT;
+BEGIN
+  SELECT id INTO p_id FROM pollsters WHERE name = 'Datum';
+
+  IF NOT EXISTS (
+    SELECT 1 FROM polls WHERE pollster_id = p_id AND field_end = '2026-05-20' AND election_round = 2
+  ) THEN
+    INSERT INTO polls (pollster_id, field_start, field_end, published_date, sample_n, margin_error,
+                       confidence_lvl, scope, technique, poll_type,
+                       pct_undecided, pct_blank_null, notes, election_round)
+    VALUES (p_id, '2026-05-17', '2026-05-20', '2026-05-22', 1200, 2.80, 95.0,
+            'nacional', 'presencial', 'intencion_voto',
+            8.5, 15.9,
+            'Datum R2 may 2026. Keiko 39.5%, Sánchez 36.1%, B/V 15.9%, NS/NP 8.5%. Geográfico: Lima/Callao (K 48.8 vs S 25.6), Norte (K 41.1 vs S 36.4), Centro (K 30.1 vs S 47.3), Sur (K 27.9 vs S 44.7), Oriente (K 33.0 vs S 45.2).',
+            2)
+    RETURNING id INTO poll_id;
+
+    INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
+      (poll_id, 'Keiko Fujimori',           'Fuerza Popular',     39.5),
+      (poll_id, 'Roberto Sánchez Palomino', 'Juntos por el Perú', 36.1);
+  END IF;
+END $$;
+
 -- ── CIT segunda vuelta: mayo 2026 ───────────────────────────
 -- CIT (Centro de Investigación Territorial). Simulacro: "Si las elecciones fueran mañana".
 -- Keiko 40.5%, Sánchez 36%, Blanco/Viciado 23.5%. Sin NS/NR (100% distribuido).
