@@ -102,7 +102,7 @@ function PollsTable({ r2polls }) {
                   <td style={{ padding: '10px 12px', textAlign: 'right', color: KEIKO_COLOR, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
                     {keiko ? keiko.pct_raw.toFixed(0) + '%' : '—'}
                     {keiko && sanchez && (
-                      <div style={{ color: '#A8A29E', fontSize: 9, fontWeight: 400, marginTop: 1 }}>
+                      <div style={{ color: '#A8A29E', fontSize: 11, fontWeight: 400, marginTop: 1 }}>
                         {((keiko.pct_raw / (keiko.pct_raw + sanchez.pct_raw)) * 100).toFixed(1)}% v.v.
                       </div>
                     )}
@@ -110,7 +110,7 @@ function PollsTable({ r2polls }) {
                   <td style={{ padding: '10px 12px', textAlign: 'right', color: SANCHEZ_COLOR, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
                     {sanchez ? sanchez.pct_raw.toFixed(0) + '%' : '—'}
                     {keiko && sanchez && (
-                      <div style={{ color: '#A8A29E', fontSize: 9, fontWeight: 400, marginTop: 1 }}>
+                      <div style={{ color: '#A8A29E', fontSize: 11, fontWeight: 400, marginTop: 1 }}>
                         {((sanchez.pct_raw / (keiko.pct_raw + sanchez.pct_raw)) * 100).toFixed(1)}% v.v.
                       </div>
                     )}
@@ -130,7 +130,7 @@ function PollsTable({ r2polls }) {
           <strong>{p.pollster}:</strong> {p.notes}
         </div>
       ))}
-      <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 6 }}>
+      <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 6 }}>
         Los % principales son <strong>intención de voto bruta</strong> (incluye indecisos y B/N). v.v. = votos válidos calculados de los datos declarados, excluyendo B/N y NS/NP.
       </div>
       <div style={{
@@ -272,7 +272,7 @@ function PMvsPollsSection({ polymarket, r2polls }) {
             </div>
           </div>
           {polymarket?.captured_at_lima && (
-            <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 6 }}>
+            <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 6 }}>
               {new Date(polymarket.captured_at_lima).toLocaleString('es-PE', { timeZone: 'America/Lima', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </div>
           )}
@@ -296,7 +296,7 @@ function PMvsPollsSection({ polymarket, r2polls }) {
             </div>
           </div>
           {polls.length > 0 && (
-            <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 6 }}>
+            <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 6 }}>
               {polls.length} encuesta{polls.length > 1 ? 's' : ''} · ~{polls.reduce((s, p) => {
                 const bn = p.pct_blank_null || 0;
                 const nd = p.pct_undecided || 0;
@@ -590,11 +590,6 @@ function AntiVotoSection({ antivoto }) {
             mientras Sánchez subió de 7% a 40% a medida que fue conocido.
             La brecha entre ambos se redujo a 4pp, lo que podría ampliar el voto blanco/nulo el día de la elección.
           </p>
-          {(keiko || sanchez) && (
-            <p style={{ color: '#8C877F', fontSize: 12, margin: 0 }}>
-              Agrega nuevas mediciones en <code>antivoto_snapshots</code> para que el gráfico se actualice automáticamente.
-            </p>
-          )}
         </>
       )}
     </div>
@@ -790,7 +785,7 @@ export default function SegundaVueltaTab({ predictions, polymarket, r2polls, ant
               </tbody>
             </table>
           </div>
-          <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 6 }}>
+          <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 6 }}>
             Error = encuesta final − resultado oficial (en % votos válidos de Keiko). Positivo = sobreestimó a Keiko. * = solo un R2 disponible.
           </div>
         </div>

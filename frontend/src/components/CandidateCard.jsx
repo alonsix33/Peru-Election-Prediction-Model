@@ -13,11 +13,11 @@ function winColor(prob) {
   return '#8C877F';
 }
 
-export default function CandidateCard({ candidate: c, rank, expanded, onToggle }) {
+export default function CandidateCard({ candidate: c, rank, expanded, onToggle, maxMean = 30 }) {
   const party = getPartyColor(c.candidate);
-  const barWidth = Math.min(100, (c.mean / 30) * 100);
-  const p10Width = Math.min(100, (c.p10 / 30) * 100);
-  const p90Width = Math.min(100, (c.p90 / 30) * 100);
+  const barWidth = Math.min(100, (c.mean / maxMean) * 100);
+  const p10Width = Math.min(100, (c.p10 / maxMean) * 100);
+  const p90Width = Math.min(100, (c.p90 / maxMean) * 100);
 
   return (
     <div

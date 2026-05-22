@@ -11,7 +11,7 @@ const POLLSTER_INFO = [
   { name: 'CID', weight: '0.80x', note: 'CID Latinoamérica. Primera aparición en el modelo. Sin historial en Perú.' },
 ];
 
-export default function PrimeraVueltaTab({ predictions, polls }) {
+export default function PrimeraVueltaTab({ predictions, polls, onNavigate }) {
   const [expandedIdx, setExpandedIdx] = useState(null);
 
   if (!predictions?.candidates?.length) {
@@ -19,6 +19,7 @@ export default function PrimeraVueltaTab({ predictions, polls }) {
   }
 
   const sorted = [...predictions.candidates].sort((a, b) => b.mean - a.mean);
+  const maxMean = sorted[0]?.mean || 30;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -35,6 +36,19 @@ export default function PrimeraVueltaTab({ predictions, polls }) {
           Roberto Sánchez Palomino 12.0%, Rafael López Aliaga 11.9%, Jorge Nieto 11.0%.
           Sánchez y Keiko pasan a segunda vuelta el 7 de junio.
         </div>
+        {onNavigate && (
+          <button
+            onClick={() => onNavigate('segunda')}
+            style={{
+              marginTop: 10, width: '100%', minHeight: 44,
+              background: '#16A34A', color: '#FFFFFF', border: 'none',
+              borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              padding: '10px 16px',
+            }}
+          >
+            Ver pronóstico de segunda vuelta →
+          </button>
+        )}
       </div>
 
       {/* Title */}
@@ -56,6 +70,7 @@ export default function PrimeraVueltaTab({ predictions, polls }) {
             rank={i + 1}
             expanded={expandedIdx === i}
             onToggle={() => setExpandedIdx(expandedIdx === i ? null : i)}
+            maxMean={maxMean}
           />
         ))}
       </div>

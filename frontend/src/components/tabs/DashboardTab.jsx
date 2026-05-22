@@ -21,9 +21,9 @@ const ABBREV = {
 function abbrev(name) { return ABBREV[name] || name.split(' ').map(w => w[0]).join(''); }
 
 // ─── Compact Candidate Row (R1 only) ────────────────────────
-function CompactRow({ c }) {
+function CompactRow({ c, maxMean }) {
   const party = getPartyColor(c.candidate);
-  const barW = Math.min(100, (c.mean / 30) * 100);
+  const barW = Math.min(100, (c.mean / (maxMean || 30)) * 100);
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid #E5E0D8' }}>
       <div style={{
@@ -42,7 +42,7 @@ function CompactRow({ c }) {
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div style={{ color: party.primary, fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{c.mean.toFixed(1)}%</div>
-        <div style={{ color: '#A8A29E', fontSize: 10 }}>% v.v.</div>
+        <div style={{ color: '#A8A29E', fontSize: 11 }}>% v.v.</div>
         <div style={{ color: '#8C877F', fontSize: 11, marginTop: 2 }}>P(Ganar)</div>
         <div style={{ color: party.primary, fontSize: 12, fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>{c.prob_win.toFixed(1)}%</div>
       </div>
@@ -172,7 +172,7 @@ function ModelTrendChart({ isR2 }) {
     scales: {
       x: {
         grid: { color: '#E5E0D854' },
-        ticks: { color: '#8C877F', font: { size: 10 }, maxRotation: 0, maxTicksLimit: 8 },
+        ticks: { color: '#8C877F', font: { size: 11 }, maxRotation: 0, maxTicksLimit: 8 },
       },
       y: {
         min: yMin, max: yMax,
@@ -323,7 +323,7 @@ function PolymarketModal({ polymarket, onClose }) {
       },
     },
     scales: {
-      x: { grid: { color: '#E5E0D8' }, ticks: { color: '#8C877F', font: { size: 9 }, maxRotation: 45, maxTicksLimit: 10 } },
+      x: { grid: { color: '#E5E0D8' }, ticks: { color: '#8C877F', font: { size: 11 }, maxRotation: 45, maxTicksLimit: 10 } },
       y: { min: 0, grid: { color: '#E5E0D8' }, ticks: { color: '#8C877F', callback: v => v + '%', font: { size: 11 } } },
     },
   };
@@ -493,6 +493,7 @@ export default function DashboardTab({ predictions, polymarket, polls, status })
   }
 
   const sorted = [...predictions.candidates].sort((a, b) => b.mean - a.mean);
+  const maxMean = sorted[0]?.mean || 30;
   const top    = sorted[0];
   const second = sorted[1];
   const topParty    = getPartyColor(top.candidate);
@@ -574,10 +575,10 @@ export default function DashboardTab({ predictions, polymarket, polls, status })
           ) : (
             <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
               <h3 style={{ color: '#1C1917', fontSize: 15, fontWeight: 600, margin: '0 0 8px' }}>Candidatos</h3>
-              {sorted.slice(0, 10).map(c => <CompactRow key={c.candidate} c={c} />)}
+              {sorted.slice(0, 10).map(c => <CompactRow key={c.candidate} c={c} maxMean={maxMean} />)}
               {sorted.length > 10 && (
                 <>
-                  {showAllCandidates && sorted.slice(10).map(c => <CompactRow key={c.candidate} c={c} />)}
+                  {showAllCandidates && sorted.slice(10).map(c => <CompactRow key={c.candidate} c={c} maxMean={maxMean} />)}
                   <button
                     onClick={() => setShowAllCandidates(!showAllCandidates)}
                     style={{
