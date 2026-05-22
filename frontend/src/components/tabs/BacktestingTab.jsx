@@ -47,7 +47,7 @@ const DATA = {
     note: 'Lescano (+6.2) y Forsyth (+6.6) fueron los mayores errores, probablemente por migración de voto estratégico en las últimas horas — un patrón similar al de Barnechea en 2016.',
   },
   2026: {
-    context: 'Primera vuelta 12 abril 2026. Blend bayesiano Polymarket + encuestas (α=0.77 día electoral). Primer ciclo incorporando mercados de predicción en tiempo real como señal complementaria.',
+    context: 'Primera vuelta 12 abril 2026. Blend bayesiano Polymarket + encuestas (α=0.77 día electoral). Primer ciclo incorporando mercados de predicción en tiempo real como señal complementaria. Nota: "Ipsos CR" y "Datum CR" son conteos rápidos (encuesta de salida el día de la elección), no encuestas pre-electorales — por eso su MAE es muy bajo; no es comparable con los MAE del modelo ni con los de años anteriores.',
     candidates: [
       { name: 'Keiko Fujimori', modelo: 30.0, onpe: 17.2, error: +12.8, inIC: false },
       { name: 'Rafael López Aliaga', modelo: 13.0, onpe: 11.9, error: +1.1, inIC: true },
@@ -61,7 +61,7 @@ const DATA = {
       { name: 'Ipsos CR', mae: 0.28 },
       { name: 'Datum CR', mae: 2.0 },
     ],
-    highlight: 'El mayor error fue Keiko +12.8pp. Polymarket la tenía al 45.5%, pero eso refleja P(ganar la presidencia) incluyendo segunda vuelta — no el % de votos en primera. En una carrera con N candidatos, ese sesgo es sistemático y corrompe el blend. Correcto: detectar el ascenso de Belmont, Aliaga en el top-3, y la posición del candidato #1 (Keiko). Fallo crítico: Sánchez en el #5 del modelo, llegó #2 en ONPE.',
+    highlight: 'Dos fallos mayores. Primero: Keiko inflada +12.8pp. Con α=0.77, Polymarket (45.5% P(ganar la presidencia)) dominó el blend — y ese 45.5% no es el % de votos en primera vuelta, sino la probabilidad de ganar toda la elección incluyendo segunda vuelta. En una carrera de N candidatos ese número siempre sobreestima al líder. A α alto, ese sesgo se amplifica en proporción directa. Segundo: Sánchez en el #5 del modelo (8.9%), llegó #2 en ONPE (12.0%). Repitió el patrón Castillo 2021 exacto: base rural fuerte en zonas subrepresentadas en encuestas urbanas. Lo que salió bien: el orden Keiko #1, Aliaga #3, Nieto #4 son posiciones correctas; los errores en magnitud de esos tres están dentro del margen.',
     note: 'Correcciones para R2: (1) conversión P(win)→voto share implícito — PM 75.5% P(ganar) no significa 75.5% de votos; con la incertidumbre histórica de ±3pp, eso implica ~52% de votos. Sin esta corrección, el modelo sobreestimaba a Keiko hasta 3pp cuando sube el alpha en la veda; (2) alpha cap 0.77→0.60 para evitar sobreponderación; (3) pesos encuestadoras calibrados por precisión R1: Ipsos 1.30×, Datum 1.05×.',
   },
 };
