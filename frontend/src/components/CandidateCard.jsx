@@ -128,7 +128,7 @@ export default function CandidateCard({ candidate: c, rank, expanded, onToggle }
           </div>
           <p style={{ margin: 0, color: '#78716C' }}>
             {c.prob_win >= 50
-              ? `${c.candidate} es el favorito para ganar la elección. En ${c.prob_runoff.toFixed(0)}% de las simulaciones pasa a segunda vuelta.`
+              ? `${c.candidate} es el candidato más favorecido según el modelo. En ${c.prob_runoff.toFixed(0)}% de las simulaciones pasa a segunda vuelta.`
               : c.prob_win >= 5
               ? `${c.candidate} tiene posibilidades reales. Pasa a segunda vuelta en ${c.prob_runoff.toFixed(0)}% de las 10,000 simulaciones.`
               : `${c.candidate} tiene probabilidades bajas de ganar, pero podría influir en la distribución de votos y segunda vuelta.`

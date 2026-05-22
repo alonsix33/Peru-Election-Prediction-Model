@@ -85,8 +85,8 @@ export default function RunoffCard({ scenario: s, expanded, onToggle }) {
           <p style={{ margin: '0 0 8px' }}>
             <strong style={{ color: '#1C1917' }}>Voto blanco: {s.avg_blank_pct.toFixed(1)}%</strong>
             {s.avg_blank_pct > 35
-              ? ' — Ambos candidatos generan alto rechazo. Una porción significativa del electorado preferiría no votar por ninguno.'
-              : ' — Nivel moderado de voto blanco para una segunda vuelta.'}
+              ? '. Ambos candidatos concentran alto rechazo. Una porción significativa del electorado podría optar por no votar por ninguno.'
+              : '. Nivel moderado de voto blanco para una segunda vuelta.'}
           </p>
           {REJECTION[candA] && (
             <p style={{ margin: '0 0 4px', color: '#78716C' }}>Rechazo definitivo {candA.split(' ').pop()}: <strong style={{ color: '#1C1917' }}>{REJECTION[candA]}%</strong></p>

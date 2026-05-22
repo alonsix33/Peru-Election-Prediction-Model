@@ -43,11 +43,11 @@ const DATA = {
       { name: 'Ipsos', mae: 4.8 },
       { name: 'CPI', mae: 5.1 },
     ],
-    highlight: 'El modelo ubicó a Castillo en el #3 con 23.6% de probabilidad de pasar a segunda vuelta — una señal más clara que la de las encuestas individuales. El error de -6.2 pts refleja la misma subestimación del voto rural que afectó a todas las encuestadoras.',
-    note: 'Lescano (+6.2) y Forsyth (+6.6) fueron los mayores errores, probablemente por migración de voto estratégico en las últimas horas — un patrón similar al de Barnechea en 2016.',
+    highlight: 'El modelo ubicó a Castillo en el #3 con 23.6% de probabilidad de pasar a segunda vuelta, una señal más clara que la de las encuestas individuales. El error de -6.2 pts refleja la misma subestimación del voto rural que afectó a todas las encuestadoras.',
+    note: 'Lescano (+6.2) y Forsyth (+6.6) fueron los mayores errores, probablemente por migración de voto estratégico en las últimas horas, patrón similar al de Barnechea en 2016.',
   },
   2026: {
-    context: 'Primera vuelta 12 abril 2026. Blend bayesiano Polymarket + encuestas (α=0.77 día electoral). Primer ciclo incorporando mercados de predicción en tiempo real como señal complementaria. Nota: "Ipsos CR" y "Datum CR" son conteos rápidos (encuesta de salida el día de la elección), no encuestas pre-electorales — por eso su MAE es muy bajo; no es comparable con los MAE del modelo ni con los de años anteriores.',
+    context: 'Primera vuelta 12 abril 2026. Blend bayesiano Polymarket + encuestas (α=0.77 día electoral). Primer ciclo incorporando mercados de predicción en tiempo real como señal complementaria. Nota: "Ipsos CR" y "Datum CR" son conteos rápidos (encuesta de salida el día de la elección), no encuestas pre-electorales, por eso su MAE es muy bajo y no es comparable con los MAE del modelo ni con los de años anteriores.',
     candidates: [
       { name: 'Keiko Fujimori', modelo: 30.0, onpe: 17.2, error: +12.8, inIC: false },
       { name: 'Rafael López Aliaga', modelo: 13.0, onpe: 11.9, error: +1.1, inIC: true },
@@ -62,7 +62,7 @@ const DATA = {
       { name: 'Datum CR', mae: 2.0 },
     ],
     highlight: 'Dos fallos mayores. Primero: Keiko inflada +12.8pp. Con α=0.77, Polymarket (45.5% P(ganar la presidencia)) dominó el blend — y ese 45.5% no es el % de votos en primera vuelta, sino la probabilidad de ganar toda la elección incluyendo segunda vuelta. En una carrera de N candidatos ese número siempre sobreestima al líder. A α alto, ese sesgo se amplifica en proporción directa. Segundo: Sánchez en el #5 del modelo (8.9%), llegó #2 en ONPE (12.0%). Repitió el patrón Castillo 2021 exacto: base rural fuerte en zonas subrepresentadas en encuestas urbanas. Lo que salió bien: el orden Keiko #1, Aliaga #3, Nieto #4 son posiciones correctas; los errores en magnitud de esos tres están dentro del margen.',
-    note: 'Correcciones para R2: (1) conversión P(win)→voto share implícito — PM 75.5% P(ganar) no significa 75.5% de votos; con la incertidumbre histórica de ±3pp, eso implica ~52% de votos. Sin esta corrección, el modelo sobreestimaba a Keiko hasta 3pp cuando sube el alpha en la veda; (2) alpha cap 0.77→0.60 para evitar sobreponderación; (3) pesos encuestadoras calibrados por precisión R1: Ipsos 1.30×, Datum 1.05×.',
+    note: 'Correcciones para R2: (1) conversión P(win)→voto share implícito: PM 75.5% P(ganar) no significa 75.5% de votos; con la incertidumbre histórica de ±3pp, eso implica ~52% de votos. Sin esta corrección, el modelo sobreestimaba a Keiko hasta 3pp cuando sube el alpha en la veda; (2) alpha cap 0.77→0.60 para evitar sobreponderación; (3) pesos encuestadoras calibrados por precisión R1: Ipsos 1.30×, Datum 1.05×.',
   },
 };
 
@@ -264,7 +264,7 @@ export default function BacktestingTab() {
         <h4 style={{ color: '#1C1917', fontSize: 15, fontWeight: 600, margin: '0 0 10px' }}>Qué cambiamos para la segunda vuelta</h4>
         <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: '0 0 10px' }}>
           El mayor aprendizaje de 2026 R1: Polymarket cotiza <strong style={{ color: '#1C1917' }}>P(ganar la presidencia)</strong>,
-          no el porcentaje de votos. En primera vuelta eso distorsionó a Keiko +12.8pp. En segunda vuelta el problema persiste —
+          no el porcentaje de votos. En primera vuelta eso distorsionó a Keiko +12.8pp. En segunda vuelta el problema persiste:
           PM 75.5% P(ganar) no equivale a 75.5% de los votos. Con ±3pp de incertidumbre histórica, ese 75.5% implica solo ~52% de votos.
           Sin corrección, el posterior se inflaría hasta 3pp al subir el alpha durante la veda.
         </p>

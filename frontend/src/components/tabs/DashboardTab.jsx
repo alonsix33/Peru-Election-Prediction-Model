@@ -390,7 +390,7 @@ function RiskScenarios({ risk, candidates }) {
     {
       label: '¿Resultado reñido? (margen < 5 pts)',
       value: risk.p_close_race,
-      desc: 'Probabilidad de que la diferencia entre ambos candidatos sea menor a 5 puntos — zona donde el voto blanco y el antivoto pueden decidir la elección.',
+      desc: 'Probabilidad de que la diferencia entre ambos candidatos sea menor a 5 puntos, zona donde el voto blanco y el antivoto pueden ser determinantes.',
       color: risk.p_close_race > 40 ? '#D97706' : '#059669',
       bg: risk.p_close_race > 40 ? '#FFFBEB' : '#F0FDF4',
     },
@@ -404,7 +404,7 @@ function RiskScenarios({ risk, candidates }) {
     {
       label: 'Si encuestas subestiman a Sánchez (+5 pts)',
       value: risk.bias_5pts_sanchez_win,
-      desc: `Patrón "voto vergüenza" (2021: encuestas subestimaron a Castillo). Si se repitiera, Sánchez P(ganar) = ${risk.bias_5pts_sanchez_win ?? '—'}%. El modelo ya incorpora parte de este riesgo via Polymarket.`,
+      desc: `Patrón "voto vergüenza" (2021: encuestas subestimaron a Castillo). Si se repitiera, Sánchez P(ganar) = ${risk.bias_5pts_sanchez_win ?? '—'}%. El modelo intenta capturar parte de este riesgo vía Polymarket.`,
       color: risk.bias_5pts_sanchez_win > 70 ? '#D97706' : '#78716C',
       bg: '#FAFAF9',
     },
@@ -468,7 +468,7 @@ function RiskScenarios({ risk, candidates }) {
         <AlertTriangle size={14} style={{ color: '#D97706', flexShrink: 0, marginTop: 2 }} />
         <span style={{ color: '#78716C', fontSize: 12, lineHeight: 1.5 }}>
           {isR2
-            ? 'Estos porcentajes se actualizan cada 30 minutos. Keiko ha llegado a segunda vuelta dos veces y ha perdido ambas por menos de 45 mil votos. El antivoto y el voto rural son los factores que el modelo estima con menor precisión.'
+            ? 'Estos porcentajes se actualizan cada 30 minutos. En 2016 y 2021, Keiko perdió la segunda vuelta por menos de 45 mil votos. El antivoto y el voto rural son los factores con mayor incertidumbre en el modelo.'
             : 'Estos porcentajes se actualizan cada 30 minutos. En Perú, 3 de las últimas 4 elecciones tuvieron sorpresas significativas en las últimas semanas. La incertidumbre es parte del proceso.'}
         </span>
       </div>

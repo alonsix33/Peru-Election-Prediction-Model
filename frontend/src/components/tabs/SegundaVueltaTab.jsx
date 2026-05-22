@@ -11,13 +11,13 @@ const KEIKO_ALLIANCES = [
     name: 'Rafael López Aliaga',
     pct: 11.9,
     status: 'formal',
-    note: 'Renovación Popular — apoyo formal confirmado. Mayor bloque de votos transferibles.',
+    note: 'Renovación Popular. Apoyo formal confirmado. Mayor bloque de votos transferibles.',
   },
   {
     name: 'Jorge Nieto',
     pct: 11.0,
     status: 'incierto',
-    note: 'Partido del Buen Gobierno — en negociaciones. Sin confirmar al 19/05/2026.',
+    note: 'Partido del Buen Gobierno. En negociaciones al 19/05/2026.',
   },
 ];
 
@@ -26,13 +26,13 @@ const SANCHEZ_ADJACENT = [
     name: 'López Chau',
     pct: 7.3,
     status: 'ambiguo',
-    note: 'Ahora Nación — descartó votar por Keiko. Sin anuncio formal de apoyo a Sánchez.',
+    note: 'Ahora Nación. Descartó votar por Keiko. Sin anuncio formal de apoyo a Sánchez.',
   },
   {
     name: 'Marisol Pérez Tello',
     pct: 3.4,
     status: 'parcial',
-    note: 'Primero la Gente — partido apoya a Sánchez. Ella personalmente votará viciado.',
+    note: 'Primero la Gente. Partido apoya a Sánchez. Ella personalmente votará viciado.',
   },
 ];
 
@@ -66,7 +66,7 @@ function PollsTable({ r2polls }) {
     return (
       <div style={{ color: '#78716C', fontSize: 13, textAlign: 'center', padding: 20 }}>
         {r2polls === null
-          ? 'Error cargando encuestas — reintenta en un momento.'
+          ? 'Error cargando encuestas. Reintenta en un momento.'
           : 'Sin encuestas de segunda vuelta aún.'}
       </div>
     );
@@ -155,7 +155,7 @@ function HeadToHead({ predictions }) {
         background: '#F7F4EF', borderRadius: 12, padding: 20,
         color: '#78716C', textAlign: 'center', fontSize: 13
       }}>
-        Modelo segunda vuelta inicializando — datos disponibles cuando el modelo corra su primera predicción R2.
+        Modelo segunda vuelta inicializando. Datos disponibles al completar la primera predicción R2.
       </div>
     );
   }
@@ -297,7 +297,7 @@ function PMvsPollsSection({ polymarket, r2polls }) {
           </div>
           {polls.length > 0 && (
             <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 6 }}>
-              {polls.length} encuesta{polls.length > 1 ? 's' : ''} — ~{polls.reduce((s, p) => {
+              {polls.length} encuesta{polls.length > 1 ? 's' : ''} · ~{polls.reduce((s, p) => {
                 const bn = p.pct_blank_null || 0;
                 const nd = p.pct_undecided || 0;
                 return s + Math.max(bn, nd);
@@ -307,9 +307,9 @@ function PMvsPollsSection({ polymarket, r2polls }) {
         </div>
       </div>
       <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: '0 0 8px' }}>
-        A diferencia de la primera vuelta, en R2 Polymarket <em>sí</em> cotiza directamente P(ganar la presidencia) — que es exactamente lo que mide la segunda vuelta.
-        La brecha entre el mercado y las encuestas sugiere que PM incorpora información no capturada en sondeos
-        (encuestas internas de campaña, alianzas en formación) o bien que existe un sesgo especulativo.
+        A diferencia de la primera vuelta, en R2 Polymarket <em>sí</em> cotiza directamente P(ganar la presidencia), que es lo que mide la segunda vuelta.
+        La brecha entre el mercado y las encuestas podría indicar que PM incorpora información no capturada en sondeos
+        (encuestas internas, alianzas en formación) o que hay un componente especulativo en el mercado.
       </p>
       <p style={{ color: '#8C877F', fontSize: 12, margin: 0 }}>
         El modelo asigna α=20–60% al mercado (sube progresivamente durante la veda).
@@ -333,8 +333,8 @@ function AllianceSection() {
         Alianzas y transferencia de voto
       </h3>
       <p style={{ color: '#A8A29E', fontSize: 12, margin: '0 0 14px' }}>
-        Transferencia histórica estimada: 40–60% del voto de un candidato sigue efectivamente la recomendación de su líder.
-        Barra de opacidad reduce para posiciones no confirmadas.
+        Históricamente, entre el 40 y el 60% del voto de un candidato sigue la recomendación de su líder.
+        Las barras de opacidad reducida indican posiciones no confirmadas.
       </p>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         {/* Sánchez side */}
@@ -422,7 +422,7 @@ function GeographicSection() {
         Polarización geográfica
       </h3>
       <p style={{ color: '#A8A29E', fontSize: 12, margin: '0 0 14px' }}>
-        Intención de voto por región (IEP, abr 2026). Replica el patrón Castillo 2021: Lima vs. el resto del país.
+        Intención de voto por región (IEP, abr 2026). Perfil similar al de Castillo 2021: Lima vs. el resto del país.
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {data.map(r => (
@@ -492,7 +492,7 @@ function AntiVotoTrendChart({ antivoto }) {
   return (
     <div style={{ marginTop: 16 }}>
       <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 8 }}>
-        Tendencia del rechazo definitivo — R1 → R2
+        Evolución del rechazo definitivo: R1 → R2
       </div>
       <ResponsiveContainer width="100%" height={200}>
         <LineChart data={chartData} margin={{ top: 10, right: 16, left: 0, bottom: 4 }}>
@@ -574,7 +574,7 @@ function AntiVotoSection({ antivoto }) {
       borderLeft: '4px solid #DC2626', padding: 20
     }}>
       <h3 style={{ color: '#DC2626', fontSize: 15, fontWeight: 600, margin: '0 0 12px' }}>
-        Antivoto — el factor estructural
+        Antivoto: el factor estructural
       </h3>
       {candidates.length === 0 ? (
         <div style={{ color: '#A8A29E', fontSize: 13 }}>Datos de antivoto no disponibles.</div>
@@ -586,9 +586,9 @@ function AntiVotoSection({ antivoto }) {
           </div>
           <AntiVotoTrendChart antivoto={antivoto} />
           <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: '12px 0 8px' }}>
-            La trayectoria muestra la convergencia: Keiko bajó 20pp (def. no: 64%→44%) desde febrero 2026 a mayo,
-            mientras Sánchez pasó de 7% (68% no lo conocía en feb) a 40% a medida que fue conocido.
-            Ambos antivoto se acercan — brecha actual de solo 4pp — lo que refuerza el peso del voto blanco/nulo.
+            Los datos muestran una convergencia: Keiko bajó 20pp en rechazo (64%→44%) de febrero a mayo,
+            mientras Sánchez subió de 7% a 40% a medida que fue conocido.
+            La brecha entre ambos se redujo a 4pp, lo que podría ampliar el voto blanco/nulo el día de la elección.
           </p>
           {(keiko || sanchez) && (
             <p style={{ color: '#8C877F', fontSize: 12, margin: 0 }}>
@@ -607,11 +607,10 @@ export default function SegundaVueltaTab({ predictions, polymarket, r2polls, ant
       {/* Title */}
       <div>
         <h2 style={{ color: '#1C1917', fontSize: 20, fontWeight: 700, margin: '0 0 6px' }}>
-          Segunda Vuelta — 7 de junio de 2026
+          Segunda Vuelta · 7 de junio de 2026
         </h2>
         <p style={{ color: '#78716C', fontSize: 14, margin: 0, lineHeight: 1.5 }}>
-          Keiko Fujimori (17.2%) vs. Roberto Sánchez Palomino (12.0%) —
-          clasificados por la ONPE con resultados al 100% proclamados el 17/05/2026.
+          Keiko Fujimori (17.2%) vs. Roberto Sánchez Palomino (12.0%). Clasificados por la ONPE con resultados al 100% proclamados el 17/05/2026.
         </p>
       </div>
 
@@ -635,7 +634,7 @@ export default function SegundaVueltaTab({ predictions, polymarket, r2polls, ant
           Encuestas publicadas
         </h3>
         <p style={{ color: '#A8A29E', fontSize: 12, margin: '0 0 12px' }}>
-          Todas las encuestas de segunda vuelta verificadas hasta la fecha.
+          Encuestas de segunda vuelta verificadas hasta la fecha.
         </p>
         <PollsTable r2polls={r2polls} />
       </div>
@@ -798,9 +797,9 @@ export default function SegundaVueltaTab({ predictions, polymarket, r2polls, ant
 
         <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: 0 }}>
           Keiko ha llegado a segunda vuelta <strong>tres veces</strong> y ha perdido las tres.
-          En 2016 y 2021 perdió por menos de 45,000 votos (~0.25 pp) — las dos elecciones más reñidas de la historia peruana.
-          Datum ha sido el más preciso en R2 históricamente (1.4 pp promedio); CPI el menos confiable (2.7 pp, sobreestima a Keiko).
-          Sánchez replica el patrón geográfico de Castillo (2021): dominante en sierra y selva, débil en Lima.
+          En 2016 y 2021 la diferencia fue de menos de 45,000 votos (~0.25 pp), las dos elecciones más reñidas de la historia peruana.
+          Datum registra el menor error histórico en R2 (1.4 pp promedio); CPI el mayor (2.7 pp, tendió a sobreestimar a Keiko).
+          Sánchez muestra un perfil geográfico similar al de Castillo (2021): dominante en sierra y selva, débil en Lima.
         </p>
       </div>
     </div>
