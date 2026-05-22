@@ -76,6 +76,12 @@ function PollNoteModal({ poll, onClose }) {
     return () => document.removeEventListener('keydown', handler);
   }, [onClose]);
 
+  const keiko = poll.results?.find(r => r.candidate?.includes('Keiko'));
+  const sanchez = poll.results?.find(r => r.candidate?.includes('Sánchez') || r.candidate?.includes('Roberto'));
+  const total = (keiko?.pct_raw || 0) + (sanchez?.pct_raw || 0);
+  const kVV = total > 0 ? ((keiko.pct_raw / total) * 100).toFixed(1) : null;
+  const sVV = total > 0 ? ((sanchez.pct_raw / total) * 100).toFixed(1) : null;
+
   return createPortal(
     <div
       onClick={onClose}
@@ -94,15 +100,71 @@ function PollNoteModal({ poll, onClose }) {
         >
           <X size={16} />
         </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
           <Info size={16} style={{ color: '#1D4ED8', flexShrink: 0 }} />
           <h3 style={{ color: '#1C1917', fontSize: 14, fontWeight: 700, margin: 0 }}>
             {poll.pollster} · {formatDate(poll.field_start)}–{formatDate(poll.field_end)}
           </h3>
         </div>
-        <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.6, margin: '0 0 16px' }}>
-          {poll.notes}
-        </p>
+
+        {/* Metric cards 2×2 */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+          {keiko && (
+            <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 8, padding: '10px 12px' }}>
+              <div style={{ color: KEIKO_COLOR, fontSize: 24, fontWeight: 700, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+                {keiko.pct_raw.toFixed(1)}%
+              </div>
+              <div style={{ color: '#92400E', fontSize: 11, marginTop: 4 }}>Keiko Fujimori</div>
+            </div>
+          )}
+          {sanchez && (
+            <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 8, padding: '10px 12px' }}>
+              <div style={{ color: SANCHEZ_COLOR, fontSize: 24, fontWeight: 700, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+                {sanchez.pct_raw.toFixed(1)}%
+              </div>
+              <div style={{ color: '#166534', fontSize: 11, marginTop: 4 }}>Roberto Sánchez</div>
+            </div>
+          )}
+          {poll.pct_blank_null != null && (
+            <div style={{ background: '#F7F4EF', border: '1px solid #E5E0D8', borderRadius: 8, padding: '10px 12px' }}>
+              <div style={{ color: '#78716C', fontSize: 24, fontWeight: 700, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+                {poll.pct_blank_null.toFixed(1)}%
+              </div>
+              <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 4 }}>Blanco / Nulo</div>
+            </div>
+          )}
+          {poll.pct_undecided != null && (
+            <div style={{ background: '#F7F4EF', border: '1px solid #E5E0D8', borderRadius: 8, padding: '10px 12px' }}>
+              <div style={{ color: '#78716C', fontSize: 24, fontWeight: 700, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+                {poll.pct_undecided.toFixed(1)}%
+              </div>
+              <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 4 }}>NS / NP</div>
+            </div>
+          )}
+        </div>
+
+        {/* Votos válidos strip */}
+        {kVV && sVV && (
+          <div style={{ background: '#EFF6FF', borderRadius: 6, padding: '7px 12px', marginBottom: 12, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 11, color: '#3B82F6', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>V.V.</span>
+            <span style={{ color: KEIKO_COLOR, fontWeight: 700, fontSize: 13 }}>Keiko {kVV}%</span>
+            <span style={{ color: '#CBD5E1', fontSize: 11 }}>·</span>
+            <span style={{ color: SANCHEZ_COLOR, fontWeight: 700, fontSize: 13 }}>Sánchez {sVV}%</span>
+          </div>
+        )}
+
+        {/* Notes as secondary context */}
+        {poll.notes && (
+          <div style={{ background: '#F7F4EF', borderRadius: 8, padding: '10px 12px', marginBottom: 16 }}>
+            <div style={{ color: '#A8A29E', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 5 }}>
+              Notas
+            </div>
+            <p style={{ color: '#78716C', fontSize: 12, lineHeight: 1.6, margin: 0 }}>{poll.notes}</p>
+          </div>
+        )}
+
         <button
           onClick={onClose}
           style={{ width: '100%', background: '#1D4ED8', color: '#FFFFFF', border: 'none', borderRadius: 8, padding: '10px 0', fontSize: 13, fontWeight: 600, cursor: 'pointer', minHeight: 40 }}
