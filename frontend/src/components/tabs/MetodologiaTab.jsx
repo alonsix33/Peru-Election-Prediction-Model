@@ -185,9 +185,15 @@ function PrimeraVueltaContent() {
 }
 
 // ─── SEGUNDA VUELTA ───────────────────────────────────────────
-function SegundaVueltaContent() {
+function SegundaVueltaContent({ r2polls }) {
+  const pollCount = r2polls?.length ?? null;
+  const houseCount = r2polls ? new Set(r2polls.map(p => p.pollster_name)).size : null;
+  const pollSublabel = pollCount !== null
+    ? `${pollCount} encuesta${pollCount !== 1 ? 's' : ''} · ${houseCount} casa${houseCount !== 1 ? 's' : ''}`
+    : 'Encuestas + Polymarket';
+
   const pipelineSteps = [
-    { icon: Database, label: 'Encuestas R2', sublabel: '4 encuestas · 2 casas' },
+    { icon: Database, label: 'Encuestas R2', sublabel: pollSublabel },
     { icon: Scale, label: 'Blend bayesiano', sublabel: 'Encuestas + Polymarket' },
     { icon: Shuffle, label: '10,000 simulaciones', sublabel: 'Monte Carlo' },
     { icon: TrendingUp, label: 'Resultado', sublabel: 'P(ganar) por candidato' },
@@ -219,7 +225,7 @@ function SegundaVueltaContent() {
         </div>
 
         <StepRow number={1} title="Las encuestas de segunda vuelta"
-          description="Hay 4 encuestas disponibles: Ipsos (23-24 abr, n=1200), IEP (21-25 abr, n=1600), Ipsos (15-17 may, n=1210) y CIT (14-17 may, n=1220). No pesan igual. Primero, las más recientes pesan más — una encuesta de hace 28 días vale mucho menos que una de hace 5. Segundo, Ipsos tiene el mayor peso porque tuvo el menor error en la primera vuelta de 2026 (0.28pp de diferencia con el resultado real). Tercero, la encuesta de CIT es un simulacro (pregunta 'si las elecciones fueran mañana') y por eso recibe un bonus de peso — simula el día D más directamente. El resultado: las dos encuestas de mayo dominan casi completamente el agregado." />
+          description={`Hay ${pollCount !== null ? pollCount : 'varias'} encuestas de segunda vuelta de ${houseCount !== null ? houseCount : 'distintas'} casas encuestadoras. No pesan igual. Las más recientes pesan más — una de hace 28 días vale mucho menos que una de hace 5. La encuestadora con mejor precisión en la primera vuelta de 2026 recibe mayor peso, y las encuestas tipo simulacro (que preguntan directamente por el día de la elección) reciben un bonus adicional. El resultado: las encuestas más recientes dominan casi completamente el agregado.`} />
 
         <StepRow number={2} title="Los house effects — corrección por sesgo de encuestadora"
           description="Algunas encuestadoras sobreestiman sistemáticamente a ciertos candidatos. Basados en su comportamiento en R1 2026, le restamos 1.5pp a CIT para Keiko (tendía a sobreestimarla) y 0.5pp a Ipsos para Keiko. A Sánchez no le aplicamos ninguna corrección porque no tenemos suficiente evidencia de sesgo en su caso. Estas correcciones son pequeñas pero evitan que los sesgos de encuestadora se acumulen." />
@@ -328,7 +334,7 @@ function SegundaVueltaContent() {
 }
 
 // ─── MAIN ─────────────────────────────────────────────────────
-export default function MetodologiaTab() {
+export default function MetodologiaTab({ r2polls }) {
   const [activeTab, setActiveTab] = useState('segunda');
 
   return (
@@ -351,7 +357,7 @@ export default function MetodologiaTab() {
         ))}
       </div>
 
-      {activeTab === 'segunda' ? <SegundaVueltaContent /> : <PrimeraVueltaContent />}
+      {activeTab === 'segunda' ? <SegundaVueltaContent r2polls={r2polls} /> : <PrimeraVueltaContent />}
     </div>
   );
 }
