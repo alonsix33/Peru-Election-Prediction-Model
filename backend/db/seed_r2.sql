@@ -305,3 +305,34 @@ BEGIN
             'Ipsos 17 may 2026. Segunda medición R2. Def.no=40%, Prob.no=7% → B2B=47%. T2B=39% (Def.23%+Pod.16%). Bajó 3pp desde abr.');
   END IF;
 END $$;
+
+-- ── CIT segunda vuelta: mayo 2026 ───────────────────────────
+-- CIT (Centro de Investigación Territorial). Simulacro: "Si las elecciones fueran mañana".
+-- Keiko 40.5%, Sánchez 36%, Blanco/Viciado 23.5%. Sin NS/NR (100% distribuido).
+-- En votos válidos: Keiko 52.9%, Sánchez 47.1%.
+-- Campo: 14-17 mayo 2026. Publicado: 22 mayo 2026. n=1220, ±2.8%, nivel confianza 95%.
+DO $$
+DECLARE
+  p_id INT;
+  poll_id INT;
+BEGIN
+  SELECT id INTO p_id FROM pollsters WHERE name = 'CIT';
+
+  IF NOT EXISTS (
+    SELECT 1 FROM polls WHERE pollster_id = p_id AND field_end = '2026-05-17' AND election_round = 2
+  ) THEN
+    INSERT INTO polls (pollster_id, field_start, field_end, published_date, sample_n, margin_error,
+                       confidence_lvl, scope, technique, poll_type,
+                       pct_undecided, pct_blank_null, notes, election_round)
+    VALUES (p_id, '2026-05-14', '2026-05-17', '2026-05-22', 1220, 2.80, 95.0,
+            'nacional', 'presencial', 'simulacro',
+            NULL, 23.5,
+            'CIT simulacro R2 may 2026. "Si las elecciones fueran mañana": Keiko 40.5%, Sánchez 36%, B/N 23.5%. Sin NS/NR. Keiko domina Lima (60 vs 29) y Norte (37.4 vs 26.4); Sánchez lidera Sur (54.7 vs 16.5) y Centro (46.9 vs 20). V.v.: Keiko 52.9%, Sánchez 47.1%.',
+            2)
+    RETURNING id INTO poll_id;
+
+    INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
+      (poll_id, 'Keiko Fujimori',           'Fuerza Popular',     40.5),
+      (poll_id, 'Roberto Sánchez Palomino', 'Juntos por el Perú', 36.0);
+  END IF;
+END $$;
