@@ -6,28 +6,34 @@ const KEIKO_COLOR = getPartyColor('Keiko Fujimori').primary;                // #
 const SANCHEZ_COLOR = getPartyColor('Roberto Sánchez Palomino').primary;   // #16A34A
 
 // Alliance context — editorial data (news-sourced, not from live polls)
-// Sources: communicados oficiales, declaraciones públicas, La República, RPP, Infobae
+// Sources: communicados oficiales, declaraciones públicas, La República, RPP, Infobae, Caretas
 const KEIKO_ALLIANCES = [
   {
     name: 'Rafael López Aliaga',
     pct: 11.9,
-    status: 'formal',
-    note: 'Renovación Popular. Apoyo formal confirmado. Mayor bloque de votos transferibles.',
+    status: 'parcial',
+    note: 'Renovación Popular. RLA rechazó dar apoyo personal a Keiko el 18/05 ("no tengo nada que hablar"). Parlamentarios del partido en diálogo con Fuerza Popular. Mayor bloque de votos en disputa.',
   },
   {
     name: 'Jorge Nieto',
     pct: 11.0,
-    status: 'incierto',
-    note: 'Partido del Buen Gobierno. En negociaciones al 19/05/2026.',
+    status: 'ambiguo',
+    note: 'Partido del Buen Gobierno. Delegó decisión a su comité ejecutivo. No descartó el voto blanco/viciado como opción del partido (18/05). Sin señal hacia ningún candidato.',
   },
 ];
 
 const SANCHEZ_ADJACENT = [
   {
+    name: 'Verónica Mendoza',
+    pct: 4.1,
+    status: 'formal',
+    note: 'Nuevo Perú. Apoyo formal anunciado por Sánchez el 15/05. Uno de los cinco partidos que confirmaron respaldo.',
+  },
+  {
     name: 'López Chau',
     pct: 7.3,
     status: 'ambiguo',
-    note: 'Ahora Nación. Descartó votar por Keiko. Sin anuncio formal de apoyo a Sánchez.',
+    note: 'Ahora Nación. Descartó votar por Keiko. Considera conversaciones con Juntos por el Perú en el Congreso. Sin anuncio formal de apoyo a Sánchez.',
   },
   {
     name: 'Marisol Pérez Tello',
