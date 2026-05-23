@@ -72,16 +72,18 @@ Calibrados con ONPE R1 2026. **Signo negativo = encuestadora subestima → corri
 
 | Encuestadora | Keiko | Sánchez | Aliaga (R1) |
 |---|---|---|---|
-| Ipsos | +0.5pp | **-3.0pp** | -0.5pp |
-| Datum | +0.8pp | **-3.5pp** | -0.8pp |
+| Ipsos | +0.5pp | **-2.0pp** | -0.5pp |
+| Datum | +0.8pp | **-2.0pp** | -0.8pp |
 | IEP | -0.5pp | **0.0pp** | -1.5pp |
 | CPI | -0.5pp | **-2.0pp** | +1.2pp |
 | CIT | +1.5pp | **-1.5pp** | +3.5pp |
 
 Evidencia de calibración Sánchez:
-- Ipsos R1: 8.57% vs ONPE 12.0% → gap -3.43pp → HE = -3.0pp
-- Datum R1: 7.45% vs ONPE 12.0% → gap -4.55pp → HE = -3.5pp
+- Ipsos R1: 8.57% vs ONPE 12.0% → gap -3.43pp → HE = -2.0pp (calibrado con R2)
+- Datum R1: 7.45% vs ONPE 12.0% → gap -4.55pp → HE = -2.0pp (calibrado con R2)
 - IEP R1: 11.84% vs ONPE 12.0% → gap -0.16pp → HE = 0.0pp ✅
+- Cross-check R2: con -2.0pp, Ipsos/Datum/CIT convergen en K+0.8-2.0pp,
+  coherente con IEP (referencia más precisa) que muestra S+0.8pp adj.
 
 ---
 
