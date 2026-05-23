@@ -71,12 +71,6 @@ function PollsterDetailTable() {
               <th key={p.name} style={{ textAlign: 'center', padding: '6px 8px', minWidth: 80 }}>
                 <div style={{ color: p.color, fontWeight: 700, fontSize: 12 }}>{p.name}</div>
                 <div style={{ color: '#8C877F', fontWeight: 400, fontSize: 10, marginTop: 1 }}>{p.dates}</div>
-                {p.note && (
-                  <div style={{
-                    fontSize: 9, color: '#8C877F', fontStyle: 'italic',
-                    background: '#F0EDE8', borderRadius: 3, padding: '1px 4px', marginTop: 2, display: 'inline-block',
-                  }}>{p.note}</div>
-                )}
               </th>
             ))}
           </tr>
