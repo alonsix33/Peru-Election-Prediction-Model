@@ -50,7 +50,7 @@ const DATA = {
     conclusion: 'El modelo identificó a Castillo con mayor claridad que las encuestas individuales. El error rural fue comparable al de toda la industria: un problema estructural de cobertura, no del agregador.',
   },
   2026: {
-    context: 'Primera vuelta 12 abril 2026. Blend bayesiano Polymarket + encuestas (α=0.77 día electoral). Primer ciclo incorporando mercados de predicción en tiempo real como señal complementaria. Nota: "Ipsos CR" y "Datum CR" son conteos rápidos (encuesta de salida el día de la elección), no encuestas pre-electorales, por eso su MAE es muy bajo y no es comparable con los MAE del modelo ni con los de años anteriores.',
+    context: 'Primera vuelta 12 abril 2026. Blend bayesiano Polymarket + encuestas (α=0.77 día electoral). MAE de encuestadoras calculado sobre las últimas encuestas pre-veda de cada casa (votos válidos estimados): IEP (28–30 mar), Ipsos tracking (29 mar–1 abr), Datum simulacro (25–27 mar), CPI (21–23 mar).',
     candidates: [
       { name: 'Keiko Fujimori', modelo: 30.0, onpe: 17.2, error: +12.8, inIC: false },
       { name: 'Rafael López Aliaga', modelo: 13.0, onpe: 11.9, error: +1.1, inIC: true },
@@ -61,8 +61,10 @@ const DATA = {
     mae: 4.01,
     ic: '3/5 (60%)',
     pollsters: [
-      { name: 'Ipsos CR', mae: 0.28 },
-      { name: 'Datum CR', mae: 2.0 },
+      { name: 'IEP', mae: 1.3 },
+      { name: 'Ipsos', mae: 2.7 },
+      { name: 'Datum', mae: 3.8 },
+      { name: 'CPI', mae: 6.4 },
     ],
     highlight: 'Dos fallos mayores. Primero: Keiko inflada +12.8pp. Con α=0.77, Polymarket (45.5% P(ganar la presidencia)) dominó el blend — y ese 45.5% no es el % de votos en primera vuelta, sino la probabilidad de ganar toda la elección incluyendo segunda vuelta. En una carrera de N candidatos ese número siempre sobreestima al líder. A α alto, ese sesgo se amplifica en proporción directa. Segundo: Sánchez en el #5 del modelo (8.9%), llegó #2 en ONPE (12.0%). Repitió el patrón Castillo 2021 exacto: base rural fuerte en zonas subrepresentadas en encuestas urbanas. Lo que salió bien: el orden Keiko #1, Aliaga #3, Nieto #4 son posiciones correctas; los errores en magnitud de esos tres están dentro del margen.',
     conclusion: 'El error en Keiko (+12.8pp) fue estructural: Polymarket estaba midiendo P(ganar la presidencia), no el % de votos en primera vuelta. Ese defecto de conversión ya está corregido para segunda vuelta.',
@@ -288,8 +290,8 @@ export default function BacktestingTab() {
         <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: 0 }}>
           Ajustes para R2: <strong style={{ color: '#1C1917' }}>conversión P(ganar)→voto share implícito</strong> antes de integrar;{' '}
           <strong style={{ color: '#1C1917' }}>alpha cap 0.60</strong> (era 0.77 en R1);{' '}
-          <strong style={{ color: '#1C1917' }}>Ipsos 1.30×</strong> (mejor MAE R1) y{' '}
-          <strong style={{ color: '#1C1917' }}>Datum 1.05×</strong> basados en performance real del conteo rápido.
+          <strong style={{ color: '#1C1917' }}>IEP 1.00×</strong> (mejor MAE pre-veda, 1.3pp) e{' '}
+          <strong style={{ color: '#1C1917' }}>Ipsos 1.05×</strong> vs <strong style={{ color: '#1C1917' }}>Datum 1.15×</strong> basados en MAE de las últimas encuestas pre-veda.
         </p>
       </div>
     </div>
