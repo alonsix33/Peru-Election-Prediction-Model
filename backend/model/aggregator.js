@@ -6,37 +6,47 @@ const { getPollWeight } = require('./weights');
  * Se RESTA del resultado crudo para corregir.
  */
 const HOUSE_EFFECTS = {
+  // Candidatos R1-only (Aliaga, López Chau) se conservan para referencia histórica
+  // pero no aparecerán en encuestas R2 — no afectan el modelo actual.
+  //
+  // House effects para Roberto Sánchez Palomino calibrados con ONPE R1 2026:
+  //   ONPE 100%: 12.0% votos válidos
+  //   Ipsos:  8.57% → subestimó −3.43pp  → house effect = −3.0pp (conservador)
+  //   Datum:  7.45% → subestimó −4.55pp  → house effect = −3.5pp (conservador)
+  //   IEP:   11.84% → error     −0.16pp  → house effect =  0.0pp (preciso)
+  //   CPI:   ~9.5%  → subestimó ~−2.5pp  → house effect = −2.0pp (estimado)
+  //   CIT:   urban-focused, sin datos R1 directos → house effect = −1.5pp (estimado)
+  // Valores conservadores (60-75% del gap R1) para R2, dado que en segunda vuelta
+  // los metodología y foco geográfico pueden ajustarse.
   CIT: {
-    'Rafael López Aliaga': +3.5,
-    'Keiko Fujimori':      +1.5,
-    'López Chau':          +0.5,
-    'Roberto Sánchez Palomino': 0.0,
+    'Rafael López Aliaga':       +3.5,
+    'Keiko Fujimori':            +1.5,
+    'López Chau':                +0.5,
+    'Roberto Sánchez Palomino': -1.5,   // estimado: sesgo urbano CIT en R1
   },
   CPI: {
-    'Rafael López Aliaga': +1.2,
-    'Keiko Fujimori':      -0.5,
-    'López Chau':          +0.8,
-    'Roberto Sánchez Palomino': 0.0,
+    'Rafael López Aliaga':       +1.2,
+    'Keiko Fujimori':            -0.5,
+    'López Chau':                +0.8,
+    'Roberto Sánchez Palomino': -2.0,   // estimado: CPI mayor MAE general en R1
   },
   Ipsos: {
-    'Rafael López Aliaga': -0.5,
-    'Keiko Fujimori':      +0.5,
-    'López Chau':          -0.3,
-    // Sin corrección para Sánchez: el gap Ipsos/IEP refleja incertidumbre metodológica,
-    // no un sesgo calibrado contra ground truth. La incertidumbre la absorbe el IC del MC.
-    'Roberto Sánchez Palomino': 0.0,
+    'Rafael López Aliaga':       -0.5,
+    'Keiko Fujimori':            +0.5,
+    'López Chau':                -0.3,
+    'Roberto Sánchez Palomino': -3.0,   // ONPE R1: Ipsos 8.57% vs ONPE 12.0% (−3.43pp)
   },
   Datum: {
-    'Rafael López Aliaga': -0.8,
-    'Keiko Fujimori':      +0.8,
-    'López Chau':          -0.3,
-    'Roberto Sánchez Palomino': 0.0,
+    'Rafael López Aliaga':       -0.8,
+    'Keiko Fujimori':            +0.8,
+    'López Chau':                -0.3,
+    'Roberto Sánchez Palomino': -3.5,   // ONPE R1: Datum 7.45% vs ONPE 12.0% (−4.55pp)
   },
   IEP: {
-    'Rafael López Aliaga': -1.5,
-    'Keiko Fujimori':      -0.5,
-    'López Chau':          +0.2,
-    'Roberto Sánchez Palomino': 0.0,
+    'Rafael López Aliaga':       -1.5,
+    'Keiko Fujimori':            -0.5,
+    'López Chau':                +0.2,
+    'Roberto Sánchez Palomino':  0.0,   // ONPE R1: IEP 11.84% vs ONPE 12.0% (−0.16pp ✅)
   }
 };
 

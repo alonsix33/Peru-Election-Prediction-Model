@@ -66,8 +66,8 @@ const DATA = {
       { name: 'Datum', mae: 3.8 },
       { name: 'CPI', mae: 6.4 },
     ],
-    highlight: 'Dos fallos mayores. Primero: Keiko inflada +12.8pp. Con α=0.77, Polymarket (45.5% P(ganar la presidencia)) dominó el blend — y ese 45.5% no es el % de votos en primera vuelta, sino la probabilidad de ganar toda la elección incluyendo segunda vuelta. En una carrera de N candidatos ese número siempre sobreestima al líder. A α alto, ese sesgo se amplifica en proporción directa. Segundo: Sánchez en el #5 del modelo (8.9%), llegó #2 en ONPE (12.0%). Repitió el patrón Castillo 2021 exacto: base rural fuerte en zonas subrepresentadas en encuestas urbanas. Lo que salió bien: el orden Keiko #1, Aliaga #3, Nieto #4 son posiciones correctas; los errores en magnitud de esos tres están dentro del margen.',
-    conclusion: 'El error en Keiko (+12.8pp) fue estructural: Polymarket estaba midiendo P(ganar la presidencia), no el % de votos en primera vuelta. Ese defecto de conversión ya está corregido para segunda vuelta.',
+    highlight: 'Dos fallos mayores. Primero: Keiko inflada +12.8pp. Con α=0.77, Polymarket (45.5% P(ganar la presidencia)) dominó el blend — ese 45.5% no es el % de votos en R1, sino la probabilidad de ganar toda la elección; en una carrera de N candidatos siempre sobreestima al líder. Segundo: Sánchez predicho en #5 (8.9%), llegó #2 en ONPE (12.0%) — mismo patrón que Castillo 2021, base rural fuerte subrepresentada en encuestas urbanas. Su subestimación cascadeó en el orden: el modelo tenía a RLA en #2 y Belmont en #3, cuando ONPE los ubicó en #3 y #5 respectivamente. Posiciones exactas: solo Keiko (#1) y Nieto (#4). Errores de magnitud pequeños: RLA +1.1pp, Belmont +1.1pp, Nieto −1.9pp, los tres dentro del IC.',
+    conclusion: 'El error en Keiko (+12.8pp) fue estructural: Polymarket medía P(ganar la presidencia), no % de votos en R1 — ya corregido para R2. El error de ordenamiento (RLA #2→#3, Belmont #3→#5) no fue un fallo independiente: fue consecuencia directa de subestimar a Sánchez en 3.1pp, que lo desplazó dos posiciones hacia arriba en cadena.',
   },
 };
 
