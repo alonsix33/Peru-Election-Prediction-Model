@@ -506,12 +506,20 @@ function runMonteCarlo(posterior, nSimulations = 10_000) {
     }
 
     // 3d. Voto oculto: 10% de simulaciones, solo R2 (nCandidates === 2).
-    //     Sesgo estructural tipo Castillo 2021: encuestas urbanas subestiman al
-    //     candidato con base rural. +3 a +6pp al candidato con menor estimado base.
-    //     Asimétrico — no aplica a R1 donde el efecto está cubierto por el shock #3-#6.
+    //     Sesgo estructural tipo Castillo 2021: encuestas urbanas subestiman a candidatos
+    //     con base rural fuerte. Aplica solo a Roberto Sánchez Palomino — evidencia R1 2026
+    //     muestra subestimación sistemática de 3-5pp en todas las encuestadoras (ONPE 12.0%
+    //     vs Ipsos 8.57%, Datum 7.45%). El efecto es candidato-específico, NO al que vaya
+    //     atrás en esa simulación (Keiko también puede ir atrás en sims y no tiene este sesgo).
     else if (roll < 0.45 && nCandidates === 2) {
-      const trailingIdx = perturbed[0] >= perturbed[1] ? 1 : 0;
-      perturbed[trailingIdx] += 3 + Math.random() * 3;
+      const sanchezIdx = candidates.indexOf('Roberto Sánchez Palomino');
+      if (sanchezIdx !== -1) {
+        perturbed[sanchezIdx] += 3 + Math.random() * 3;
+      } else {
+        // Fallback si la composición del runoff es distinta a la esperada
+        const trailingIdx = perturbed[0] >= perturbed[1] ? 1 : 0;
+        perturbed[trailingIdx] += 3 + Math.random() * 3;
+      }
     }
 
     // 4. Clamp y normalizar
