@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 const API = import.meta.env.VITE_API_URL || '';
 
@@ -48,6 +48,8 @@ export function useElectionData() {
     polymarket: null, polls: null, r2polls: null, antivoto: null,
     loading: true, error: null, lastUpdated: null
   });
+  // Ref so the scheduling closure always reads the latest phase without re-registering the effect
+  const latestPhaseRef = useRef(null);
 
   const refresh = useCallback(async () => {
     setData(prev => ({ ...prev, loading: true, error: null }));
@@ -94,10 +96,25 @@ export function useElectionData() {
     }
   }, []);
 
+  // Sync latestPhaseRef whenever the status changes
+  useEffect(() => {
+    if (data.status?.electoral_phase) {
+      latestPhaseRef.current = data.status.electoral_phase;
+    }
+  }, [data.status]);
+
   useEffect(() => {
     refresh();
-    const interval = setInterval(refresh, 60 * 60 * 1000);
-    return () => clearInterval(interval);
+    let timerId;
+    const scheduleNext = () => {
+      const phase = latestPhaseRef.current;
+      const ms = phase === 'election_day' ? 15 * 60 * 1000
+               : phase === 'veda'         ? 30 * 60 * 1000
+               : 60 * 60 * 1000; // pre_veda or unknown
+      timerId = setTimeout(async () => { await refresh(); scheduleNext(); }, ms);
+    };
+    scheduleNext();
+    return () => clearTimeout(timerId);
   }, [refresh]);
 
   return { ...data, refresh };

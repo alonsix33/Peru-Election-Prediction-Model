@@ -37,13 +37,18 @@ export default function Header({ status, predictions }) {
   const mins = Math.floor((totalSecsLeft % 3600) / 60);
   const secs = totalSecsLeft % 60;
 
-  // Last updated indicator
+  // Last updated indicator — thresholds scale with the phase update interval
   let updatedText = null;
   let updatedDotColor = '#6B7280';
   if (predictions?.generated_at_lima) {
     const genTime = new Date(predictions.generated_at_lima);
     const minsAgo = Math.floor((Date.now() - genTime) / 60000);
-    updatedDotColor = minsAgo < 35 ? '#059669' : minsAgo < 90 ? '#D97706' : '#DC2626';
+    // Green = within 1.2× expected interval; orange = within 2.5×; red = beyond
+    const greenThresh  = phase === 'election_day' ? 18 : phase === 'veda' ? 36 : 72;
+    const orangeThresh = phase === 'election_day' ? 38 : phase === 'veda' ? 75 : 150;
+    updatedDotColor = minsAgo < greenThresh ? '#059669'
+                    : minsAgo < orangeThresh ? '#D97706'
+                    : '#DC2626';
     if (minsAgo < 1) updatedText = 'Actualizado ahora';
     else if (minsAgo < 60) updatedText = `Actualizado hace ${minsAgo} min`;
     else updatedText = `Actualizado hace ${Math.floor(minsAgo / 60)}h`;

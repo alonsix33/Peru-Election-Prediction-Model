@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getPartyColor } from '../../config/partyColors';
 import { Activity, TrendingUp, X, ExternalLink, Loader2, AlertTriangle, ShieldAlert, ChevronDown } from 'lucide-react';
 import WinProbabilityNeedle from '../WinProbabilityNeedle';
@@ -89,15 +89,25 @@ function CandidatesHeadToHead({ keiko, sanchez }) {
 }
 
 // ─── Model Trend Chart ───────────────────────────────────────
-function ModelTrendChart({ isR2 }) {
+function ModelTrendChart({ isR2, phase }) {
   const [history, setHistory] = useState(null);
+  const phaseRef = useRef(phase);
+  useEffect(() => { phaseRef.current = phase; }, [phase]);
 
   useEffect(() => {
     const load = () =>
       fetch(`${API}/api/model-history`).then(r => r.json()).then(setHistory).catch(() => {});
     load();
-    const iv = setInterval(load, 30 * 60 * 1000);
-    return () => clearInterval(iv);
+    let timerId;
+    const scheduleNext = () => {
+      const p = phaseRef.current;
+      const ms = p === 'election_day' ? 15 * 60 * 1000
+               : p === 'veda'         ? 30 * 60 * 1000
+               : 60 * 60 * 1000;
+      timerId = setTimeout(() => { load(); scheduleNext(); }, ms);
+    };
+    scheduleNext();
+    return () => clearTimeout(timerId);
   }, []);
 
   if (!history?.history?.length) return null;
@@ -185,7 +195,10 @@ function ModelTrendChart({ isR2 }) {
 
   const latest = history.history[0];
   const minsAgo = Math.floor((Date.now() - new Date(latest.generated_at_lima)) / 60000);
-  const dotColor = minsAgo < 35 ? '#059669' : minsAgo < 90 ? '#D97706' : '#DC2626';
+  const p = phaseRef.current;
+  const greenT  = p === 'election_day' ? 18 : p === 'veda' ? 36 : 72;
+  const orangeT = p === 'election_day' ? 38 : p === 'veda' ? 75 : 150;
+  const dotColor = minsAgo < greenT ? '#059669' : minsAgo < orangeT ? '#D97706' : '#DC2626';
 
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 20 }}>
@@ -200,7 +213,7 @@ function ModelTrendChart({ isR2 }) {
           </span>
           <span style={{
             width: 8, height: 8, borderRadius: '50%', background: dotColor,
-            display: 'inline-block', boxShadow: minsAgo < 35 ? `0 0 6px ${dotColor}` : 'none',
+            display: 'inline-block', boxShadow: minsAgo < greenT ? `0 0 6px ${dotColor}` : 'none',
           }} />
         </div>
       </div>
@@ -381,7 +394,7 @@ function PolymarketModal({ polymarket, onClose }) {
 }
 
 // ─── Risk Scenarios ──────────────────────────────────────────
-function RiskScenarios({ risk, candidates }) {
+function RiskScenarios({ risk, candidates, phase }) {
   if (!risk) return null;
   const isR2 = (candidates?.length ?? 0) <= 2;
 
@@ -444,8 +457,8 @@ function RiskScenarios({ risk, candidates }) {
       </div>
       <p style={{ color: '#78716C', fontSize: 13, margin: '0 0 16px', lineHeight: 1.5 }}>
         {isR2
-          ? '¿Qué tan probable es que el modelo se equivoque? Escenarios calculados en 10,000 simulaciones + análisis estadístico.'
-          : '¿Qué tan probable es que el modelo se equivoque? Calculado en cada corrida de 10,000 simulaciones.'}
+          ? `¿Qué tan probable es que el modelo se equivoque? Escenarios calculados en ${phase === 'election_day' || phase === 'veda' ? '50,000' : '20,000'} simulaciones + análisis estadístico.`
+          : `¿Qué tan probable es que el modelo se equivoque? Calculado en cada corrida de ${phase === 'election_day' || phase === 'veda' ? '50,000' : '20,000'} simulaciones.`}
       </p>
       <div className="risk-cards" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         {activeCards.map((r, i) => (
@@ -472,8 +485,8 @@ function RiskScenarios({ risk, candidates }) {
         <AlertTriangle size={14} style={{ color: '#D97706', flexShrink: 0, marginTop: 2 }} />
         <span style={{ color: '#78716C', fontSize: 12, lineHeight: 1.5 }}>
           {isR2
-            ? 'Estos porcentajes se actualizan cada 30 minutos. En 2016 y 2021, Keiko perdió la segunda vuelta por menos de 45 mil votos. El antivoto y el voto rural son los factores con mayor incertidumbre en el modelo.'
-            : 'Estos porcentajes se actualizan cada 30 minutos. En Perú, 3 de las últimas 4 elecciones tuvieron sorpresas significativas en las últimas semanas. La incertidumbre es parte del proceso.'}
+            ? `Estos porcentajes se actualizan cada ${phase === 'election_day' ? '15 min' : phase === 'veda' ? '30 min' : '60 min'}. En 2016 y 2021, Keiko perdió la segunda vuelta por menos de 45 mil votos. El antivoto, el voto rural y el voto oculto son los factores con mayor incertidumbre en el modelo.`
+            : `Estos porcentajes se actualizan cada ${phase === 'election_day' ? '15 min' : phase === 'veda' ? '30 min' : '60 min'}. En Perú, 3 de las últimas 4 elecciones tuvieron sorpresas significativas en las últimas semanas. La incertidumbre es parte del proceso.`}
         </span>
       </div>
     </div>
@@ -564,7 +577,7 @@ export default function DashboardTab({ predictions, polymarket, polls, status })
         )}
 
         {/* Trend chart — full width */}
-        <ModelTrendChart isR2={isR2} />
+        <ModelTrendChart isR2={isR2} phase={status?.electoral_phase} />
 
         {/* Separator */}
         <div style={{ borderTop: '1px solid #E5E0D8', marginTop: 4 }} />
@@ -609,7 +622,7 @@ export default function DashboardTab({ predictions, polymarket, polls, status })
         </div>
 
         {/* Risk Scenarios */}
-        <RiskScenarios risk={predictions.risk_scenarios} candidates={predictions.candidates} />
+        <RiskScenarios risk={predictions.risk_scenarios} candidates={predictions.candidates} phase={status?.electoral_phase} />
       </div>
 
       <style>{`
