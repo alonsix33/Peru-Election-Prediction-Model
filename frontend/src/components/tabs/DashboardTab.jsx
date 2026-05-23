@@ -399,7 +399,13 @@ function RiskScenarios({ risk, candidates, phase }) {
   if (!risk) return null;
   const isR2 = (candidates?.length ?? 0) <= 2;
 
+  const sanchezBase = candidates?.find(c => c.candidate?.includes('Sánchez') || c.candidate?.includes('Roberto'));
+  const sanchezBaseWin = sanchezBase?.prob_win != null ? sanchezBase.prob_win.toFixed(1) : null;
+
   const blankPct = risk.expected_blank_null;
+  const biasWin = risk.bias_5pts_sanchez_win;
+  const biasFlips = biasWin != null && biasWin > 50;
+
   const r2Cards = isR2 ? [
     {
       question: '¿Puede haber un empate técnico?',
@@ -417,10 +423,12 @@ function RiskScenarios({ risk, candidates, phase }) {
     },
     {
       question: '¿Y si las encuestas subestiman a Sánchez?',
-      value: risk.bias_5pts_sanchez_win,
-      context: 'En 2021, las encuestas subestimaron a Castillo en aproximadamente 6pp. Si ese patrón se repitiera, la probabilidad de Sánchez cambiaría significativamente.',
-      color: risk.bias_5pts_sanchez_win > 70 ? '#D97706' : '#78716C',
-      bg: '#FAFAF9',
+      value: biasWin,
+      context: sanchezBaseWin != null && biasWin != null
+        ? `Con +5pp de sesgo (como ocurrió con Castillo en 2021, −6pp), el resultado${biasFlips ? ' se invierte' : ' se ajusta'}: Sánchez pasaría de ${sanchezBaseWin}% → ${biasWin}% de probabilidad de ganar.`
+        : 'Con +5pp de sesgo sistemático en las encuestas (como ocurrió con Castillo en 2021), la probabilidad de Sánchez aumentaría significativamente.',
+      color: biasWin > 50 ? '#D97706' : '#78716C',
+      bg: biasWin > 50 ? '#FFFBEB' : '#FAFAF9',
     },
   ] : [];
 
