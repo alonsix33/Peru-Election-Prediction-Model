@@ -38,7 +38,7 @@ function electoralPhase() {
   const now = nowPeru();
   const veda = DateTime.fromISO(VEDA_START, { zone: PERU_TIMEZONE });
   const election = DateTime.fromISO(ELECTION_DAY, { zone: PERU_TIMEZONE }).startOf('day');
-  const electionEnd = election.plus({ hours: 19 }); // Cierre de mesas: 7pm
+  const electionEnd = election.plus({ hours: 17 }); // Cierre de mesas: 5pm (ONPE)
 
   if (now < veda)           return 'pre_veda';
   if (now < election)       return 'veda';
