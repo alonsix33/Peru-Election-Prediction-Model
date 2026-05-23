@@ -48,9 +48,11 @@ const HOUSE_EFFECTS = {
   },
   IEP: {
     'Rafael López Aliaga':       -1.5,
-    'Keiko Fujimori':            -0.5,
+    'Keiko Fujimori':             0.0,  // ONPE R1: IEP v.v. 17.7% vs ONPE 17.2% (+0.5pp sobreestimó,
+                                        // dentro del MoE ±2.8pp → sin corrección). IEP es encuestadora
+                                        // de referencia; gaps pequeños no justifican ajuste.
     'López Chau':                +0.2,
-    'Roberto Sánchez Palomino':  0.0,   // ONPE R1: IEP 11.84% vs ONPE 12.0% (−0.16pp ✅)
+    'Roberto Sánchez Palomino':  0.0,   // ONPE R1: IEP 11.8% vs ONPE 12.0% (−0.2pp ✅ casi perfecto)
   }
 };
 
