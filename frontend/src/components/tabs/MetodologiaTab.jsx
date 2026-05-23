@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Database, TrendingUp, Shuffle, Scale, AlertTriangle,
-  BookOpen, ChevronRight, Layers, Zap, Shield, Eye, MapPin
+  BookOpen, ChevronRight, Layers, Zap, Shield, Eye, MapPin, Clock
 } from 'lucide-react';
 
 function PipelineStep({ icon: Icon, label, sublabel }) {
@@ -107,8 +107,8 @@ function PrimeraVueltaContent() {
           description="No todas las encuestadoras aciertan igual. IEP tuvo el menor error absoluto medio en las elecciones de 2021, así que le damos más peso (1.25x). CID Latinoamérica es nueva en el modelo y tiene la muestra más grande (n=2,120) pero sin historial previo en elecciones peruanas (0.80x). Las encuestas más recientes también pesan más que las antiguas, con decaimiento exponencial." />
         <StepRow number={3} title="Incluimos lo que dice el mercado"
           description="Polymarket es un mercado donde la gente apuesta dinero real sobre quién va a ganar. En primera vuelta le dimos un peso de ~28% al mercado y ~72% a las encuestas. Cuando empezó la veda electoral (5 de abril), el peso del mercado subió hasta 77% el día de la elección. En retrospectiva, ese 77% fue demasiado alto: Polymarket publicaba probabilidad de ganar la presidencia entera, no el porcentaje de votos en primera vuelta, lo que infló a Keiko +12.8pp." />
-        <StepRow number={4} title="Simulamos 10,000 elecciones"
-          description="Corremos la elección 10,000 veces con variaciones aleatorias calibradas para la volatilidad peruana. Usamos distribuciones de cola pesada (t-Student) para capturar eventos extremos. En el 35% de las simulaciones incluimos shocks: el líder puede colapsar -5 a -15 puntos (15% de las sims), el segundo puede caer (10%), o un candidato menor puede subir fuerte como Castillo en 2021 (10%)." />
+        <StepRow number={4} title="Simulamos 10,000–50,000 elecciones"
+          description="Corremos la elección con variaciones aleatorias calibradas para la volatilidad peruana. Usamos distribuciones de cola pesada (t-Student) para capturar eventos extremos. En el 35% de las simulaciones incluimos shocks: el líder puede colapsar -5 a -15 puntos (15% de las sims), el segundo puede caer (10%), o un candidato menor puede subir fuerte como Castillo en 2021 (10%)." />
         <StepRow number={5} title="Simulamos la segunda vuelta" isLast
           description="Para las simulaciones donde ningún candidato supera el 50%, tomamos a los dos primeros y simulamos la segunda vuelta. Los votos de los eliminados se transfieren según afinidad ideológica, limitados por el rechazo definitivo de cada finalista. Si un candidato le cae mal al 63% de la población, esos votos van al voto blanco." />
       </div>
@@ -195,7 +195,7 @@ function SegundaVueltaContent({ r2polls }) {
   const pipelineSteps = [
     { icon: Database, label: 'Encuestas R2', sublabel: pollSublabel },
     { icon: Scale, label: 'Blend bayesiano', sublabel: 'Encuestas + Polymarket' },
-    { icon: Shuffle, label: '10,000 simulaciones', sublabel: 'Monte Carlo' },
+    { icon: Shuffle, label: 'Monte Carlo', sublabel: '20k–50k simulaciones' },
     { icon: TrendingUp, label: 'Resultado', sublabel: 'P(ganar) por candidato' },
   ];
 
@@ -206,13 +206,36 @@ function SegundaVueltaContent({ r2polls }) {
           ¿Cómo funciona el modelo de segunda vuelta?
         </h2>
         <p style={{ fontSize: 16, color: '#78716C', lineHeight: 1.7, margin: '0 0 28px' }}>
-          Este modelo está activo hoy y se actualiza cada 30 minutos. Combina 4 encuestas de segunda vuelta con las señales de Polymarket, aplica correcciones estadísticas y simula la elección 10,000 veces. Te explicamos exactamente qué hace cada paso — sin tecnicismos.
+          Este modelo combina encuestas de segunda vuelta con Polymarket, aplica correcciones estadísticas y simula la elección. Te explicamos exactamente qué hace cada paso — sin tecnicismos.
         </p>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
           {pipelineSteps.map((step, i) => (
             <div key={i} style={{ display: 'contents' }}>
               <PipelineStep icon={step.icon} label={step.label} sublabel={step.sublabel} />
               {i < pipelineSteps.length - 1 && <ChevronRight size={20} color="#C9C4BB" style={{ flexShrink: 0 }} />}
+            </div>
+          ))}
+        </div>
+
+        {/* Update schedule table */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 24, marginBottom: 8 }}>
+          <Clock size={14} color="#8C877F" />
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#78716C', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Frecuencia de actualización
+          </span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
+          {[
+            { fase: 'Pre-veda',      cuando: 'hasta 31 may 8am',    intervalo: 'cada 60 min', sims: '20,000 sims', color: '#1E40AF', bg: '#EFF6FF' },
+            { fase: 'Veda',          cuando: '31 may – 6 jun',       intervalo: 'cada 30 min', sims: '50,000 sims', color: '#C2410C', bg: '#FFF7ED' },
+            { fase: 'Día elección',  cuando: '7 jun hasta 5pm',      intervalo: 'cada 15 min', sims: '50,000 sims', color: '#991B1B', bg: '#FEF2F2' },
+            { fase: 'Foto final',    cuando: '7 jun · 5pm Lima',     intervalo: 'última corrida', sims: 'para post-mortem', color: '#78716C', bg: '#F0EDE8' },
+          ].map(s => (
+            <div key={s.fase} style={{ background: s.bg, borderRadius: 8, padding: '10px 14px' }}>
+              <div style={{ color: s.color, fontWeight: 700, fontSize: 13 }}>{s.intervalo}</div>
+              <div style={{ color: s.color, fontSize: 12, fontWeight: 600, marginTop: 1 }}>{s.fase}</div>
+              <div style={{ color: '#8C877F', fontSize: 11, marginTop: 2 }}>{s.cuando}</div>
+              <div style={{ color: '#A8A29E', fontSize: 11 }}>{s.sims}</div>
             </div>
           ))}
         </div>
@@ -231,7 +254,7 @@ function SegundaVueltaContent({ r2polls }) {
           description="Algunas encuestadoras sobreestiman sistemáticamente a ciertos candidatos. Basados en su comportamiento en R1 2026, le restamos 1.5pp a CIT para Keiko (tendía a sobreestimarla) y 0.5pp a Ipsos para Keiko. A Sánchez no le aplicamos ninguna corrección porque no tenemos suficiente evidencia de sesgo en su caso. Estas correcciones son pequeñas pero evitan que los sesgos de encuestadora se acumulen." />
 
         <StepRow number={3} title="Los que no deciden — incertidumbre, no redistribución"
-          description="Entre el 24% y el 37% de los encuestados no se compromete con ningún candidato: dicen 'no sé', declaran que votarán blanco/nulo, o simplemente no responden. El modelo no pretende saber cómo votará ese grupo — redistribuirlos proporcionalmente implicaría asumir que romperán igual que los que ya decidieron, y en Perú no hay evidencia de que eso sea cierto (en 2021 rompieron masivamente hacia Castillo). En cambio, el modelo trabaja directamente con la proporción declarada entre los dos candidatos: si Keiko aparece al 39% y Sánchez al 35%, el punto de partida es Keiko 52.7% vs Sánchez 47.3% en votos válidos. Toda la incertidumbre sobre cómo romperán los no comprometidos la absorben las 10,000 simulaciones del paso 6." />
+          description="Entre el 24% y el 37% de los encuestados no se compromete con ningún candidato: dicen 'no sé', declaran que votarán blanco/nulo, o simplemente no responden. El modelo no pretende saber cómo votará ese grupo — redistribuirlos proporcionalmente implicaría asumir que romperán igual que los que ya decidieron, y en Perú no hay evidencia de que eso sea cierto (en 2021 rompieron masivamente hacia Castillo). En cambio, el modelo trabaja directamente con la proporción declarada entre los dos candidatos: si Keiko aparece al 39% y Sánchez al 35%, el punto de partida es Keiko 52.7% vs Sánchez 47.3% en votos válidos. Toda la incertidumbre sobre cómo romperán los no comprometidos la absorben las simulaciones Monte Carlo del paso 6." />
 
         <StepRow number={4} title="Polymarket — por qué no se usa el número directo"
           description="Polymarket publica la probabilidad de que cada candidato gane la elección. Hoy Keiko aparece al 75.5%. Ese número no significa que Keiko va a sacar 75.5% de los votos — significa que los apostadores creen que hay 75.5% de chances de que gane. Para usar esa señal correctamente, el modelo hace el camino inverso: si hay 75.5% de probabilidad de ganar, y la incertidumbre histórica de una elección peruana es de ±3pp, ¿qué porcentaje de votos necesita Keiko para que eso tenga sentido? La respuesta es ~52%. Sin esta corrección, el modelo inflaría a Keiko artificialmente cada vez que el alpha sube durante la veda." />
@@ -239,8 +262,8 @@ function SegundaVueltaContent({ r2polls }) {
         <StepRow number={5} title="El alpha — cuánto peso le damos a Polymarket"
           description="El alpha (α) controla qué tanto influye Polymarket vs las encuestas. Hoy está en 25%: Polymarket pesa 25%, encuestas 75%. El 31 de mayo empieza la veda electoral — las encuestas se congelan pero Polymarket sigue moviéndose. El alpha sube gradualmente hasta 60% el día de la elección. Gracias a la corrección del paso anterior, esto ya no distorsiona el resultado: Polymarket ahora dice '~52% de votos para Keiko', que es casi lo mismo que las encuestas. Subir el alpha de 25% a 60% mueve el posterior menos de 0.5pp." />
 
-        <StepRow number={6} title="Las 10,000 simulaciones Monte Carlo" isLast
-          description="Con el número final (posterior) como punto de partida, corremos 10,000 simulaciones. En cada una añadimos variación aleatoria — hoy ±5.7pp, el día de la elección ±3pp. En el 35% de las simulaciones ocurre un shock: en el 15% el líder colapsa entre 5 y 15 puntos (escándalo, colapso en debate); en el 10% el segundo cae; en el 10% hay un swing de debate que puede ir a cualquiera. Corrido el experimento, los shocks benefician neto a Sánchez en 2.2pp porque hay más eventos diseñados para perjudicar al líder que al segundo. El P(ganar) es simplemente el porcentaje de simulaciones que ganó cada candidato." />
+        <StepRow number={6} title="Las simulaciones Monte Carlo (20k–50k)" isLast
+          description="Con el número final (posterior) como punto de partida, corremos 20,000 simulaciones en pre-veda y 50,000 durante la veda y el día de la elección. En cada una añadimos variación aleatoria — hoy ±5.7pp, el día de la elección ±3pp. En el 45% de las simulaciones de R2 ocurre un shock: en el 15% el líder colapsa entre 5 y 15 puntos; en el 10% el segundo cae; en el 10% hay un swing de debate; y en el 10% se activa el voto oculto — un shock positivo de +3 a +6pp al candidato que va segundo, modelando el patrón Castillo 2021 donde el votante rural no declara su intención en encuestas. El P(ganar) es simplemente el porcentaje de simulaciones que ganó cada candidato." />
       </div>
 
       {/* Ejemplo visual: los 100 mundos */}
@@ -273,9 +296,9 @@ function SegundaVueltaContent({ r2polls }) {
 
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <FeatureCard icon={Zap} iconColor="#D97706" title="Shocks incluidos"
-          description="En el 35% de las simulaciones pasa algo inesperado: un escándalo, un debate decisivo, un colapso de campaña. En Perú, 3 de las últimas 4 elecciones tuvieron sorpresas. Los modelamos explícitamente." />
+          description="En el 45% de las simulaciones de R2 pasa algo inesperado: un escándalo, un debate decisivo, o el voto oculto — el +3 a +6pp al candidato que va segundo por votantes que no declaran su intención. En Perú, 3 de las últimas 4 elecciones tuvieron sorpresas. Los modelamos explícitamente." />
         <FeatureCard icon={Eye} iconColor="#1D4ED8" title="Transparencia total"
-          description="No ajustamos nada a mano. El modelo corre automáticamente cada 30 minutos. Si llega una encuesta nueva, el peso cambia solo. Si Polymarket se mueve, el posterior cambia — pero de forma acotada." />
+          description="No ajustamos nada a mano. El modelo corre automáticamente: cada 60 min antes de la veda, cada 30 min durante la veda, cada 15 min el día de la elección. Si llega una encuesta nueva, el peso cambia solo." />
         <FeatureCard icon={Shield} iconColor="#059669" title="Correcciones calibradas"
           description="Los sesgos de encuestadora, el alpha dinámico, la conversión de probabilidad PM a voto share — todo está calibrado con datos reales de R1 2026 y el historial electoral peruano." />
       </div>
@@ -285,7 +308,7 @@ function SegundaVueltaContent({ r2polls }) {
           <AlertTriangle size={20} color="#D97706" />
           <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1C1917', margin: 0 }}>Lo que el modelo no puede ver</h3>
         </div>
-        <LimitationItem text="El voto vergüenza: en 2021, las encuestas subestimaron a Castillo ~5pp porque parte de sus votantes no lo admitían en encuestas. Si Sánchez tiene un perfil similar de votante rural que no declara su intención, el modelo no lo captura. El escenario 'bias +5pts Sánchez' en la sección de riesgos ilustra este caso." />
+        <LimitationItem text="El voto oculto parcialmente modelado: en 2021, las encuestas subestimaron a Castillo ~5pp porque parte de sus votantes no lo admitían. El modelo ahora incluye un shock explícito (10% de sims R2: +3 a +6pp al candidato que va segundo). Pero si el efecto fuera mayor o sistémico — no un shock sino un sesgo estructural en todas las encuestas — el modelo seguiría subestimándolo. El escenario 'bias +5pts Sánchez' en la sección de riesgos ilustra el caso extremo." />
         <LimitationItem text="La movilización diferencial el día D: si el voto rural (donde Sánchez lidera) tiene mayor o menor asistencia que el urbano (donde lidera Keiko), el resultado puede ser muy diferente al de las encuestas. Las encuestas miden intención, no asistencia." />
         <LimitationItem text="Eventos de última hora: un escándalo, una exclusión legal, o una declaración viral en los últimos días antes de la veda. Los shocks del Monte Carlo capturan parte de esto, pero no un evento específico y conocido." />
         <LimitationItem text="El antivoto real vs declarado: el 44% que dice 'definitivamente no votaría por Keiko' en encuestas puede suavizarse o endurecerse el día de la elección. El modelo usa esos números como referencia pero no puede predecir cuánto se moverán." />

@@ -280,9 +280,9 @@ async function checkElectionFreeze() {
     return true;
   }
 
-  // Verificar si es día de elección (R2: 7 junio 2026) y pasó el corte de 6pm
+  // Verificar si es día de elección (R2: 7 junio 2026) y pasó el corte de 5pm (ONPE)
   const { isElectionDay } = timeToElection();
-  const pastCutoff = now.hour >= 18;
+  const pastCutoff = now.hour >= 17;
 
   if (!isElectionDay || !pastCutoff) return false;
 
@@ -293,7 +293,7 @@ async function checkElectionFreeze() {
   const finalExists = parseInt(rows[0].count) > 0;
 
   if (!finalExists) {
-    console.log('🗳️ 6pm Lima — ejecutando FOTO FINAL R2 del modelo...');
+    console.log('🗳️ 5pm Lima — ejecutando FOTO FINAL R2 del modelo...');
     try {
       await scrapePolymarket();
     } catch (err) {
@@ -313,22 +313,43 @@ async function checkElectionFreeze() {
   return true;
 }
 
+// Retorna el intervalo mínimo en minutos según la fase electoral.
+// pre_veda: 60min | veda: 30min | election_day: 15min | post_election: null (no correr)
+function getPhaseIntervalMinutes() {
+  const phase = electoralPhase();
+  if (phase === 'election_day') return 15;
+  if (phase === 'veda')         return 30;
+  if (phase === 'pre_veda')     return 60;
+  return null; // post_election
+}
+
+let lastCronRunAt = null;
+
 function startPolymarketCron() {
-  console.log('⏰ Polymarket cron job programado: cada 30 minutos');
+  console.log('⏰ Polymarket cron job programado: fase-adaptivo (pre_veda 60min / veda 30min / election_day 15min)');
 
   // Ejecutar inmediatamente al arrancar (respetando freeze)
   (async () => {
     const frozen = await checkElectionFreeze().catch(() => false);
     if (!frozen) {
+      lastCronRunAt = nowPeru();
       scrapePolymarket().catch(err => console.error('Scrape inicial falló:', err.message));
     }
   })();
 
-  // Programar cada 30 min con protección contra crashes y freeze
-  cron.schedule('*/30 * * * *', async () => {
+  // Cron de base cada 5 min — decide si correr según intervalo de la fase actual
+  cron.schedule('*/5 * * * *', async () => {
     try {
       const frozen = await checkElectionFreeze();
       if (frozen) return;
+
+      const intervalMins = getPhaseIntervalMinutes();
+      if (intervalMins === null) return;
+
+      const now = nowPeru();
+      if (lastCronRunAt && now.diff(lastCronRunAt, 'minutes').minutes < intervalMins) return;
+
+      lastCronRunAt = now;
       await scrapePolymarket();
     } catch (err) {
       console.error('Cron scrape falló (no-fatal):', err.message);

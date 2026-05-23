@@ -105,9 +105,12 @@ async function runFullPipeline({ saveToDB = false, trigger = 'auto_polymarket_up
   const bayesian = bayesianIntegration(withUndecided, polymarketData, pmVolume, overrideAlpha);
   console.log('   ✅ Bayesian: α=' + bayesian.polymarket_weight.toFixed(3));
 
-  // 5. Monte Carlo
-  const { results: mcResults, runoffSummary, riskScenarios } = runMonteCarlo(bayesian.candidates, 10_000);
-  console.log('   ✅ Monte Carlo: 10,000 simulaciones');
+  // 5. Monte Carlo — conteo de sims depende de la fase
+  // pre_veda: 20k (cada 60min, ruido irrelevante vs incertidumbre estructural)
+  // veda + election_day: 50k (cada 15-30min, colas importan más)
+  const simCount = phase === 'election_day' || phase === 'veda' ? 50_000 : 20_000;
+  const { results: mcResults, runoffSummary, riskScenarios } = runMonteCarlo(bayesian.candidates, simCount);
+  console.log(`   ✅ Monte Carlo: ${simCount.toLocaleString()} simulaciones`);
 
   // 5b. Escenarios analíticos R2 (no requieren MC adicional)
   if (electionRound === 2 && riskScenarios) {

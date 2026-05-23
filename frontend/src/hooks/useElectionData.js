@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 const API = import.meta.env.VITE_API_URL || '';
 
@@ -48,16 +48,15 @@ export function useElectionData() {
     polymarket: null, polls: null, r2polls: null, antivoto: null,
     loading: true, error: null, lastUpdated: null
   });
+  // Ref so the scheduling closure always reads the latest phase without re-registering the effect
+  const latestPhaseRef = useRef(null);
+  // Tracks wall-clock time of the last completed refresh (used by visibility handler)
+  const lastRefreshAtRef = useRef(0);
 
   const refresh = useCallback(async () => {
     setData(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      // predictions = R2 (segunda vuelta, live model)
-      // r1predictions = R1 (primera vuelta, always frozen)
-      // polls = R1 polls (round=1 default, for TrendChart history)
-      // r2polls = R2 polls (head-to-head segunda vuelta)
-      // antivoto = rechazo definitivo por candidato, historial + latest
       const [status, predictions, r1predictions, polymarket, polls, r2polls, antivoto] = await Promise.all([
         safeFetch(`${API}/api/status`),
         safeFetch(`${API}/api/predictions`),
@@ -70,9 +69,9 @@ export function useElectionData() {
 
       const normalized = normalizePredictions(predictions);
       const normalizedR1 = normalizePredictions(r1predictions);
-      // Core endpoints only — r2polls and antivoto are supplementary and handled gracefully when null
       const anyFailed = [status, normalized, polymarket, polls].some(d => d === null);
 
+      lastRefreshAtRef.current = Date.now();
       setData({
         status,
         predictions: normalized,
@@ -94,10 +93,43 @@ export function useElectionData() {
     }
   }, []);
 
+  // Sync latestPhaseRef whenever the status changes
+  useEffect(() => {
+    if (data.status?.electoral_phase) {
+      latestPhaseRef.current = data.status.electoral_phase;
+    }
+  }, [data.status]);
+
+  // Phase-aware scheduled polling (handles tab-in-foreground case)
   useEffect(() => {
     refresh();
-    const interval = setInterval(refresh, 60 * 60 * 1000);
-    return () => clearInterval(interval);
+    let timerId;
+    const scheduleNext = () => {
+      const phase = latestPhaseRef.current;
+      const ms = phase === 'election_day' ? 15 * 60 * 1000
+               : phase === 'veda'         ? 30 * 60 * 1000
+               : 60 * 60 * 1000;
+      timerId = setTimeout(async () => { await refresh(); scheduleNext(); }, ms);
+    };
+    scheduleNext();
+    return () => clearTimeout(timerId);
+  }, [refresh]);
+
+  // Page Visibility API — refresh when user returns to a backgrounded tab,
+  // but only if enough time has passed (browsers throttle timers in background).
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) return;
+      const phase = latestPhaseRef.current;
+      const intervalMs = phase === 'election_day' ? 15 * 60 * 1000
+                       : phase === 'veda'         ? 30 * 60 * 1000
+                       : 60 * 60 * 1000;
+      if (Date.now() - lastRefreshAtRef.current >= intervalMs) {
+        refresh();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [refresh]);
 
   return { ...data, refresh };

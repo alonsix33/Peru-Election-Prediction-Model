@@ -7,6 +7,14 @@
 // - Temporal drift: 0.30 pts/día (2.7 pts a 9 días)
 // Total: 35% de simulaciones tienen algún shock (vs 5% anterior)
 // Target: Aliaga P(2da vuelta) ~88-92%, P(ganar) ~55-62%
+//
+// RECALIBRACIÓN R2 — 23 mayo 2026
+// - Voto oculto: 10% de simulaciones R2 (+3 a +6pp al candidato rezagado).
+//   Modela sesgo estructural tipo Castillo 2021: base rural subestimada por encuestas urbanas.
+//   Asimétrico: solo aplica cuando hay exactamente 2 candidatos (segunda vuelta).
+// - runoffUncertainty: 8.0 → 11.0. La campaña de 7 semanas entre vueltas tiene alta
+//   volatilidad histórica (debates, alianzas, movilización diferencial). σ=11 da ±11pp
+//   en el 68% de simulaciones, más realista para una carrera decidida por <1pp en 2021.
 
 const { handleError } = require('../errors/errorHandler');
 const { timeToElection } = require('./clock');
@@ -254,7 +262,7 @@ function simulateRunoff(finalistA, finalistB, allFirstRoundResults) {
 
   // 5. Incertidumbre propia de segunda vuelta:
   // 7 semanas de campaña — debates, escándalos, movilización.
-  const runoffUncertainty = 8.0;
+  const runoffUncertainty = 11.0;
   const shockA = randn() * runoffUncertainty;
   const shockB = -shockA * 0.7;
   votesA += shockA;
@@ -480,7 +488,7 @@ function runMonteCarlo(posterior, nSimulations = 10_000) {
         }
       }
     }
-    // 3c. Shock positivo: 10% de simulaciones
+    // 3c. Shock positivo: 10% de simulaciones (roll 0.25–0.35, R1 y R2)
     //     R1: "efecto Castillo" — candidato del #3-#6 sube fuerte
     //     R2: "efecto debate" — cualquiera de los dos finalistas recibe el swing
     else if (roll < 0.35) {
@@ -495,6 +503,15 @@ function runMonteCarlo(posterior, nSimulations = 10_000) {
         const debateIdx = Math.random() < 0.5 ? sorted[0].i : sorted[1].i;
         perturbed[debateIdx] += shockSize;
       }
+    }
+
+    // 3d. Voto oculto: 10% de simulaciones, solo R2 (nCandidates === 2).
+    //     Sesgo estructural tipo Castillo 2021: encuestas urbanas subestiman al
+    //     candidato con base rural. +3 a +6pp al candidato con menor estimado base.
+    //     Asimétrico — no aplica a R1 donde el efecto está cubierto por el shock #3-#6.
+    else if (roll < 0.45 && nCandidates === 2) {
+      const trailingIdx = perturbed[0] >= perturbed[1] ? 1 : 0;
+      perturbed[trailingIdx] += 3 + Math.random() * 3;
     }
 
     // 4. Clamp y normalizar
