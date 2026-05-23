@@ -34,19 +34,25 @@ const HOUSE_EFFECTS = {
     'Rafael López Aliaga':       -0.5,
     'Keiko Fujimori':            +0.5,
     'López Chau':                -0.3,
-    'Roberto Sánchez Palomino': -3.0,   // ONPE R1: Ipsos 8.57% vs ONPE 12.0% (−3.43pp)
+    'Roberto Sánchez Palomino': -2.0,   // ONPE R1: Ipsos 8.57% vs ONPE 12.0% (gap −3.43pp)
+                                        // Calibrado a −2.0pp con cross-check R2: Ipsos may (K+5.4pp raw)
+                                        // converge con IEP (S+0.8pp ref) y Datum en rango K+0.8-2.0pp.
   },
   Datum: {
     'Rafael López Aliaga':       -0.8,
     'Keiko Fujimori':            +0.8,
     'López Chau':                -0.3,
-    'Roberto Sánchez Palomino': -3.5,   // ONPE R1: Datum 7.45% vs ONPE 12.0% (−4.55pp)
+    'Roberto Sánchez Palomino': -2.0,   // ONPE R1: Datum 7.45% vs ONPE 12.0% (gap −4.55pp)
+                                        // Calibrado a −2.0pp con cross-check R2: Datum may (K+4.5pp raw)
+                                        // converge con IEP y resto de encuestadoras en K+0.8-2.0pp.
   },
   IEP: {
     'Rafael López Aliaga':       -1.5,
-    'Keiko Fujimori':            -0.5,
+    'Keiko Fujimori':             0.0,  // ONPE R1: IEP v.v. 17.7% vs ONPE 17.2% (+0.5pp sobreestimó,
+                                        // dentro del MoE ±2.8pp → sin corrección). IEP es encuestadora
+                                        // de referencia; gaps pequeños no justifican ajuste.
     'López Chau':                +0.2,
-    'Roberto Sánchez Palomino':  0.0,   // ONPE R1: IEP 11.84% vs ONPE 12.0% (−0.16pp ✅)
+    'Roberto Sánchez Palomino':  0.0,   // ONPE R1: IEP 11.8% vs ONPE 12.0% (−0.2pp ✅ casi perfecto)
   }
 };
 

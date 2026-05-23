@@ -72,16 +72,20 @@ Calibrados con ONPE R1 2026. **Signo negativo = encuestadora subestima → corri
 
 | Encuestadora | Keiko | Sánchez | Aliaga (R1) |
 |---|---|---|---|
-| Ipsos | +0.5pp | **-3.0pp** | -0.5pp |
-| Datum | +0.8pp | **-3.5pp** | -0.8pp |
-| IEP | -0.5pp | **0.0pp** | -1.5pp |
+| Ipsos | +0.5pp | **-2.0pp** | -0.5pp |
+| Datum | +0.8pp | **-2.0pp** | -0.8pp |
+| IEP | **0.0pp** | **0.0pp** | -1.5pp |
 | CPI | -0.5pp | **-2.0pp** | +1.2pp |
 | CIT | +1.5pp | **-1.5pp** | +3.5pp |
 
 Evidencia de calibración Sánchez:
-- Ipsos R1: 8.57% vs ONPE 12.0% → gap -3.43pp → HE = -3.0pp
-- Datum R1: 7.45% vs ONPE 12.0% → gap -4.55pp → HE = -3.5pp
-- IEP R1: 11.84% vs ONPE 12.0% → gap -0.16pp → HE = 0.0pp ✅
+- Ipsos R1: 8.57% vs ONPE 12.0% → gap -3.43pp → HE = -2.0pp (calibrado con R2)
+- Datum R1: 7.45% vs ONPE 12.0% → gap -4.55pp → HE = -2.0pp (calibrado con R2)
+- IEP R1 Sánchez: 11.8% vs ONPE 12.0% → gap -0.2pp ✅ → HE = 0.0pp
+- IEP R1 Keiko: 17.7% vs ONPE 17.2% → gap +0.5pp (dentro MoE ±2.8pp) → HE = 0.0pp
+- IEP es encuestadora de referencia: HE = 0.0pp para todos los candidatos R2
+- Cross-check R2 (IEP ref pura = S+1.6pp): con -2.0pp Ipsos/Datum convergen
+  en K+0.8-2.0pp para polls de mayo — consistente con race genuinamente ajustada.
 
 ---
 

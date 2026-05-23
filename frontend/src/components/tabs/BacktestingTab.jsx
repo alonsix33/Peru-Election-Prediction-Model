@@ -1,7 +1,177 @@
 import { useState } from 'react';
 import { getPartyColor } from '../../config/partyColors';
-import { History, BarChart3, CheckCircle, XCircle, TrendingUp, Info } from 'lucide-react';
+import { History, BarChart3, CheckCircle, XCircle, TrendingUp, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import TermTooltip from '../TermTooltip';
+
+// ─── Análisis detallado por encuestadora · R1 2026 ────────────────────────────
+// Última encuesta pre-veda de cada casa, convertida a votos válidos.
+// Normalización: IEP → pool de candidatos listados (56.6%);
+//   Ipsos → 100−B/N(16%)−NS/NP(14%)=70%; Datum → 100−B/N(28.9%)=71.1%;
+//   CPI → 100−B/N(24.2%)−NS/NP(23.1%)=52.7%; CIT → 100−B/N(22.5%)=77.5%.
+const POLLSTER_DETAIL_2026 = {
+  candidates: [
+    { name: 'Keiko Fujimori',           short: 'Keiko',   onpe: 17.2 },
+    { name: 'Roberto Sánchez Palomino', short: 'Sánchez', onpe: 12.0 },
+    { name: 'Rafael López Aliaga',      short: 'Aliaga',  onpe: 11.9 },
+    { name: 'Jorge Nieto',              short: 'Nieto',   onpe: 11.0 },
+    { name: 'Ricardo Belmont',          short: 'Belmont', onpe: 10.2 },
+  ],
+  pollsters: [
+    {
+      name: 'IEP', dates: '28–30 mar', mae: 1.3, color: '#1D4ED8',
+      ests: [17.7, 11.8, 15.4, 9.5, 9.2],
+    },
+    {
+      name: 'Ipsos', dates: '29 mar–1 abr', mae: 2.7, color: '#7C3AED',
+      ests: [17.1, 8.6, 11.4, 7.1, 4.3],
+    },
+    {
+      name: 'Datum', dates: '25–27 mar', mae: 3.8, color: '#059669',
+      note: 'simulacro',
+      ests: [18.6, 7.5, 13.4, 6.9, 2.7],
+    },
+    {
+      name: 'CPI', dates: '21–23 mar', mae: 6.4, color: '#D97706',
+      ests: [19.2, 5.9, 22.2, 7.4, null],
+    },
+    {
+      name: 'CIT', dates: '20–23 mar', mae: 6.6, color: '#DC2626',
+      note: 'simulacro',
+      ests: [16.6, 3.0, 21.7, 3.9, null],
+    },
+  ],
+};
+
+function errColor(err) {
+  if (err === null) return '#C4B8B0';
+  const abs = Math.abs(err);
+  if (abs < 1.0) return '#059669';
+  if (abs < 3.0) return '#D97706';
+  return '#DC2626';
+}
+
+function PollsterDetailTable() {
+  const { candidates, pollsters } = POLLSTER_DETAIL_2026;
+  return (
+    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <table style={{ borderCollapse: 'collapse', fontSize: 12, minWidth: 520 }}>
+        <thead>
+          <tr style={{ borderBottom: '2px solid #E5E0D8' }}>
+            <th style={{
+              textAlign: 'left', padding: '8px 10px 8px 0',
+              color: '#8C877F', fontWeight: 500, fontSize: 11,
+              position: 'sticky', left: 0, background: '#FAFAF9', minWidth: 72,
+            }}>
+              Candidato
+            </th>
+            <th style={{ textAlign: 'right', padding: '8px 10px', color: '#1C1917', fontWeight: 600, fontSize: 11, minWidth: 52 }}>
+              ONPE
+            </th>
+            {pollsters.map(p => (
+              <th key={p.name} style={{ textAlign: 'center', padding: '6px 8px', minWidth: 80 }}>
+                <div style={{ color: p.color, fontWeight: 700, fontSize: 12 }}>{p.name}</div>
+                <div style={{ color: '#8C877F', fontWeight: 400, fontSize: 10, marginTop: 1 }}>{p.dates}</div>
+                {p.note && (
+                  <div style={{
+                    fontSize: 9, color: '#8C877F', fontStyle: 'italic',
+                    background: '#F0EDE8', borderRadius: 3, padding: '1px 4px', marginTop: 2, display: 'inline-block',
+                  }}>{p.note}</div>
+                )}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {candidates.map((c, ci) => (
+            <tr key={c.name} style={{ borderBottom: '1px solid #F0EDE8' }}>
+              {/* Candidate name */}
+              <td style={{
+                padding: '9px 10px 9px 0', color: '#1C1917', fontWeight: 500, fontSize: 12,
+                position: 'sticky', left: 0, background: '#FAFAF9',
+              }}>
+                {c.short}
+              </td>
+              {/* ONPE */}
+              <td style={{
+                padding: '9px 10px', textAlign: 'right',
+                fontVariantNumeric: 'tabular-nums', color: '#1C1917', fontWeight: 600, fontSize: 12,
+              }}>
+                {c.onpe.toFixed(1)}%
+              </td>
+              {/* Each pollster */}
+              {pollsters.map((p, pi) => {
+                const est = p.ests[ci];
+                const err = est !== null ? Math.round((est - c.onpe) * 10) / 10 : null;
+                const color = errColor(err);
+                return (
+                  <td key={p.name} style={{ padding: '6px 8px', textAlign: 'center', verticalAlign: 'middle' }}>
+                    {est !== null ? (
+                      <div>
+                        <div style={{ color: '#1C1917', fontVariantNumeric: 'tabular-nums', fontSize: 12 }}>
+                          {est.toFixed(1)}%
+                        </div>
+                        <div style={{
+                          color, fontWeight: 600, fontSize: 11,
+                          fontVariantNumeric: 'tabular-nums', marginTop: 1,
+                        }}>
+                          {err > 0 ? '+' : ''}{err.toFixed(1)}pp
+                        </div>
+                      </div>
+                    ) : (
+                      <span style={{ color: '#C4B8B0', fontSize: 11 }}>—</span>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+
+          {/* MAE row */}
+          <tr style={{ borderTop: '2px solid #E5E0D8', background: '#FAFAF9' }}>
+            <td style={{
+              padding: '9px 10px 9px 0', color: '#8C877F', fontWeight: 600,
+              fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em',
+              position: 'sticky', left: 0, background: '#FAFAF9',
+            }}>
+              MAE
+            </td>
+            <td style={{ padding: '9px 10px' }} />
+            {pollsters.map(p => {
+              const maeColor = p.mae < 2 ? '#059669' : p.mae < 4 ? '#D97706' : '#DC2626';
+              return (
+                <td key={p.name} style={{ padding: '9px 8px', textAlign: 'center' }}>
+                  <span style={{
+                    color: maeColor, fontWeight: 700, fontSize: 12,
+                    fontVariantNumeric: 'tabular-nums',
+                  }}>
+                    {p.mae.toFixed(1)} pp
+                  </span>
+                </td>
+              );
+            })}
+          </tr>
+        </tbody>
+      </table>
+
+      {/* Legend */}
+      <div style={{ display: 'flex', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>
+        {[
+          { color: '#059669', label: '< 1pp' },
+          { color: '#D97706', label: '1–3pp' },
+          { color: '#DC2626', label: '> 3pp' },
+        ].map(({ color, label }) => (
+          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
+            <span style={{ color: '#8C877F', fontSize: 10 }}>{label}</span>
+          </div>
+        ))}
+        <span style={{ color: '#8C877F', fontSize: 10, marginLeft: 4 }}>
+          · Error = encuestadora − ONPE · v.v. = votos válidos · — = no incluido en esa encuesta
+        </span>
+      </div>
+    </div>
+  );
+}
 
 const DATA = {
   2016: {
@@ -90,6 +260,7 @@ function MetricCard({ label, value, sub, color }) {
 
 export default function BacktestingTab() {
   const [activeYear, setActiveYear] = useState(2026);
+  const [showPollDetail, setShowPollDetail] = useState(false);
   const d = DATA[activeYear];
 
   return (
@@ -273,6 +444,60 @@ export default function BacktestingTab() {
           </div>
         ))}
       </div>
+
+      {/* Pollster detail breakdown — only for 2026 */}
+      {activeYear === 2026 && (
+        <div style={{ border: '1px solid #E5E0D8', borderRadius: 10, overflow: 'hidden' }}>
+          {/* Toggle button */}
+          <button
+            onClick={() => setShowPollDetail(v => !v)}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '13px 16px', background: showPollDetail ? '#F0F4FF' : '#FAFAF9',
+              border: 'none', cursor: 'pointer', textAlign: 'left', gap: 8,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <BarChart3 size={15} style={{ color: '#1D4ED8', flexShrink: 0 }} />
+              <span style={{ color: '#1C1917', fontSize: 13, fontWeight: 600 }}>
+                Encuestadora vs ONPE — última pre-veda
+              </span>
+              <span style={{
+                fontSize: 10, padding: '2px 7px', background: '#EFF6FF',
+                color: '#1D4ED8', border: '1px solid #BFDBFE', borderRadius: 10,
+              }}>
+                detalle por candidato
+              </span>
+            </div>
+            {showPollDetail
+              ? <ChevronUp size={15} style={{ color: '#8C877F', flexShrink: 0 }} />
+              : <ChevronDown size={15} style={{ color: '#8C877F', flexShrink: 0 }} />
+            }
+          </button>
+
+          {/* Expanded content */}
+          {showPollDetail && (
+            <div style={{ padding: '16px', borderTop: '1px solid #E5E0D8', background: '#FFFFFF' }}>
+              <p style={{ color: '#78716C', fontSize: 12, lineHeight: 1.6, margin: '0 0 14px' }}>
+                Estimados de votos válidos de la <strong style={{ color: '#1C1917' }}>última encuesta pre-veda</strong> de
+                cada casa vs resultado ONPE 100%. El error (en pp) muestra si la encuestadora sobreestimó (+) o
+                subestimó (−) a cada candidato. Desliza para ver todas las columnas.
+              </p>
+              <PollsterDetailTable />
+              <div style={{
+                marginTop: 14, padding: '10px 14px',
+                background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8,
+              }}>
+                <p style={{ color: '#92400E', fontSize: 11, lineHeight: 1.6, margin: 0 }}>
+                  <strong>Patrón común:</strong> todas las encuestadoras subestimaron a Sánchez
+                  (Ipsos −3.4pp, Datum −4.5pp, CPI −6.1pp, CIT −9.0pp). Solo IEP estuvo cerca (−0.2pp).
+                  El mismo sesgo rural afectó a Nieto y Belmont. Aliaga fue sobreestimado en 3 de 5 casas.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 2026 lessons & R2 updates note */}
       <div style={{
