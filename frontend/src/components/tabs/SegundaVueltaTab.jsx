@@ -271,7 +271,7 @@ function PollsTable({ r2polls }) {
         marginTop: 8, background: '#FFFBEB', border: '1px solid #FCD34D',
         borderRadius: 6, padding: '6px 10px', fontSize: 11, color: '#92400E',
       }}>
-        Circulan encuestas falsas atribuidas a Datum, Ipsos e IEP. Solo las encuestas mostradas aquí han sido verificadas. IEP emitió comunicado el 16/05/2026 confirmando que no publicó ninguna encuesta de mayo.
+        Circulan encuestas falsas atribuidas a Datum, Ipsos e IEP. Solo las encuestas mostradas aquí han sido verificadas.
       </div>
     </>
   );
@@ -440,14 +440,10 @@ function PMvsPollsSection({ polymarket, r2polls }) {
           )}
         </div>
       </div>
-      <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: '0 0 8px' }}>
-        A diferencia de la primera vuelta, en R2 Polymarket <em>sí</em> cotiza directamente P(ganar la presidencia), que es lo que mide la segunda vuelta.
-        La brecha entre el mercado y las encuestas podría indicar que PM incorpora información no capturada en sondeos
-        (encuestas internas, alianzas en formación) o que hay un componente especulativo en el mercado.
-      </p>
       <p style={{ color: '#8C877F', fontSize: 12, margin: 0 }}>
-        El modelo asigna α=20–60% al mercado (sube progresivamente durante la veda).
-        Polymarket se incorpora como P(ganar), capada en ±10 pts desde el 50% para evitar vote shares imposibles.
+        En R2 Polymarket cotiza P(ganar la presidencia), que corresponde directamente con lo que mide la segunda vuelta.
+        El modelo convierte esa probabilidad a voto share implícito (Φ⁻¹, σ=3pp) y le asigna un peso α entre 20% (pre-veda) y 60% (día de la elección).
+        La brecha PM–encuestas puede reflejar información no capturada en sondeos o volatilidad especulativa del mercado.
       </p>
     </div>
   );
@@ -468,8 +464,7 @@ function AllianceSection() {
         Alianzas y transferencia de voto
       </h3>
       <p style={{ color: '#A8A29E', fontSize: 12, margin: '0 0 14px' }}>
-        Históricamente, entre el 40 y el 60% del voto de un candidato sigue la recomendación de su líder.
-        Badge verde = confirmado · amarillo = en negociación · gris = posición ambigua.
+        Verde = apoyo formal · amarillo = en negociación · gris = posición ambigua o dividida.
       </p>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         {/* Sánchez side */}
@@ -742,18 +737,15 @@ export default function SegundaVueltaTab({ predictions, polymarket, r2polls, ant
         <h2 style={{ color: '#1C1917', fontSize: 20, fontWeight: 700, margin: '0 0 6px' }}>
           Segunda Vuelta · 7 de junio de 2026
         </h2>
-        <p style={{ color: '#78716C', fontSize: 14, margin: '0 0 6px', lineHeight: 1.5 }}>
-          Keiko Fujimori (17.2%) vs. Roberto Sánchez Palomino (12.0%). Clasificados por la ONPE con resultados al 100% proclamados el 17/05/2026.
-        </p>
         <p style={{ color: '#78716C', fontSize: 14, margin: 0, lineHeight: 1.5 }}>
-          ¿Quién ganará el 7 de junio? El modelo combina encuestas, mercados de predicción y factores históricos para responder esta pregunta con datos actualizados automáticamente.
+          ¿Quién ganará el 7 de junio? El modelo combina encuestas, mercados de predicción y factores históricos para responder esta pregunta.
         </p>
       </div>
 
       {/* Model prediction head-to-head */}
       <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
         <div style={{ color: '#8C877F', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>
-          Predicción del modelo (actualizada automáticamente)
+          Predicción del modelo
         </div>
         <HeadToHead predictions={predictions} />
         {predictions?.generated_at_lima && (
@@ -786,21 +778,6 @@ export default function SegundaVueltaTab({ predictions, polymarket, r2polls, ant
 
       {/* Antivoto — dynamic from API */}
       <AntiVotoSection antivoto={antivoto} />
-
-      {/* Narrative bridge */}
-      <div style={{
-        background: '#F7F4EF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 20,
-      }}>
-        <h3 style={{ color: '#1C1917', fontSize: 15, fontWeight: 600, margin: '0 0 10px' }}>
-          ¿Qué implican estos factores para el pronóstico?
-        </h3>
-        <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: 0 }}>
-          Las alianzas formales (RLA + otros) suman bloques de voto que históricamente transfieren entre 40% y 60% de sus electores.
-          La geografía muestra que Sánchez tiene ventaja fuera de Lima, replicando el perfil de Castillo en 2021.
-          El antivoto de ambos candidatos converge cerca del 40-44%, lo que podría elevar el voto blanco/nulo por encima del promedio histórico.
-          El modelo integra estos factores a través de la incertidumbre del Monte Carlo: los números de P(Ganar) reflejan todos estos escenarios ponderados por su probabilidad.
-        </p>
-      </div>
 
       {/* Historical pattern — expanded with anti-vote, polls vs result, margins */}
       <div style={{
