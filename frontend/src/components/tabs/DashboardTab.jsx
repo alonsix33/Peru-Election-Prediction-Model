@@ -210,6 +210,7 @@ function ModelTrendChart({ isR2, phase }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ color: '#8C877F', fontSize: 11 }}>
             {minsAgo < 60 ? `hace ${minsAgo} min` : `hace ${Math.round(minsAgo / 60)}h`}
+            {' · '}cada {p === 'election_day' ? '15' : p === 'veda' ? '30' : '60'} min
           </span>
           <span style={{
             width: 8, height: 8, borderRadius: '50%', background: dotColor,

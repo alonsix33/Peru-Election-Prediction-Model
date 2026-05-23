@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   Database, TrendingUp, Shuffle, Scale, AlertTriangle,
-  BookOpen, ChevronRight, Layers, Zap, Shield, Eye, MapPin
+  BookOpen, ChevronRight, Layers, Zap, Shield, Eye, MapPin, Clock
 } from 'lucide-react';
 
 function PipelineStep({ icon: Icon, label, sublabel }) {
@@ -206,13 +206,36 @@ function SegundaVueltaContent({ r2polls }) {
           ¿Cómo funciona el modelo de segunda vuelta?
         </h2>
         <p style={{ fontSize: 16, color: '#78716C', lineHeight: 1.7, margin: '0 0 28px' }}>
-          Este modelo está activo hoy y se actualiza automáticamente: cada 60 min antes de la veda, cada 30 min durante la veda electoral, y cada 15 min el día de la elección. Combina 4 encuestas de segunda vuelta con las señales de Polymarket, aplica correcciones estadísticas y simula la elección 20,000 a 50,000 veces. Te explicamos exactamente qué hace cada paso — sin tecnicismos.
+          Este modelo combina encuestas de segunda vuelta con Polymarket, aplica correcciones estadísticas y simula la elección. Te explicamos exactamente qué hace cada paso — sin tecnicismos.
         </p>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
           {pipelineSteps.map((step, i) => (
             <div key={i} style={{ display: 'contents' }}>
               <PipelineStep icon={step.icon} label={step.label} sublabel={step.sublabel} />
               {i < pipelineSteps.length - 1 && <ChevronRight size={20} color="#C9C4BB" style={{ flexShrink: 0 }} />}
+            </div>
+          ))}
+        </div>
+
+        {/* Update schedule table */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 24, marginBottom: 8 }}>
+          <Clock size={14} color="#8C877F" />
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#78716C', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Frecuencia de actualización
+          </span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
+          {[
+            { fase: 'Pre-veda',      cuando: 'hasta 31 may 8am',    intervalo: 'cada 60 min', sims: '20,000 sims', color: '#1E40AF', bg: '#EFF6FF' },
+            { fase: 'Veda',          cuando: '31 may – 6 jun',       intervalo: 'cada 30 min', sims: '50,000 sims', color: '#C2410C', bg: '#FFF7ED' },
+            { fase: 'Día elección',  cuando: '7 jun hasta 5pm',      intervalo: 'cada 15 min', sims: '50,000 sims', color: '#991B1B', bg: '#FEF2F2' },
+            { fase: 'Foto final',    cuando: '7 jun · 5pm Lima',     intervalo: 'última corrida', sims: 'para post-mortem', color: '#78716C', bg: '#F0EDE8' },
+          ].map(s => (
+            <div key={s.fase} style={{ background: s.bg, borderRadius: 8, padding: '10px 14px' }}>
+              <div style={{ color: s.color, fontWeight: 700, fontSize: 13 }}>{s.intervalo}</div>
+              <div style={{ color: s.color, fontSize: 12, fontWeight: 600, marginTop: 1 }}>{s.fase}</div>
+              <div style={{ color: '#8C877F', fontSize: 11, marginTop: 2 }}>{s.cuando}</div>
+              <div style={{ color: '#A8A29E', fontSize: 11 }}>{s.sims}</div>
             </div>
           ))}
         </div>

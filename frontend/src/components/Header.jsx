@@ -49,9 +49,10 @@ export default function Header({ status, predictions }) {
     updatedDotColor = minsAgo < greenThresh ? '#059669'
                     : minsAgo < orangeThresh ? '#D97706'
                     : '#DC2626';
-    if (minsAgo < 1) updatedText = 'Actualizado ahora';
-    else if (minsAgo < 60) updatedText = `Actualizado hace ${minsAgo} min`;
-    else updatedText = `Actualizado hace ${Math.floor(minsAgo / 60)}h`;
+    const intervalLabel = phase === 'election_day' ? '15 min' : phase === 'veda' ? '30 min' : '60 min';
+    if (minsAgo < 1) updatedText = `Actualizado ahora · cada ${intervalLabel}`;
+    else if (minsAgo < 60) updatedText = `Actualizado hace ${minsAgo} min · cada ${intervalLabel}`;
+    else updatedText = `Actualizado hace ${Math.floor(minsAgo / 60)}h · cada ${intervalLabel}`;
   }
 
   return (
