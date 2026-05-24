@@ -2,7 +2,7 @@
 
 **Fecha de elección:** 12 de abril de 2026  
 **Documento generado:** 13 de abril de 2026  
-**Última actualización:** 23 de mayo de 2026 — análisis contrafactual y correcciones científicas (Sección 8)  
+**Última actualización:** 24 de mayo de 2026 — corrección de datos de encuestas pre-veda (§8.2) y datos de BacktestingTab  
 **Estado:** Final — ONPE 100% contabilizado, JNE proclamó resultados el 17/05/2026  
 
 ---
@@ -517,11 +517,19 @@ El patrón de Castillo 2021 estaba documentado públicamente antes de la elecci�
 
 La regla del análisis contrafactual es estricta: solo puedes usar lo que sabías antes. No puedes usar los resultados para calibrar. ¿Qué teníamos?
 
-**Datos de encuestas:** Cuatro encuestadoras con sus últimas publicaciones pre-veda:
-- IEP (28–30 marzo): la más reciente y la más precisa históricamente — MAE de **1.3 pp** en sus válidos calculados
-- Ipsos tracking (29 mar–1 abr): MAE de **2.7 pp**
-- Datum simulacro (25–27 mar): MAE de **3.8 pp**
-- CPI (21–23 mar): MAE de **6.4 pp**, la más antigua y menos precisa
+**Datos de encuestas:** Cinco encuestadoras. Las fechas y MAEs corresponden a la **última encuesta pre-veda** de cada casa (campo), todas publicadas el 5 de abril de 2026 o antes de la veda electoral. Votos válidos calculados con pool correcto por encuestadora; sin mezclar con conteos rápidos ni boca de urna.
+
+| Encuestadora | Campo (última pre-veda) | Tipo | MAE vs ONPE |
+|---|---|---|---|
+| IEP | 28–30 mar 2026 | intención de voto | **1.3 pp** ✅ |
+| CPI | 3–4 abr 2026 | simulacro con cédula | **3.4 pp** ⚠️ |
+| Ipsos | 3–4 abr 2026 | intención de voto | **3.7 pp** ⚠️ |
+| Datum | 1–4 abr 2026 | intención de voto | **4.1 pp** ⚠️ |
+| CIT | 30 mar–1 abr 2026 | simulacro con cédula | **5.3 pp** ❌ |
+
+*Nota: Los datos de CPI y CIT de semanas previas (21–23 mar y 20–23 mar respectivamente) son encuestas anteriores del mismo ciclo, no las últimas pre-veda. Los valores de BacktestingTab usan los datos de la tabla anterior.*
+
+El ranking real de encuestadoras cambió notablemente al usar los polls finales: **CPI mejoró de 6.4 pp (encuesta 21–23 mar, con Aliaga sobreestimado +10 pp) a 3.4 pp** en su simulacro final del 3–4 de abril. Esto sugiere que CPI corrigió su metodología de cobertura geográfica entre mediciones.
 
 **Patrón histórico de sesgo rural:** La subestimación de Castillo en 2021 (−6.2 pp) era pública, documentada, y atribuida a las limitaciones de las encuestas urbanas para capturar el voto rural.
 
@@ -718,10 +726,11 @@ El límite alcanzable con datos pre-elección era **~1.5 pp de MAE** — tres ve
 | 1.1 | 2026-04-13 | Sección 7.4 — conteo rápido Ipsos y Datum |
 | 2.0 | 2026-05-17 | Sección 7.5 completa con ONPE 100%; actualización de métricas globales, ranking, grades; corrección de nombres de candidatos; nota sobre López Chau no rastreado; actualización de segunda vuelta (Keiko vs R.Sánchez) |
 | 3.0 | 2026-05-23 | Sección 8 nueva — análisis contrafactual completo: diagnóstico de dos causas raíz, tres correcciones científicas, sandbox con resultados candidato a candidato, análisis de sensibilidad del ajuste rural, conclusiones sobre MAE alcanzable (1.59 pp vs 4.01 pp real) |
+| 3.1 | 2026-05-24 | §8.2 corregido: datos de encuestas pre-veda actualizados a la última encuesta real de cada casa. Ipsos/CPI/Datum actualizados a polls de 3–5 abril; CIT corregido a simulacro 30 mar–1 abr (n=1500, publicado 5 abr, no el de 20–23 mar). Belmont añadido a CPI (2.1%) y CIT (2.6%). Ranking encuestadoras ahora: IEP (1.3) > CPI (3.4) > Ipsos (3.7) > Datum (4.1) > CIT (5.3). BacktestingTab actualizado. |
 
 ---
 
-*Documento generado el 13 de abril de 2026. Última actualización: 17 de mayo de 2026 con resultados oficiales ONPE 100%.*  
+*Documento generado el 13 de abril de 2026. Última actualización: 24 de mayo de 2026.*  
 *Este análisis es de carácter académico y experimental. No constituye asesoría electoral ni predicción oficial.*  
 *Repositorio: github.com/alonsix33/Peru-Election-Prediction-Model*
 

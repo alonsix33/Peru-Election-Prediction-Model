@@ -113,13 +113,14 @@ VALUES (4, '2026-03-21', '2026-03-23', 1300, 2.70, 95.5, 'nacional', 'presencial
 RETURNING id INTO pid;
 
 INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
-  (pid, 'Rafael López Aliaga',      'Renovación Popular',    11.70),
-  (pid, 'Keiko Fujimori',           'Fuerza Popular',        10.10),
-  (pid, 'López Chau',               NULL,                      6.60),
-  (pid, 'Carlos Álvarez',           NULL,                      3.50),
-  (pid, 'Jorge Nieto',              'Partido del Buen Gobierno', 3.90),
-  (pid, 'Roberto Sánchez Palomino', 'Juntos por el Perú',     3.10),
-  (pid, 'César Acuña',              'APP',                     3.20);
+  (pid, 'Rafael López Aliaga',      'Renovación Popular',       11.70),
+  (pid, 'Keiko Fujimori',           'Fuerza Popular',           10.10),
+  (pid, 'López Chau',               NULL,                         6.60),
+  (pid, 'Carlos Álvarez',           NULL,                         3.50),
+  (pid, 'Jorge Nieto',              'Partido del Buen Gobierno',  3.90),
+  (pid, 'Roberto Sánchez Palomino', 'Juntos por el Perú',        3.10),
+  (pid, 'César Acuña',              'APP',                        3.20),
+  (pid, 'Ricardo Belmont',          'Partido Cívico Obras',       2.10);  -- CPI informe oficial; confirmado
 
 -- ------------------------------------------------------------
 -- SERIE IPSOS (Presencial, Urb+Rural, n=1212, ME ±2.5%, Confianza 95%)
@@ -238,7 +239,8 @@ INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
   (pid, 'Wolfgang Grozo',           NULL,                           4.30),
   (pid, 'Yonhy Lescano',            'Acción Popular',               3.60),
   (pid, 'Jorge Nieto',              'Partido del Buen Gobierno',    3.00),
-  (pid, 'Roberto Sánchez Palomino', 'Juntos por el Perú',          2.30);
+  (pid, 'Roberto Sánchez Palomino', 'Juntos por el Perú',          2.30),
+  (pid, 'Ricardo Belmont',          'Partido Cívico Obras',         1.63); -- ~2.1% v.v. ÷ 77.5% pool
 
 -- ------------------------------------------------------------
 -- IEP INTENCIÓN (~30 mar 2026)
@@ -283,6 +285,100 @@ INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
   (pid, 'George Forsyth',           'Somos Perú',                    2.00),
   (pid, 'Yonhy Lescano',            'Cooperación Popular',           2.00),
   (pid, 'Carlos Espá',              'SíCreo',                        2.00);
+
+-- ============================================================
+-- ÚLTIMAS ENCUESTAS PRE-VEDA R1 2026 (campo abr 2026)
+-- Publicadas el 5 de abril de 2026 — última fecha permitida antes de la veda.
+-- ============================================================
+
+-- ------------------------------------------------------------
+-- CIT SIMULACRO (campo 30 mar – 1 abr 2026, publicado 5 abr en Panorama)
+-- n=1500, B/N=23.4%, pool=76.6%. Informe oficial CIT.
+-- Más reciente que el CIT de 20-23 mar (arriba). ESTE es el último CIT pre-veda.
+-- ------------------------------------------------------------
+
+INSERT INTO polls (pollster_id, field_start, field_end, published_date, sample_n, margin_error, confidence_lvl, scope, technique, poll_type, pct_blank_null, notes)
+VALUES (5, '2026-03-30', '2026-04-01', '2026-04-05', 1500, 2.80, 95.0, 'nacional', 'presencial', 'simulacro', 23.40, 'CIT simulacro 30mar-1abr 2026 · publicado 5 abr Panorama · cédula réplica · última encuesta pre-veda CIT')
+RETURNING id INTO pid;
+
+INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
+  (pid, 'Rafael López Aliaga',      'Renovación Popular',         13.60),
+  (pid, 'Keiko Fujimori',           'Fuerza Popular',             13.10),
+  (pid, 'Carlos Álvarez',           'País para Todos',             8.10),
+  (pid, 'César Acuña',              'APP',                         6.00),
+  (pid, 'López Chau',               'Ahora Nación',                6.00),
+  (pid, 'Jorge Nieto',              'Partido del Buen Gobierno',   4.20),
+  (pid, 'Marisol Pérez Tello',      'Primero la Gente',            3.50),
+  (pid, 'Roberto Sánchez Palomino', 'Juntos por el Perú',         3.00),
+  (pid, 'Ricardo Belmont',          'Partido Cívico Obras',        2.60);
+-- v.v. directas del informe CIT: Aliaga=17.8%, Keiko=17.1%, Sánchez=3.9%, Nieto=5.5%, Belmont=3.4%
+
+-- ------------------------------------------------------------
+-- IPSOS tracking (campo 3-4 abr 2026, publicado ~4-5 abr, Perú21)
+-- n=1205, B/N=11%, NS/NP=16%, pool=73%.  Última encuesta pre-veda Ipsos.
+-- ------------------------------------------------------------
+
+INSERT INTO polls (pollster_id, field_start, field_end, published_date, sample_n, margin_error, confidence_lvl, scope, technique, poll_type, pct_undecided, pct_blank_null, notes)
+VALUES (3, '2026-04-03', '2026-04-04', '2026-04-05', 1205, 2.80, 95.0, 'nacional', 'presencial', 'intencion_voto', 16.00, 11.00, 'Ipsos/Perú21 3-4 abr 2026 · última encuesta pre-veda Ipsos · publicado 5 abr')
+RETURNING id INTO pid;
+
+INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
+  (pid, 'Keiko Fujimori',           'Fuerza Popular',               15.00),
+  (pid, 'Carlos Álvarez',           'País para Todos',               8.00),
+  (pid, 'Rafael López Aliaga',      'Renovación Popular',            7.00),
+  (pid, 'Ricardo Belmont',          'Partido Cívico Obras',          6.00),
+  (pid, 'Roberto Sánchez Palomino', 'Juntos por el Perú',           5.00),
+  (pid, 'López Chau',               'Ahora Nación',                  5.00),
+  (pid, 'Jorge Nieto',              'Partido del Buen Gobierno',     4.00),
+  (pid, 'Marisol Pérez Tello',      'Primero la Gente',              3.00),
+  (pid, 'César Acuña',              'APP',                           3.00),
+  (pid, 'Fernando Olivera',         'Frente de la Esperanza',        3.00),
+  (pid, 'José Luna Gálvez',         'Podemos Perú',                  2.00);
+-- v.v. (pool 73%): Keiko=20.5%, Sánchez=6.8%, Aliaga=9.6%, Nieto=5.5%, Belmont=8.2%
+
+-- ------------------------------------------------------------
+-- CPI SIMULACRO (campo 3-4 abr 2026, publicado 5 abr, RPP)
+-- n=2000, B/N=14.7%, NS/NP=13.9%, pool=71.4%.  Última encuesta pre-veda CPI.
+-- ------------------------------------------------------------
+
+INSERT INTO polls (pollster_id, field_start, field_end, published_date, sample_n, margin_error, confidence_lvl, scope, technique, poll_type, pct_undecided, pct_blank_null, notes)
+VALUES (4, '2026-04-03', '2026-04-04', '2026-04-05', 2000, 2.20, 95.0, 'nacional', 'presencial', 'simulacro', 13.90, 14.70, 'CPI 3-4 abr 2026 simulacro con cédula · publicado 5 abr RPP · última encuesta pre-veda CPI')
+RETURNING id INTO pid;
+
+INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
+  (pid, 'Keiko Fujimori',           'Fuerza Popular',               13.30),
+  (pid, 'Rafael López Aliaga',      'Renovación Popular',           10.60),
+  (pid, 'Carlos Álvarez',           'País para Todos',               9.70),
+  (pid, 'López Chau',               'Ahora Nación',                  6.80),
+  (pid, 'Jorge Nieto',              'Partido del Buen Gobierno',     5.30),
+  (pid, 'Ricardo Belmont',          'Partido Cívico Obras',          4.90),
+  (pid, 'Marisol Pérez Tello',      'Primero la Gente',              4.40),
+  (pid, 'Roberto Sánchez Palomino', 'Juntos por el Perú',           4.30),
+  (pid, 'César Acuña',              'APP',                           3.70),
+  (pid, 'Fernando Olivera',         'Frente de la Esperanza',        2.80);
+-- v.v. (pool 71.4%): Keiko=18.6%, Sánchez=6.0%, Aliaga=14.8%, Nieto=7.4%, Belmont=6.9%
+
+-- ------------------------------------------------------------
+-- DATUM intención de voto (campo 1-4 abr 2026, publicado 5 abr, Infobae)
+-- n≈3000, ME ±1.8%, NS/NP=16.8%. Datum publica directamente % votos válidos.
+-- NOTA: pct_raw aquí = % votos válidos ya calculados por Datum (excluye NS/NP y B/N).
+--       pct_blank_null = 0 → sin normalización adicional en el modelo.
+-- ------------------------------------------------------------
+
+INSERT INTO polls (pollster_id, field_start, field_end, published_date, sample_n, margin_error, confidence_lvl, scope, technique, poll_type, pct_undecided, pct_blank_null, notes)
+VALUES (2, '2026-04-01', '2026-04-04', '2026-04-05', 3000, 1.80, 95.0, 'nacional', 'presencial', 'intencion_voto', 16.80, 0.00, 'Datum 1-4 abr 2026 · publicado 5 abr Infobae · última encuesta pre-veda Datum · valores = % votos válidos publicados por Datum')
+RETURNING id INTO pid;
+
+INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
+  (pid, 'Keiko Fujimori',           'Fuerza Popular',               18.10),
+  (pid, 'Carlos Álvarez',           'País para Todos',              10.80),
+  (pid, 'Rafael López Aliaga',      'Renovación Popular',           10.30),
+  (pid, 'Jorge Nieto',              'Partido del Buen Gobierno',     5.30),
+  (pid, 'Roberto Sánchez Palomino', 'Juntos por el Perú',           5.20),
+  (pid, 'Ricardo Belmont',          'Partido Cívico Obras',          4.80),
+  (pid, 'Marisol Pérez Tello',      'Primero la Gente',              3.50),
+  (pid, 'López Chau',               'Ahora Nación',                  3.40);
+-- Estos valores son v.v. directos de Datum: Keiko +0.9pp vs ONPE, Sánchez −6.8pp vs ONPE
 
 END $$;
 
