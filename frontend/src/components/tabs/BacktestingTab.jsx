@@ -5,9 +5,13 @@ import TermTooltip from '../TermTooltip';
 
 // ─── Análisis detallado por encuestadora · R1 2026 ────────────────────────────
 // Última encuesta pre-veda de cada casa, convertida a votos válidos.
-// Normalización: IEP → pool de candidatos listados (56.6%);
-//   Ipsos → 100−B/N(16%)−NS/NP(14%)=70%; Datum → 100−B/N(28.9%)=71.1%;
-//   CPI → 100−B/N(24.2%)−NS/NP(23.1%)=52.7%; CIT → 100−B/N(22.5%)=77.5%.
+// Todas las fechas son de campo (field); publicadas entre el 3 y 5 de abril de 2026.
+// Normalización:
+//   IEP 28-30 mar   → pool candidatos listados (sum=56.6%) ≈ 100−B/N(21.8%)−NS/NP(22.7%)=55.5%
+//   Ipsos 3-4 abr   → 100−B/N(11%)−NS/NP(16%)=73%  (intención de voto)
+//   Datum 1-4 abr   → v.v. publicados por Datum (excluye NS/NP=16.8%; sin B/N explícito)
+//   CPI 3-4 abr     → 100−B/N(14.7%)−NS/NP(13.9%)=71.4%  (simulacro con cédula)
+//   CIT 30mar-1abr  → v.v. del informe oficial CIT (100−B/N=23.4%=76.6%)  (simulacro)
 const POLLSTER_DETAIL_2026 = {
   candidates: [
     { name: 'Keiko Fujimori',           short: 'Keiko',   onpe: 17.2 },
@@ -18,26 +22,37 @@ const POLLSTER_DETAIL_2026 = {
   ],
   pollsters: [
     {
+      // IEP/La República · 28–30 mar 2026 · n=1200 · ME ±2.8%
+      // Raw: K=10.0, S=6.7, A=8.7, N=5.4, B=5.2; pool≈56.6% (suma listados)
       name: 'IEP', dates: '28–30 mar', mae: 1.3, color: '#1D4ED8',
       ests: [17.7, 11.8, 15.4, 9.5, 9.2],
     },
     {
-      name: 'Ipsos', dates: '29 mar–1 abr', mae: 2.7, color: '#7C3AED',
-      ests: [17.1, 8.6, 11.4, 7.1, 4.3],
+      // Ipsos/Perú21 · 3–4 abr 2026 · n=1205 · ME ±2.8%  (intención de voto)
+      // Raw: K=15, S=5, A=7, N=4, B=6; B/N=11%, NS/NP=16% → pool=73%
+      name: 'Ipsos', dates: '3–4 abr', mae: 3.7, color: '#7C3AED',
+      ests: [20.5, 6.8, 9.6, 5.5, 8.2],
     },
     {
-      name: 'Datum', dates: '25–27 mar', mae: 3.8, color: '#059669',
+      // Datum/Infobae · 1–4 abr 2026 · n≈3000 · ME ±1.8%  (intención de voto)
+      // Datum publica directamente % votos válidos: K=18.1, S=5.2, A=10.3, N=5.3, B=4.8
+      name: 'Datum', dates: '1–4 abr', mae: 4.1, color: '#059669',
+      ests: [18.1, 5.2, 10.3, 5.3, 4.8],
+    },
+    {
+      // CPI/RPP · 3–4 abr 2026 · n=2000  (simulacro con cédula)
+      // Raw: K=13.3, S=4.3, A=10.6, N=5.3, B=4.9; B/N=14.7%, NS/NP=13.9% → pool=71.4%
+      name: 'CPI', dates: '3–4 abr', mae: 3.4, color: '#D97706',
       note: 'simulacro',
-      ests: [18.6, 7.5, 13.4, 6.9, 2.7],
+      ests: [18.6, 6.0, 14.8, 7.4, 6.9],
     },
     {
-      name: 'CPI', dates: '21–23 mar', mae: 6.4, color: '#D97706',
-      ests: [19.2, 5.9, 22.2, 7.4, null],
-    },
-    {
-      name: 'CIT', dates: '20–23 mar', mae: 6.6, color: '#DC2626',
+      // CIT/Panorama · 30 mar–1 abr 2026 · n=1500  (simulacro con cédula)
+      // Informe CIT da directamente % votos válidos: A=17.8, K=17.1, S=3.9, N=5.5, B=3.4
+      // B/N=23.4%; pool=76.6%  Publicado 5 abr 2026.
+      name: 'CIT', dates: '30 mar–1 abr', mae: 5.3, color: '#DC2626',
       note: 'simulacro',
-      ests: [16.6, 3.0, 21.7, 3.9, null],
+      ests: [17.1, 3.9, 17.8, 5.5, 3.4],
     },
   ],
 };
@@ -214,7 +229,7 @@ const DATA = {
     conclusion: 'El modelo identificó a Castillo con mayor claridad que las encuestas individuales. El error rural fue comparable al de toda la industria: un problema estructural de cobertura, no del agregador.',
   },
   2026: {
-    context: 'Primera vuelta 12 abril 2026. Blend bayesiano Polymarket + encuestas (α=0.77 día electoral). MAE de encuestadoras calculado sobre las últimas encuestas pre-veda de cada casa (votos válidos estimados): IEP (28–30 mar), Ipsos tracking (29 mar–1 abr), Datum simulacro (25–27 mar), CPI (21–23 mar).',
+    context: 'Primera vuelta 12 abril 2026. Blend bayesiano Polymarket + encuestas (α=0.77 día electoral). MAE de encuestadoras calculado sobre la última encuesta pre-veda de cada casa (votos válidos): IEP (28–30 mar), Ipsos (3–4 abr), Datum (1–4 abr), CPI simulacro (3–4 abr), CIT simulacro (30 mar–1 abr).',
     candidates: [
       { name: 'Keiko Fujimori', modelo: 30.0, onpe: 17.2, error: +12.8, inIC: false },
       { name: 'Rafael López Aliaga', modelo: 13.0, onpe: 11.9, error: +1.1, inIC: true },
@@ -225,10 +240,11 @@ const DATA = {
     mae: 4.01,
     ic: '3/5 (60%)',
     pollsters: [
-      { name: 'IEP', mae: 1.3 },
-      { name: 'Ipsos', mae: 2.7 },
-      { name: 'Datum', mae: 3.8 },
-      { name: 'CPI', mae: 6.4 },
+      { name: 'IEP',   mae: 1.3 },
+      { name: 'CPI',   mae: 3.4 },
+      { name: 'Ipsos', mae: 3.7 },
+      { name: 'Datum', mae: 4.1 },
+      { name: 'CIT',   mae: 5.3 },
     ],
     highlight: 'Dos fallos mayores. Primero: Keiko inflada +12.8pp. Con α=0.77, Polymarket (45.5% P(ganar la presidencia)) dominó el blend — ese 45.5% no es el % de votos en R1, sino la probabilidad de ganar toda la elección; en una carrera de N candidatos siempre sobreestima al líder. Segundo: Sánchez predicho en #5 (8.9%), llegó #2 en ONPE (12.0%) — mismo patrón que Castillo 2021, base rural fuerte subrepresentada en encuestas urbanas. Su subestimación cascadeó en el orden: el modelo tenía a RLA en #2 y Belmont en #3, cuando ONPE los ubicó en #3 y #5 respectivamente. Posiciones exactas: solo Keiko (#1) y Nieto (#4). Errores de magnitud pequeños: RLA +1.1pp, Belmont +1.1pp, Nieto −1.9pp, los tres dentro del IC.',
     conclusion: 'El error en Keiko (+12.8pp) fue estructural: Polymarket medía P(ganar la presidencia), no % de votos en R1 — ya corregido para R2. El error de ordenamiento (RLA #2→#3, Belmont #3→#5) no fue un fallo independiente: fue consecuencia directa de subestimar a Sánchez en 3.1pp, que lo desplazó dos posiciones hacia arriba en cadena.',
@@ -236,7 +252,7 @@ const DATA = {
 };
 
 const POLLSTER_COLORS = {
-  Ipsos: '#7C3AED', CPI: '#D97706', Datum: '#059669', IEP: '#1D4ED8',
+  Ipsos: '#7C3AED', CPI: '#D97706', Datum: '#059669', IEP: '#1D4ED8', CIT: '#DC2626',
 };
 
 function MetricCard({ label, value, sub, color }) {
