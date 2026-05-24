@@ -519,17 +519,21 @@ La regla del análisis contrafactual es estricta: solo puedes usar lo que sabía
 
 **Datos de encuestas:** Cinco encuestadoras. Las fechas y MAEs corresponden a la **última encuesta pre-veda** de cada casa (campo), todas publicadas el 5 de abril de 2026 o antes de la veda electoral. Votos válidos calculados con pool correcto por encuestadora; sin mezclar con conteos rápidos ni boca de urna.
 
+MAE calculado sobre **6 candidatos**: Keiko Fujimori, Roberto Sánchez, López Aliaga, Nieto, Belmont y Carlos Álvarez (6to lugar ONPE con 7.926%).
+
 | Encuestadora | Campo (última pre-veda) | Tipo | MAE vs ONPE |
 |---|---|---|---|
-| IEP | 28–30 mar 2026 | intención de voto | **1.3 pp** ✅ |
-| CPI | 3–4 abr 2026 | simulacro con cédula | **3.4 pp** ⚠️ |
-| Ipsos | 3–4 abr 2026 | intención de voto | **3.7 pp** ⚠️ |
-| Datum | 1–4 abr 2026 | intención de voto | **4.1 pp** ⚠️ |
-| CIT | 30 mar–1 abr 2026 | simulacro con cédula | **5.3 pp** ❌ |
+| IEP | 28–30 mar 2026 | intención de voto | **1.8 pp** ✅ |
+| Ipsos | 3–4 abr 2026 | intención de voto | **3.6 pp** ⚠️ |
+| CPI | 3–4 abr 2026 | simulacro con cédula | **3.8 pp** ⚠️ |
+| Datum | 1–4 abr 2026 | intención de voto | **3.9 pp** ⚠️ |
+| CIT | 30 mar–1 abr 2026 | simulacro con cédula | **4.9 pp** ⚠️ |
 
 *Nota: Los datos de CPI y CIT de semanas previas (21–23 mar y 20–23 mar respectivamente) son encuestas anteriores del mismo ciclo, no las últimas pre-veda. Los valores de BacktestingTab usan los datos de la tabla anterior.*
 
-El ranking real de encuestadoras cambió notablemente al usar los polls finales: **CPI mejoró de 6.4 pp (encuesta 21–23 mar, con Aliaga sobreestimado +10 pp) a 3.4 pp** en su simulacro final del 3–4 de abril. Esto sugiere que CPI corrigió su metodología de cobertura geográfica entre mediciones.
+**Nota sobre Álvarez:** todos los polls lo sobreestiman en +2.7 a +5.7 pp (ONPE 7.9%, polls 10.6–13.6%). Su colapso tardío no era visible en ninguna encuesta — fue detectado exclusivamente por Polymarket en tiempo real (0.2% precio el día electoral). Esto es lo que el MAE no captura: la velocidad de reacción de Polymarket ante movimientos de última hora.
+
+**Nota sobre CPI:** mejoró de 6.4 pp (poll 21–23 mar, con Aliaga sobreestimado +10 pp) a 3.8 pp en su simulacro final del 3–4 de abril. Esto sugiere que CPI corrigió metodología de cobertura geográfica entre mediciones.
 
 **Patrón histórico de sesgo rural:** La subestimación de Castillo en 2021 (−6.2 pp) era pública, documentada, y atribuida a las limitaciones de las encuestas urbanas para capturar el voto rural.
 
@@ -726,7 +730,7 @@ El límite alcanzable con datos pre-elección era **~1.5 pp de MAE** — tres ve
 | 1.1 | 2026-04-13 | Sección 7.4 — conteo rápido Ipsos y Datum |
 | 2.0 | 2026-05-17 | Sección 7.5 completa con ONPE 100%; actualización de métricas globales, ranking, grades; corrección de nombres de candidatos; nota sobre López Chau no rastreado; actualización de segunda vuelta (Keiko vs R.Sánchez) |
 | 3.0 | 2026-05-23 | Sección 8 nueva — análisis contrafactual completo: diagnóstico de dos causas raíz, tres correcciones científicas, sandbox con resultados candidato a candidato, análisis de sensibilidad del ajuste rural, conclusiones sobre MAE alcanzable (1.59 pp vs 4.01 pp real) |
-| 3.1 | 2026-05-24 | §8.2 corregido: datos de encuestas pre-veda actualizados a la última encuesta real de cada casa. Ipsos/CPI/Datum actualizados a polls de 3–5 abril; CIT corregido a simulacro 30 mar–1 abr (n=1500, publicado 5 abr, no el de 20–23 mar). Belmont añadido a CPI (2.1%) y CIT (2.6%). Ranking encuestadoras ahora: IEP (1.3) > CPI (3.4) > Ipsos (3.7) > Datum (4.1) > CIT (5.3). BacktestingTab actualizado. |
+| 3.1 | 2026-05-24 | §8.2 corregido: datos de encuestas pre-veda actualizados a la última encuesta real de cada casa. Ipsos/CPI/Datum actualizados a polls de 3–5 abril; CIT corregido a simulacro 30 mar–1 abr (n=1500). Belmont añadido a CPI y CIT. Carlos Álvarez añadido como 6to candidato en tabla de encuestadoras — sobreestimado por todos los polls (+2.7 a +5.7pp). MAE recalculado con 6 candidatos. Ranking: IEP(1.8) > Ipsos(3.6) > CPI(3.8) > Datum(3.9) > CIT(4.9). |
 
 ---
 
