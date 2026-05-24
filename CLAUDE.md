@@ -112,16 +112,17 @@ Basados en patrón Castillo 2021 (subestimación rural -6.2pp):
 
 ### MAE real por encuestadora (última pre-veda)
 Verificado con verificación profunda (24 may 2026). Poll = última encuesta permitida de cada casa.
+MAE calculado sobre 6 candidatos: Keiko, Sánchez, Aliaga, Nieto, Belmont, Álvarez.
 
 | Encuestadora | Poll (campo) | MAE vs ONPE |
 |---|---|---|
-| IEP | 28–30 mar | **1.3pp** ✅ |
-| CPI | 3–4 abr simulacro | **3.4pp** ⚠️ |
-| Ipsos | 3–4 abr intención | **3.7pp** ⚠️ |
-| Datum | 1–4 abr intención | **4.1pp** ⚠️ |
-| CIT | 30 mar–1 abr simulacro | **5.3pp** ❌ |
+| IEP | 28–30 mar | **1.8pp** ✅ |
+| Ipsos | 3–4 abr intención | **3.6pp** ⚠️ |
+| CPI | 3–4 abr simulacro | **3.8pp** ⚠️ |
+| Datum | 1–4 abr intención | **3.9pp** ⚠️ |
+| CIT | 30 mar–1 abr simulacro | **4.9pp** ⚠️ |
 
-CPI mejoró de 6.4pp (poll 21-23 mar) a 3.4pp en su simulacro final. CIT era un simulacro más reciente de lo previsto (n=1500 vs n=1220 del 20-23 mar). Belmont estaba en todos los polls; datos anteriores lo omitían por error.
+CPI mejoró de 6.4pp (poll 21-23 mar) a 3.8pp en su simulacro final. CIT era un simulacro más reciente de lo previsto (n=1500 vs n=1220 del 20-23 mar). Belmont estaba en todos los polls; datos anteriores lo omitían por error. Carlos Álvarez sobreestimado por TODOS los polls (+2.7 a +5.7pp) — su colapso fue detectado solo por Polymarket en tiempo real.
 
 ### Contrafactual: qué hubiera dado (sandbox_r1_corrections.py)
 | Corrección | MAE |
