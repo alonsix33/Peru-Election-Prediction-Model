@@ -259,15 +259,20 @@ El alpha óptimo en retrospectiva fue **0.08** — un peso muy bajo para Polymar
 
 ### 6.2. Descomposición: dónde Polymarket ayudó y dónde dañó
 
+*"Error solo enc." = error si el modelo usara únicamente encuestas (α=0). "Error blend" = error real con α=0.77.*
+
 | Candidato | Error solo enc. | Error blend | PM ayudó/dañó | Magnitud |
 |---|---|---|---|---|
 | **Belmont** | −5.8 pp | −0.3 pp | **Ayudó** | +5.5 pp de mejora |
 | **Nieto** | −4.5 pp | −1.9 pp | **Ayudó** | +2.6 pp |
 | **Sánchez** | −3.4 pp | −2.4 pp | **Ayudó** | +1.0 pp |
-| **Keiko** | −2.3 pp | +12.8 pp | **Dañó** | −10.5 pp |
+| **Álvarez** | +4.8 pp | −5.4 pp | **Dirección ✓, magnitud ✗** | +0 pp neto* |
 | **Aliaga** | +1.0 pp | +1.1 pp | Neutral | −0.1 pp |
+| **Keiko** | −2.3 pp | +12.8 pp | **Dañó** | −10.5 pp |
 
-**Balance neto:** PM mejoró 3 candidatos por un total de +9.1 pp y empeoró 1 candidato por −10.5 pp. Aritméticamente, PM empeoró ligeramente el modelo (−1.4 pp neto). Pero el diagnóstico es claro: no es que Polymarket sea mala señal. Es que una señal buena (P(ganar)) fue interpretada como otra cosa (% de voto), y el error se concentró en un solo candidato.
+*Álvarez: las encuestas lo tenían en ~12.7% (inflado por voto estratégico tardío) y PM lo llevó a 0.2% el día electoral (colapso real). El blend aterrizó en 2.5% vs ONPE 7.9% — PM se pasó de largo en magnitud, pero la dirección era la única señal correcta disponible. Sin PM, el modelo habría dado +4.8 pp de error; con PM, −5.4 pp. En valor absoluto es igual de malo, pero PM tenía razón: Álvarez iba a colapsar.*
+
+**Balance neto:** PM mejoró Belmont, Nieto y Sánchez (+9.1 pp en total), fue directionally correcto en Álvarez (incluso si la magnitud se pasó), y dañó solo a Keiko (−10.5 pp). El error se concentró en **un único problema bien diagnosticado**: P(ganar) ≠ % votos cuando hay N=26 candidatos. Para todos los demás candidatos, PM fue la mejor señal disponible o al menos no dañó.
 
 ### 6.3. Cobertura IC 90% — FOTO FINAL
 
