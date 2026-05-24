@@ -6,8 +6,10 @@ import TermTooltip from '../TermTooltip';
 // ─── Análisis detallado por encuestadora · R1 2026 ────────────────────────────
 // Última encuesta pre-veda de cada casa, convertida a votos válidos.
 // Todas las fechas son de campo (field); publicadas entre el 3 y 5 de abril de 2026.
-// Normalización:
-//   IEP 28-30 mar   → pool candidatos listados (sum=56.6%) ≈ 100−B/N(21.8%)−NS/NP(22.7%)=55.5%
+// Normalización (pool = candidatos declarados + Otros; excluye B/N, NS/NP, ninguno, no irá):
+//   IEP 28-30 mar   → pool=69.6% (top 11 candidatos 55.3% + Otros 14.3%)
+//                     Raw PDF IEP Mar II-26: K=10.0,S=6.7,A=8.7,N=5.4,B=5.2,Alv=6.9
+//                     Nota: IEP también realizó encuesta 7-9 abr (durante veda, n=1219, conf.)
 //   Ipsos 3-4 abr   → 100−B/N(11%)−NS/NP(16%)=73%  (intención de voto)
 //   Datum 1-4 abr   → v.v. publicados por Datum (excluye NS/NP=16.8%; sin B/N explícito)
 //   CPI 3-4 abr     → 100−B/N(14.7%)−NS/NP(13.9%)=71.4%  (simulacro con cédula)
@@ -23,10 +25,10 @@ const POLLSTER_DETAIL_2026 = {
   ],
   pollsters: [
     {
-      // IEP/La República · 28–30 mar 2026 · n=1200 · ME ±2.8%
-      // Raw: K=10.0, S=6.7, A=8.7, N=5.4, B=5.2, Alv=6.9; pool≈56.6% (suma listados)
-      name: 'IEP', dates: '28–30 mar', mae: 1.8, color: '#1D4ED8',
-      ests: [17.7, 11.8, 15.4, 9.5, 9.2, 12.2],
+      // IEP/PDF oficial · 28–30 mar 2026 · n=1200 · ME ±2.8% · Encuesta telefónica a celulares
+      // Raw: K=10.0,S=6.7,A=8.7,N=5.4,B=5.2,Alv=6.9; Otros=14.3%; pool=69.6%
+      name: 'IEP', dates: '28–30 mar', mae: 2.3, color: '#1D4ED8',
+      ests: [14.4, 9.6, 12.5, 7.8, 7.5, 9.9],
     },
     {
       // Ipsos/Perú21 · 3–4 abr 2026 · n=1205 · ME ±2.8%  (intención de voto)
@@ -229,7 +231,7 @@ const DATA = {
     conclusion: 'El modelo identificó a Castillo con mayor claridad que las encuestas individuales. El error rural fue comparable al de toda la industria: un problema estructural de cobertura, no del agregador.',
   },
   2026: {
-    context: 'Primera vuelta 12 abril 2026. Blend bayesiano Polymarket + encuestas (α=0.77 día electoral). MAE de encuestadoras calculado sobre la última encuesta pre-veda de cada casa (votos válidos, 6 candidatos): IEP (28–30 mar), Ipsos (3–4 abr), Datum (1–4 abr), CPI simulacro (3–4 abr), CIT simulacro (30 mar–1 abr). Álvarez sobreestimado por todos los polls (+3 a +6pp) — su colapso fue captado solo por Polymarket en tiempo real.',
+    context: 'Primera vuelta 12 abril 2026. Blend bayesiano Polymarket + encuestas (α=0.77 día electoral). MAE de encuestadoras calculado sobre la última encuesta pre-veda publicada de cada casa (votos válidos, 6 candidatos): IEP (28–30 mar), Ipsos (3–4 abr), Datum (1–4 abr), CPI simulacro (3–4 abr), CIT simulacro (30 mar–1 abr). IEP además realizó encuesta 7–9 abr (durante veda, confidencial, MAE 2.4pp). Álvarez sobreestimado por todos los polls (+3 a +6pp) — su colapso fue captado solo por Polymarket en tiempo real.',
     candidates: [
       { name: 'Keiko Fujimori', modelo: 30.0, onpe: 17.2, error: +12.8, inIC: false },
       { name: 'Rafael López Aliaga', modelo: 13.0, onpe: 11.9, error: +1.1, inIC: true },
@@ -240,7 +242,7 @@ const DATA = {
     mae: 4.01,
     ic: '3/5 (60%)',
     pollsters: [
-      { name: 'IEP',   mae: 1.8 },
+      { name: 'IEP',   mae: 2.3 },
       { name: 'Ipsos', mae: 3.6 },
       { name: 'CPI',   mae: 3.8 },
       { name: 'Datum', mae: 3.9 },

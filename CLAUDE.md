@@ -81,8 +81,10 @@ Calibrados con ONPE R1 2026. **Signo negativo = encuestadora subestima → corri
 Evidencia de calibración Sánchez:
 - Ipsos R1: 8.57% vs ONPE 12.0% → gap -3.43pp → HE = -2.0pp (calibrado con R2)
 - Datum R1: 7.45% vs ONPE 12.0% → gap -4.55pp → HE = -2.0pp (calibrado con R2)
-- IEP R1 Sánchez: 11.8% vs ONPE 12.0% → gap -0.2pp ✅ → HE = 0.0pp
-- IEP R1 Keiko: 17.7% vs ONPE 17.2% → gap +0.5pp (dentro MoE ±2.8pp) → HE = 0.0pp
+- IEP R1 Sánchez: 9.6% vs ONPE 12.0% → gap -2.4pp (dentro MoE ±2.8pp) → HE = 0.0pp (referencia)
+- IEP R1 Keiko: 14.4% vs ONPE 17.2% → gap -2.8pp (dentro MoE ±2.8pp) → HE = 0.0pp (referencia)
+- Nota: valores IEP normalizados con pool=69.6% (top 11 cand. + Otros); PDF oficial IEP Mar II-26.
+  La normalización anterior (pool=56.6%) inflaba los valores ~23% — corregido 24 may 2026.
 - IEP es encuestadora de referencia: HE = 0.0pp para todos los candidatos R2
 - Cross-check R2 (IEP ref pura = S+1.6pp): con -2.0pp Ipsos/Datum convergen
   en K+0.8-2.0pp para polls de mayo — consistente con race genuinamente ajustada.
@@ -116,7 +118,7 @@ MAE calculado sobre 6 candidatos: Keiko, Sánchez, Aliaga, Nieto, Belmont, Álva
 
 | Encuestadora | Poll (campo) | MAE vs ONPE |
 |---|---|---|
-| IEP | 28–30 mar | **1.8pp** ✅ |
+| IEP | 28–30 mar | **2.3pp** ✅ |
 | Ipsos | 3–4 abr intención | **3.6pp** ⚠️ |
 | CPI | 3–4 abr simulacro | **3.8pp** ⚠️ |
 | Datum | 1–4 abr intención | **3.9pp** ⚠️ |

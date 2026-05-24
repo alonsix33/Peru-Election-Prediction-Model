@@ -243,11 +243,14 @@ INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
   (pid, 'Ricardo Belmont',          'Partido Cívico Obras',         1.63); -- ~2.1% v.v. ÷ 77.5% pool
 
 -- ------------------------------------------------------------
--- IEP INTENCIÓN (~30 mar 2026)
+-- IEP INTENCIÓN (28-30 mar 2026) — última encuesta IEP pre-veda publicada
+-- Fuente: PDF oficial IEP "Mar II-26". Metodología: Encuesta telefónica a celulares.
+-- IEP realizó además encuesta 7-9 abr (durante veda, n=1219, confidencial, no publicada hasta 29 abr).
+-- Pool correcto: 69.6% (top 11 candidatos 55.3% + Otros 14.3%). B/N=2.8%, NS/NP+ninguno=26.0%, ausentes=1.3%.
 -- ------------------------------------------------------------
 
 INSERT INTO polls (pollster_id, field_start, field_end, sample_n, margin_error, confidence_lvl, scope, technique, poll_type, notes)
-VALUES (1, '2026-03-28', '2026-03-30', 1200, 2.80, 95.0, 'nacional', 'presencial', 'intencion_voto', 'IEP ~30mar 2026 via La República — campo exacto pendiente confirmar')
+VALUES (1, '2026-03-28', '2026-03-30', 1200, 2.80, 95.0, 'nacional', 'telefonica', 'intencion_voto', 'IEP Mar II-26 — campo 28-30 mar 2026 — Encuesta telefónica a celulares — fuente: PDF oficial IEP')
 RETURNING id INTO pid;
 
 INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
