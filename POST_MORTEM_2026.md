@@ -526,15 +526,19 @@ La regla del análisis contrafactual es estricta: solo puedes usar lo que sabía
 
 MAE calculado sobre **6 candidatos**: Keiko Fujimori, Roberto Sánchez, López Aliaga, Nieto, Belmont y Carlos Álvarez (6to lugar ONPE con 7.926%).
 
-| Encuestadora | Campo (última pre-veda) | Tipo | MAE vs ONPE |
+| Encuestadora | Campo (última pre-veda publicada) | Tipo | MAE vs ONPE |
 |---|---|---|---|
-| IEP | 28–30 mar 2026 | intención de voto | **1.8 pp** ✅ |
+| IEP | 28–30 mar 2026 | intención de voto (telefónica) | **2.3 pp** ✅ |
 | Ipsos | 3–4 abr 2026 | intención de voto | **3.6 pp** ⚠️ |
 | CPI | 3–4 abr 2026 | simulacro con cédula | **3.8 pp** ⚠️ |
 | Datum | 1–4 abr 2026 | intención de voto | **3.9 pp** ⚠️ |
 | CIT | 30 mar–1 abr 2026 | simulacro con cédula | **4.9 pp** ⚠️ |
 
-*Nota: Los datos de CPI y CIT de semanas previas (21–23 mar y 20–23 mar respectivamente) son encuestas anteriores del mismo ciclo, no las últimas pre-veda. Los valores de BacktestingTab usan los datos de la tabla anterior.*
+*Nota metodológica (corrección 24 may 2026): El MAE de IEP se corrigió de 1.8 pp a 2.3 pp tras revisar el PDF oficial IEP Mar II-26. La normalización anterior usaba pool=56.6% (solo los candidatos citados por La República), ignorando la categoría "Otros" = 14.3% del total de respondentes. El pool correcto es 69.6% (top 11 candidatos + Otros), reduciendo los valores normalizados ~23%.*
+
+*Nota sobre IEP y la veda: IEP también realizó una encuesta del **7 al 9 de abril de 2026** (campo durante la veda electoral, n=1219, confidencial), publicada el 29 de abril post-elección. Esta encuesta no era accesible a ningún forecaster antes del 12 de abril. Sus valores normalizados (pool=76.7%): Keiko 14.1%, Sánchez 9.4%, Aliaga 12.1%, Nieto 8.0%, Belmont 14.2%, Álvarez 9.4% → MAE 2.4 pp — virtualmente idéntico a la encuesta de marzo.*
+
+*Nota sobre CPI y CIT: Los datos de semanas previas (21–23 mar y 20–23 mar respectivamente) son encuestas anteriores del mismo ciclo, no las últimas pre-veda. Los valores de BacktestingTab usan los datos de la tabla anterior.*
 
 **Nota sobre Álvarez:** todos los polls lo sobreestiman en +2.7 a +5.7 pp (ONPE 7.9%, polls 10.6–13.6%). Su colapso tardío no era visible en ninguna encuesta — fue detectado exclusivamente por Polymarket en tiempo real (0.2% precio el día electoral). Esto es lo que el MAE no captura: la velocidad de reacción de Polymarket ante movimientos de última hora.
 
@@ -642,7 +646,7 @@ Keiko pasa de +12.8 pp de error a +0.7 pp. Sánchez pasa de −3.1 pp a +0.4 pp.
 El modelo corregido tiene un error residual de +3.0 pp en López Aliaga — paradójicamente mayor que el error original de +1.1 pp. ¿Por qué?
 
 El modelo real cometía dos errores en sentidos opuestos que se cancelaban:
-1. **Las encuestas sobreestimaban a Aliaga** — IEP lo daba en ~14.9% en votos válidos, vs ONPE 11.9%.
+1. **Algunas encuestas sobreestimaban a Aliaga** — CIT (17.8%) y CPI (14.8%) lo sobreestimaban significativamente; en cambio, IEP con pool correcto lo situaba en 12.5% (solo +0.6 pp vs ONPE 11.9%), mientras Ipsos (9.6%) y Datum (10.3%) lo subestimaban. El promedio ponderado inflaba a Aliaga por el peso de CIT y CPI.
 2. **PM lo estiraba hacia arriba**, pero la normalización entre todos los candidatos lo comprimía de vuelta hacia ~13%.
 
 Por casualidad, esa cadena de errores producía un resultado cercano al real (13.0% vs 11.9%). Al corregir el modelo, quitamos PM de la ecuación — y queda el sesgo puro de las encuestas: 14.9%.
@@ -674,13 +678,15 @@ Con las tres correcciones aplicadas usando únicamente información disponible a
 
 | Métrica | Modelo real | Modelo corregido | Mejor encuestadora (IEP) |
 |---|---|---|---|
-| MAE vs ONPE | 4.00 pp | **1.59 pp** | 1.31 pp |
-| Error Keiko | +12.8 pp | +0.7 pp | ~0.5 pp |
-| Error Sánchez | −3.1 pp | +0.4 pp | ~−0.2 pp |
-| Error Aliaga | +1.1 pp | +3.0 pp | ~3.5 pp |
+| MAE vs ONPE | 4.00 pp | **1.59 pp** | 2.3 pp |
+| Error Keiko | +12.8 pp | +0.7 pp | −2.8 pp |
+| Error Sánchez | −3.1 pp | +0.4 pp | −2.4 pp |
+| Error Aliaga | +1.1 pp | +3.0 pp | +0.6 pp ✅ |
 | Orden 1ro y 2do | Keiko ✓ · Aliaga ✗ | Keiko ✓ · Sánchez ✓ | Keiko ✓ · Aliaga ✗ |
 
-El modelo corregido habría igualado o superado al mejor forecaster individual (IEP, 1.31 pp) en todos los candidatos excepto Aliaga — donde el sesgo es estructural y compartido con todas las encuestas.
+*Nota: MAE de IEP corregido de 1.31 pp (cálculo anterior con pool=56.6%) a 2.3 pp (pool correcto=69.6% según PDF oficial IEP Mar II-26).*
+
+El modelo corregido (1.59 pp) **supera** al mejor forecaster individual (IEP, 2.3 pp) — resultado aún más valioso. El gran acierto del modelo corregido es la precisión en Keiko (+0.7 pp) y Sánchez (+0.4 pp), los dos candidatos de segunda vuelta. IEP fue el único con buen desempeño en Aliaga (+0.6 pp), mientras CIT (+5.9 pp) y CPI (+2.9 pp) lo sobreestimaban; esa sobreestimación de Aliaga fue la que dejó al modelo corregido en +3.0 pp para ese candidato.
 
 Más importante: **el orden del top-2 habría sido correcto** (Keiko · Sánchez), lo que habría anticipado correctamente que López Aliaga no pasaría a segunda vuelta. El modelo real ordenó mal este resultado crítico.
 
@@ -736,6 +742,7 @@ El límite alcanzable con datos pre-elección era **~1.5 pp de MAE** — tres ve
 | 2.0 | 2026-05-17 | Sección 7.5 completa con ONPE 100%; actualización de métricas globales, ranking, grades; corrección de nombres de candidatos; nota sobre López Chau no rastreado; actualización de segunda vuelta (Keiko vs R.Sánchez) |
 | 3.0 | 2026-05-23 | Sección 8 nueva — análisis contrafactual completo: diagnóstico de dos causas raíz, tres correcciones científicas, sandbox con resultados candidato a candidato, análisis de sensibilidad del ajuste rural, conclusiones sobre MAE alcanzable (1.59 pp vs 4.01 pp real) |
 | 3.1 | 2026-05-24 | §8.2 corregido: datos de encuestas pre-veda actualizados a la última encuesta real de cada casa. Ipsos/CPI/Datum actualizados a polls de 3–5 abril; CIT corregido a simulacro 30 mar–1 abr (n=1500). Belmont añadido a CPI y CIT. Carlos Álvarez añadido como 6to candidato en tabla de encuestadoras — sobreestimado por todos los polls (+2.7 a +5.7pp). MAE recalculado con 6 candidatos. Ranking: IEP(1.8) > Ipsos(3.6) > CPI(3.8) > Datum(3.9) > CIT(4.9). |
+| 3.2 | 2026-05-24 | Corrección normalización IEP: pool corregido de 56.6% a 69.6% (PDF oficial IEP Mar II-26 confirma categoría "Otros"=14.3%). MAE IEP corregido de 1.8 pp a 2.3 pp. Valores normalizados IEP actualizados en §8.2 y §8.7. §8.7: modelo corregido (1.59 pp) ahora supera a IEP (2.3 pp). §8.5: narrativa Aliaga corregida — IEP solo +0.6 pp error en Aliaga; overestimation era de CIT/CPI, no universal. Metodología IEP confirmada como encuesta telefónica (no presencial). Descubierto encuesta IEP 7–9 abr (durante veda, confidencial, MAE 2.4 pp). |
 
 ---
 
