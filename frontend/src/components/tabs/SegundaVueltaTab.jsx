@@ -313,7 +313,7 @@ function HeadToHead({ predictions }) {
             <div style={{ marginBottom: 12 }}>
               <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>% votos válidos (estimación MC)</div>
               <div style={{ color, fontWeight: 700, fontSize: 28, fontVariantNumeric: 'tabular-nums' }}>
-                {data ? data.mean.toFixed(1) : '—'}%
+                {data ? data.mean.toFixed(2) : '—'}%
               </div>
               {data && (
                 <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 2 }}>
@@ -325,7 +325,7 @@ function HeadToHead({ predictions }) {
             <div>
               <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>P(ganar segunda vuelta)<TermTooltip term="P_GANAR" /></div>
               <div style={{ color, fontWeight: 600, fontSize: 18, fontVariantNumeric: 'tabular-nums' }}>
-                {data ? data.prob_win.toFixed(1) : '—'}%
+                {data ? data.prob_win.toFixed(2) : '—'}%
               </div>
             </div>
           </div>
