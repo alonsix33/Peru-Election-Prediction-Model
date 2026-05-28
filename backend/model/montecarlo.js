@@ -188,11 +188,14 @@ function getTransfer(eliminated, finalist) {
  * 3. Voto blanco extra si ambos finalistas tienen alto rechazo
  * 4. Incertidumbre de campaña (7 semanas entre vueltas)
  */
-function simulateRunoff(finalistA, finalistB, allFirstRoundResults) {
+function simulateRunoff(finalistA, finalistB, allFirstRoundResults, dynamicRejection = {}) {
   // Factor de conversión para el blanco extra por doble rechazo
   const rejectionDiscount = 0.35 + Math.random() * 0.20;
-  const rejA = ((REJECTION_RATES[finalistA] ?? DEFAULT_REJECTION) / 100) * rejectionDiscount;
-  const rejB = ((REJECTION_RATES[finalistB] ?? DEFAULT_REJECTION) / 100) * rejectionDiscount;
+  // Prioriza tasas dinámicas (de antivoto_snapshots en BD); cae a hardcoded solo si no hay dato
+  const rateA = dynamicRejection[finalistA] ?? REJECTION_RATES[finalistA] ?? DEFAULT_REJECTION;
+  const rateB = dynamicRejection[finalistB] ?? REJECTION_RATES[finalistB] ?? DEFAULT_REJECTION;
+  const rejA = (rateA / 100) * rejectionDiscount;
+  const rejB = (rateB / 100) * rejectionDiscount;
 
   // 1. Base: votos propios
   let votesA = allFirstRoundResults[finalistA] || 0;
@@ -395,9 +398,11 @@ function normalize(values, targetSum = 100) {
  *
  * @param {Object} posterior - { candidate: { posterior_pct, ... } }
  * @param {number} nSimulations - Número de simulaciones (default 10,000)
+ * @param {Object} [dynamicRejection] - Tasas de rechazo dinámicas {candidate: pct} desde antivoto_snapshots.
+ *   Si se provee, sobreescribe REJECTION_RATES para esos candidatos.
  * @returns {Object} results + runoffStats
  */
-function runMonteCarlo(posterior, nSimulations = 10_000) {
+function runMonteCarlo(posterior, nSimulations = 10_000, dynamicRejection = {}) {
   const candidates = Object.keys(posterior);
   const nCandidates = candidates.length;
   const basePcts = candidates.map(c => posterior[c].posterior_pct);
@@ -569,7 +574,7 @@ function runMonteCarlo(posterior, nSimulations = 10_000) {
       firstRoundResults[candidates[i]] = normalized[i];
     }
 
-    const runoff = simulateRunoff(finalistA, finalistB, firstRoundResults);
+    const runoff = simulateRunoff(finalistA, finalistB, firstRoundResults, dynamicRejection);
 
     if (runoff.winner === finalistA) {
       winCount[firstIdx]++;

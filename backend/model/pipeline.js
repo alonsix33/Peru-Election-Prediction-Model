@@ -1,4 +1,4 @@
-const { nowPeru, electoralPhase } = require('./clock');
+const { nowPeru, electoralPhase, timeToElection } = require('./clock');
 const { aggregatePolls } = require('./aggregator');
 const { redistributeUndecided } = require('./undecided');
 const { bayesianIntegration } = require('./bayesian');
@@ -105,17 +105,29 @@ async function runFullPipeline({ saveToDB = false, trigger = 'auto_polymarket_up
   const bayesian = bayesianIntegration(withUndecided, polymarketData, pmVolume, overrideAlpha);
   console.log('   ✅ Bayesian: α=' + bayesian.polymarket_weight.toFixed(3));
 
+  // 5a. Tasas de rechazo dinámicas para simulateRunoff (antivoto_snapshots)
+  const { rows: antiRows } = await db.query(`
+    SELECT candidate, pct_no FROM antivoto_snapshots
+    WHERE election_round = $1
+      AND field_end = (SELECT MAX(field_end) FROM antivoto_snapshots WHERE election_round = $1)
+  `, [electionRound]);
+  const dynamicRejection = {};
+  for (const r of antiRows) dynamicRejection[r.candidate] = parseFloat(r.pct_no);
+
   // 5. Monte Carlo — conteo de sims depende de la fase
   // pre_veda: 20k (cada 60min, ruido irrelevante vs incertidumbre estructural)
   // veda + election_day: 50k (cada 15-30min, colas importan más)
   const simCount = phase === 'election_day' || phase === 'veda' ? 50_000 : 20_000;
-  const { results: mcResults, runoffSummary, riskScenarios } = runMonteCarlo(bayesian.candidates, simCount);
-  console.log(`   ✅ Monte Carlo: ${simCount.toLocaleString()} simulaciones`);
+  const { results: mcResults, runoffSummary, riskScenarios } = runMonteCarlo(bayesian.candidates, simCount, dynamicRejection);
+  console.log(`   ✅ Monte Carlo: ${simCount.toLocaleString()} simulaciones${Object.keys(dynamicRejection).length ? ' (rechazo dinámico)' : ''}`);
 
   // 5b. Escenarios analíticos R2 (no requieren MC adicional)
   if (electionRound === 2 && riskScenarios) {
-    const keikoPollsPct = bayesian.candidates['Keiko Fujimori']?.polls_pct ?? 50;
-    const sanchezPollsPct = bayesian.candidates['Roberto Sánchez Palomino']?.polls_pct ?? 50;
+    // Usar posterior_pct (output completo del modelo, ya incluye house effects + PM blend)
+    // El escenario pregunta: "¿y si incluso la estimación corregida del modelo está 2.5pp por debajo?"
+    // +2.5pp residual ≈ ~5pp total de subestimación (el modelo ya corrige ~2.5pp vía house effects)
+    const keikoPosterioPct  = bayesian.candidates['Keiko Fujimori']?.posterior_pct           ?? bayesian.candidates['Keiko Fujimori']?.polls_pct           ?? 50;
+    const sanchezPosterioPct = bayesian.candidates['Roberto Sánchez Palomino']?.posterior_pct ?? bayesian.candidates['Roberto Sánchez Palomino']?.polls_pct ?? 50;
 
     // Aproximación de la función error (Abramowitz & Stegun)
     const erf = (x) => {
@@ -125,30 +137,29 @@ async function runFullPipeline({ saveToDB = false, trigger = 'auto_polymarket_up
     };
     const Phi = (z) => 0.5 * (1 + erf(z / Math.sqrt(2)));
 
-    // lead > 0 → Sánchez lidera encuestas
-    const lead = sanchezPollsPct - keikoPollsPct;
-    const sigma = 3.0;
+    // lead > 0 → Sánchez lidera el posterior del modelo
+    const lead = sanchezPosterioPct - keikoPosterioPct;
+
+    // Sigma dinámico: igual que montecarlo.js — se ajusta con días restantes
+    const { days: daysToElec } = timeToElection();
+    const temporalDrift = Math.max(0, daysToElec) * 0.30;
+    const sigma = Math.sqrt(9.0 + temporalDrift * temporalDrift);
     const rt2 = Math.sqrt(2);
 
     riskScenarios.polls_only_keiko_win   = parseFloat(((1 - Phi(lead / (sigma * rt2))) * 100).toFixed(1));
     riskScenarios.polls_only_sanchez_win = parseFloat((Phi(lead / (sigma * rt2)) * 100).toFixed(1));
-    riskScenarios.bias_5pts_sanchez_win  = parseFloat((Phi((lead + 5) / (sigma * rt2)) * 100).toFixed(1));
-    riskScenarios.bias_5pts_keiko_win    = parseFloat(((1 - Phi((lead + 5) / (sigma * rt2))) * 100).toFixed(1));
+    // +2.5pp residual: el texto del frontend describe esto como "+5pp tipo Castillo"
+    // porque el modelo ya corrige ~2.5pp vía house effects → total ~5pp de sesgo histórico
+    riskScenarios.bias_5pts_sanchez_win  = parseFloat((Phi((lead + 2.5) / (sigma * rt2)) * 100).toFixed(1));
+    riskScenarios.bias_5pts_keiko_win    = parseFloat(((1 - Phi((lead + 2.5) / (sigma * rt2))) * 100).toFixed(1));
 
-    // Opción E: P(voto blanco/nulo) por rechazo bilateral calibrado.
+    // Votos blancos/nulos/viciados: rechazo bilateral calibrado.
     // P(blank) = [P(rechaza KF) × P(rechaza RSP) + ρ × σ_KF × σ_RSP] × franchise_factor
-    // ρ ≈ -0.20: correlación negativa — izquierda rechaza KF, derecha rechaza RSP → grupos distintos.
-    // franchise_factor=0.75: encuestas sobreestiman blanqueo 1.3-1.5x históricamente.
-    // Tasas: última medición Ipsos disponible en antivoto_snapshots (Def. no votaría).
-    const { rows: antRows } = await db.query(`
-      SELECT candidate, pct_no FROM antivoto_snapshots
-      WHERE election_round = $1
-        AND field_end = (SELECT MAX(field_end) FROM antivoto_snapshots WHERE election_round = $1)
-    `, [electionRound]);
-    const antMap = {};
-    for (const r of antRows) antMap[r.candidate] = parseFloat(r.pct_no) / 100;
-    const rejKF  = antMap['Keiko Fujimori']           ?? 0.48; // fallback: Ipsos abr 2026
-    const rejRSP = antMap['Roberto Sánchez Palomino'] ?? 0.43; // fallback: Ipsos abr 2026
+    // ρ ≈ -0.20: grupos distintos rechazan a cada candidato (correlación negativa).
+    // franchise_factor=0.75: encuestas sobreestiman blanqueo 1.3–1.5x históricamente.
+    // Tasas: reutilizamos dynamicRejection ya cargado (antivoto_snapshots).
+    const rejKF  = (dynamicRejection['Keiko Fujimori']           ?? 48.0) / 100;
+    const rejRSP = (dynamicRejection['Roberto Sánchez Palomino'] ?? 43.0) / 100;
     const rhoBlank  = -0.20;
     const sigmaKF   = Math.sqrt(rejKF  * (1 - rejKF));
     const sigmaRSP  = Math.sqrt(rejRSP * (1 - rejRSP));
