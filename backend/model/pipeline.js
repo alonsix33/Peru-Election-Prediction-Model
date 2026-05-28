@@ -156,7 +156,10 @@ async function runFullPipeline({ saveToDB = false, trigger = 'auto_polymarket_up
     // Votos blancos/nulos/viciados: rechazo bilateral calibrado.
     // P(blank) = [P(rechaza KF) × P(rechaza RSP) + ρ × σ_KF × σ_RSP] × franchise_factor
     // ρ ≈ -0.20: grupos distintos rechazan a cada candidato (correlación negativa).
-    // franchise_factor=0.75: encuestas sobreestiman blanqueo 1.3–1.5x históricamente.
+    // franchise_factor=0.20: calibrado vs R2 histórico peruano.
+    //   2016 (PPK vs KF, rechazo ~55%/~60%): real=2.5%, fórmula bruta≈16.4% → factor=0.152
+    //   2021 (Castillo vs KF, rechazo ~52%/~67%): real=3.1%, fórmula bruta≈17.5% → factor=0.177
+    //   Promedio implícito ≈ 0.20 (factor anterior 0.75 sobreestimaba 3-4x)
     // Tasas: reutilizamos dynamicRejection ya cargado (antivoto_snapshots).
     const rejKF  = (dynamicRejection['Keiko Fujimori']           ?? 48.0) / 100;
     const rejRSP = (dynamicRejection['Roberto Sánchez Palomino'] ?? 43.0) / 100;
@@ -164,7 +167,7 @@ async function runFullPipeline({ saveToDB = false, trigger = 'auto_polymarket_up
     const sigmaKF   = Math.sqrt(rejKF  * (1 - rejKF));
     const sigmaRSP  = Math.sqrt(rejRSP * (1 - rejRSP));
     const pRejectBoth = rejKF * rejRSP + rhoBlank * sigmaKF * sigmaRSP;
-    riskScenarios.expected_blank_null = parseFloat((Math.max(0, pRejectBoth) * 0.75 * 100).toFixed(1));
+    riskScenarios.expected_blank_null = parseFloat((Math.max(0, pRejectBoth) * 0.20 * 100).toFixed(1));
     console.log(`   ✅ Escenarios R2: solo encuestas KF=${riskScenarios.polls_only_keiko_win}% / RSP=${riskScenarios.polls_only_sanchez_win}%, B/N modelo=${riskScenarios.expected_blank_null}%`);
   }
 

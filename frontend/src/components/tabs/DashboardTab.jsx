@@ -418,8 +418,8 @@ function RiskScenarios({ risk, candidates, phase }) {
       question: '¿Cuántos votos podrían ser blancos/nulos/viciados?',
       value: blankPct,
       context: `Estimado a partir del rechazo activo a ambos candidatos. El histórico de segunda vuelta 2016 y 2021 fue de 2–4%. Valores por encima de eso indicarían un rechazo bilateral inusualmente alto.`,
-      color: blankPct > 6 ? '#D97706' : '#78716C',
-      bg: blankPct > 6 ? '#FFFBEB' : '#FAFAF9',
+      color: blankPct > 4 ? '#D97706' : '#78716C',
+      bg: blankPct > 4 ? '#FFFBEB' : '#FAFAF9',
     },
     {
       question: '¿Y si las encuestas subestiman a Sánchez?',
