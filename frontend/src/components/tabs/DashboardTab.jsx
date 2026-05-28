@@ -415,9 +415,9 @@ function RiskScenarios({ risk, candidates, phase }) {
       bg: risk.p_close_race > 40 ? '#FFFBEB' : '#F0FDF4',
     },
     {
-      question: '¿Cuántos votos podrían anularse?',
+      question: '¿Cuántos votos podrían ser blancos/nulos/viciados?',
       value: blankPct,
-      context: `Estimado a partir del rechazo a ambos candidatos. El histórico de segunda vuelta 2016 y 2021 fue de 2–4%. Valores por encima de eso indicarían un rechazo activo inusualmente alto.`,
+      context: `Estimado a partir del rechazo activo a ambos candidatos. El histórico de segunda vuelta 2016 y 2021 fue de 2–4%. Valores por encima de eso indicarían un rechazo bilateral inusualmente alto.`,
       color: blankPct > 6 ? '#D97706' : '#78716C',
       bg: blankPct > 6 ? '#FFFBEB' : '#FAFAF9',
     },
