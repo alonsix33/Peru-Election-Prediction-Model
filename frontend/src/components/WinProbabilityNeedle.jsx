@@ -302,7 +302,7 @@ export default function WinProbabilityNeedle({ keiko, sanchez }) {
             {leaderName}
           </div>
           <div style={{ color: leaderColor, fontWeight: 600, fontSize: 15, marginTop: 2 }}>
-            {`${keikoLeads ? 'K' : 'S'}+${Math.abs(meanMargin).toFixed(1)}pp · ${leader.prob_win.toFixed(0)}% de probabilidad de ganar`}
+            {`${keikoLeads ? 'K' : 'S'}+${Math.abs(meanMargin).toFixed(2)}pp · ${leader.prob_win.toFixed(2)}% de probabilidad de ganar`}
           </div>
           <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 5, fontVariantNumeric: 'tabular-nums' }}>
             IC 80%: [{fmtMargin(keiko.p10)}pp, {fmtMargin(keiko.p90)}pp]

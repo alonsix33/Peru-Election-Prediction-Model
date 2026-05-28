@@ -41,7 +41,7 @@ function CompactRow({ c, maxMean }) {
         </div>
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-        <div style={{ color: party.primary, fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{c.mean.toFixed(1)}%</div>
+        <div style={{ color: party.primary, fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{c.mean.toFixed(2)}%</div>
         <div style={{ color: '#A8A29E', fontSize: 11 }}>% v.v.</div>
         <div style={{ color: '#8C877F', fontSize: 11, marginTop: 2 }}>P(Ganar)</div>
         <div style={{ color: party.primary, fontSize: 12, fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>{c.prob_win.toFixed(1)}%</div>
@@ -70,7 +70,7 @@ function CandidatesHeadToHead({ keiko, sanchez }) {
               {c.candidate}
             </div>
             <div style={{ color: party.primary, fontSize: 38, fontWeight: 700, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
-              {c.mean.toFixed(1)}%
+              {c.mean.toFixed(2)}%
             </div>
             <div style={{ color: '#A8A29E', fontSize: 10, margin: '3px 0 16px' }}>% votos válidos</div>
             <div style={{ color: party.primary, fontSize: 22, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
