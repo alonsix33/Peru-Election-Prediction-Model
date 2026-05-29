@@ -409,3 +409,37 @@ BEGIN
       (poll_id, 'Roberto Sánchez Palomino', 'Juntos por el Perú', 36.0);
   END IF;
 END $$;
+
+-- ── CPI segunda vuelta: mayo 26-28, 2026 ────────────────────
+-- CPI / RPP. Intención de voto segunda vuelta (presencial, no simulacro).
+-- Keiko 32.5%, Sánchez 29.1%, Blanco/Viciado 22.6%, Indecisos 13.4%, No vota 2.4%.
+-- Campo: 26-28 mayo 2026. n=1200, ±2.8%, confianza 95.5%. 19 departamentos.
+-- Blanco/Nulo SÍ se leyó como opción (comparable con IEP abr y Datum).
+-- En votos válidos (KF+RSP=61.6%): Keiko 52.8%, Sánchez 47.2%.
+-- Geog: Lima/Callao KF 45.6% vs RSP 19.7%; Norte KF 32.1% vs RSP 20.7%;
+--        Oriente KF 36.8%; Sur costa RSP 42.8%; Sierra C/Sur RSP 53.3% vs KF 12.9%.
+DO $$
+DECLARE
+  p_id INT;
+  poll_id INT;
+BEGIN
+  SELECT id INTO p_id FROM pollsters WHERE name = 'CPI';
+
+  IF NOT EXISTS (
+    SELECT 1 FROM polls WHERE pollster_id = p_id AND field_end = '2026-05-28' AND election_round = 2
+  ) THEN
+    INSERT INTO polls (pollster_id, field_start, field_end, published_date, sample_n, margin_error,
+                       confidence_lvl, scope, technique, poll_type,
+                       pct_undecided, pct_blank_null, notes, election_round)
+    VALUES (p_id, '2026-05-26', '2026-05-28', '2026-05-29', 1200, 2.80, 95.5,
+            'nacional', 'presencial', 'intencion_voto',
+            13.4, 22.6,
+            'CPI R2 may 26-28 2026. Intención de voto: Keiko 32.5%, Sánchez 29.1%, B/V 22.6%, Indecisos 13.4%, No vota 2.4%. B/N sí se leyó como opción. V.v.: Keiko 52.8%, Sánchez 47.2%. Geog: Lima/Callao KF45.6%/RSP19.7%; Norte KF32.1%/RSP20.7%; Oriente KF36.8%; Sur costa RSP42.8%; Sierra C/Sur RSP53.3%/KF12.9%.',
+            2)
+    RETURNING id INTO poll_id;
+
+    INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
+      (poll_id, 'Keiko Fujimori',           'Fuerza Popular',     32.5),
+      (poll_id, 'Roberto Sánchez Palomino', 'Juntos por el Perú', 29.1);
+  END IF;
+END $$;
