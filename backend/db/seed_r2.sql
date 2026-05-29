@@ -117,9 +117,11 @@ END $$;
 -- IEP April 21-25, 2026: intención de voto segunda vuelta.
 -- Keiko 31%, Sánchez 32% (intención bruta). Blanco/nulo 24%, NS/NP 13%.
 -- En votos válidos (excl. B/N+NS/NP): Sánchez 50.8%, Keiko 49.2%.
--- IEP emitió comunicado oficial el 16/05/2026 confirmando que NO hubo encuesta de mayo.
--- Cleanup: borra cualquier registro IEP R2 con field_end en mayo 2026 (fechas incorrectas).
--- Esto cubre field_end en '2026-05-01'..'2026-05-31' independientemente del día exacto.
+-- Nota: IEP emitió comunicado el 16/05/2026 aclarando que no existía encuesta de mayo
+-- en ese momento (respondía a una fake circulando). La encuesta real de mayo se realizó
+-- el 22-26 mayo 2026 y fue publicada el 28 mayo 2026 (ver bloque siguiente).
+-- Cleanup: borra registros IEP R2 con field_end entre 1-21 mayo (fake anteriores).
+-- Se excluye '2026-05-22'..'2026-05-31' porque ahí cae la encuesta real de mayo 22-26.
 DO $$
 DECLARE
   p_id INT;
@@ -129,11 +131,11 @@ BEGIN
   SELECT id INTO p_id FROM pollsters WHERE name = 'IEP';
   IF p_id IS NULL THEN RETURN; END IF;
 
-  -- Borrar todos los registros IEP R2 con fechas de mayo 2026 (fake/incorrectos)
+  -- Borrar registros IEP R2 con fechas falsas (1-21 mayo)
   FOR bad_id IN
     SELECT id FROM polls
     WHERE pollster_id = p_id AND election_round = 2
-      AND field_end BETWEEN '2026-05-01' AND '2026-05-31'
+      AND field_end BETWEEN '2026-05-01' AND '2026-05-21'
   LOOP
     DELETE FROM poll_results WHERE poll_id = bad_id;
     DELETE FROM polls WHERE id = bad_id;
@@ -147,9 +149,9 @@ BEGIN
                        confidence_lvl, scope, technique, poll_type,
                        pct_undecided, pct_blank_null, notes, election_round)
     VALUES (p_id, '2026-04-21', '2026-04-25', '2026-05-02', 1600, 2.80, 95.0,
-            'nacional', 'presencial', 'intencion_voto',
-            37.0, 24.0,
-            'IEP abr 21-25 2026. Intención de voto segunda vuelta: Sánchez 32%, Keiko 31%, B/N 24%, NS/NP 13%. En votos válidos: Sánchez 50.8%, Keiko 49.2%. IEP emitió comunicado oficial el 16/05/2026 confirmando que no hubo encuesta de mayo.',
+            'nacional', 'telefonica', 'intencion_voto',
+            13.0, 24.0,
+            'IEP abr 21-25 2026 (Abril III-26). Intención de voto segunda vuelta: Sánchez 32%, Keiko 31%, B/N 24%, NS/NP 13%. Opciones Blanco/Nulo SÍ se leyeron. En votos válidos: Sánchez 50.8%, Keiko 49.2%.',
             2)
     RETURNING id INTO poll_id;
 
@@ -335,6 +337,45 @@ BEGIN
     INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
       (poll_id, 'Keiko Fujimori',           'Fuerza Popular',     39.5),
       (poll_id, 'Roberto Sánchez Palomino', 'Juntos por el Perú', 36.1);
+  END IF;
+END $$;
+
+-- ── IEP tercera medición R2: mayo 22-26, 2026 ───────────────
+-- IEP / La República. Intención de voto segunda vuelta.
+-- Keiko 36%, Sánchez 30%, Blanco/Nulo 6%, Aún no decide 26%, No vota 2%.
+-- Campo: 22-26 mayo 2026. Publicado: 28 mayo 2026. n=1204, ±2.8%, 95%.
+-- METODOLOGÍA: en mayo-26 las opciones "Blanco" y "Nulo" NO se leyeron a los
+-- encuestados (vs. sí en abr III-26). El 6% B/N son respuestas espontáneas
+-- (Blanco 2.1% + Nulo 4.2%). El 26% de indecisos incluye: No decide 15.9%,
+-- Ninguno 5.5%, No precisa 3.2%, Voto secreto 1.1%.
+-- La caída de B/N 24%→6% y el alza de indecisos 13%→26% son en parte artefacto
+-- metodológico, no señal real de cambio de intención.
+-- En votos válidos (KF+RSP=66%): Keiko 54.5%, Sánchez 45.5%.
+-- Geográfico: Lima KF 51%; Norte KF 32%; Centro RSP 40%; Sur RSP 35%;
+-- Oriente RSP 38%; Rural RSP 42%, KF 21%.
+DO $$
+DECLARE
+  p_id INT;
+  poll_id INT;
+BEGIN
+  SELECT id INTO p_id FROM pollsters WHERE name = 'IEP';
+
+  IF NOT EXISTS (
+    SELECT 1 FROM polls WHERE pollster_id = p_id AND field_end = '2026-05-26' AND election_round = 2
+  ) THEN
+    INSERT INTO polls (pollster_id, field_start, field_end, published_date, sample_n, margin_error,
+                       confidence_lvl, scope, technique, poll_type,
+                       pct_undecided, pct_blank_null, notes, election_round)
+    VALUES (p_id, '2026-05-22', '2026-05-26', '2026-05-28', 1204, 2.80, 95.0,
+            'nacional', 'telefonica', 'intencion_voto',
+            26.0, 6.0,
+            'IEP may 22-26 2026. Intención de voto R2: Keiko 36%, Sánchez 30%, B/N 6% (espontáneo, no leído), Indecisos 26%, No vota 2%. NOTA: Blanco/Nulo no se leyó como opción → caída 24%→6% es artefacto metodológico. Indecisos 26% = No decide 15.9% + Ninguno 5.5% + No precisa 3.2% + Secreto 1.1%. V.v.: Keiko 54.5%, Sánchez 45.5%. Geog: Lima KF51%; Norte KF32%; Centro RSP40%; Sur RSP35%; Oriente RSP38%; Rural RSP42%/KF21%.',
+            2)
+    RETURNING id INTO poll_id;
+
+    INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
+      (poll_id, 'Keiko Fujimori',           'Fuerza Popular',     36.0),
+      (poll_id, 'Roberto Sánchez Palomino', 'Juntos por el Perú', 30.0);
   END IF;
 END $$;
 
