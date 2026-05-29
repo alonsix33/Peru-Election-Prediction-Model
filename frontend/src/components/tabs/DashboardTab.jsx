@@ -399,12 +399,8 @@ function RiskScenarios({ risk, candidates, phase }) {
   if (!risk) return null;
   const isR2 = (candidates?.length ?? 0) <= 2;
 
-  const sanchezBase = candidates?.find(c => c.candidate?.includes('Sánchez') || c.candidate?.includes('Roberto'));
-  const sanchezBaseWin = sanchezBase?.prob_win != null ? sanchezBase.prob_win.toFixed(1) : null;
-
   const blankPct = risk.expected_blank_null;
-  const biasWin = risk.bias_5pts_sanchez_win;
-  const biasFlips = biasWin != null && biasWin > 50;
+  const votoOculto = risk.voto_oculto_sanchez_win_pct;
 
   const r2Cards = isR2 ? [
     {
@@ -422,13 +418,13 @@ function RiskScenarios({ risk, candidates, phase }) {
       bg: blankPct > 4 ? '#FFFBEB' : '#FAFAF9',
     },
     {
-      question: '¿Y si las encuestas subestiman a Sánchez?',
-      value: biasWin,
-      context: sanchezBaseWin != null && biasWin != null
-        ? `Con +5pp de sesgo (como ocurrió con Castillo en 2021, −6pp), el resultado${biasFlips ? ' se invierte' : ' se ajusta'}: Sánchez pasaría de ${sanchezBaseWin}% → ${biasWin}% de probabilidad de ganar.`
-        : 'Con +5pp de sesgo sistemático en las encuestas (como ocurrió con Castillo en 2021), la probabilidad de Sánchez aumentaría significativamente.',
-      color: biasWin > 50 ? '#D97706' : '#78716C',
-      bg: biasWin > 50 ? '#FFFBEB' : '#FAFAF9',
+      question: '¿Y si se activa el efecto Castillo?',
+      value: votoOculto,
+      context: votoOculto != null
+        ? `En el 10% de simulaciones donde se activa el sesgo rural (como Castillo 2021, −6pp en encuestas), Sánchez gana el ${votoOculto}% de esas simulaciones. El sesgo rural fue documentado en R1 2026: todas las encuestadoras subestimaron a Sánchez 3-5pp.`
+        : 'Probabilidad de que Sánchez gane en el escenario donde el sesgo rural se activa (como Castillo 2021).',
+      color: votoOculto != null && votoOculto > 50 ? '#D97706' : '#78716C',
+      bg: votoOculto != null && votoOculto > 50 ? '#FFFBEB' : '#FAFAF9',
     },
   ] : [];
 
