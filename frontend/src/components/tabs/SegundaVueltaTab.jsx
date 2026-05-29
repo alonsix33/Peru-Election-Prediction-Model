@@ -271,7 +271,7 @@ function PollsTable({ r2polls }) {
         marginTop: 8, background: '#FFFBEB', border: '1px solid #FCD34D',
         borderRadius: 6, padding: '6px 10px', fontSize: 11, color: '#92400E',
       }}>
-        Circulan encuestas falsas atribuidas a Datum, Ipsos e IEP. Solo las encuestas mostradas aquí han sido verificadas.
+        Circulan encuestas falsas atribuidas a Datum, Ipsos e IEP. Solo las encuestas mostradas aquí han sido verificadas contra fuentes oficiales.
       </div>
     </>
   );
@@ -657,7 +657,7 @@ function AntiVotoTrendChart({ antivoto }) {
         </LineChart>
       </ResponsiveContainer>
       <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 4 }}>
-        Fuentes: Ipsos (5 feb, 27 mar, 2 abr, 23-24 abr, 17 may 2026) · CIT (20-23 mar 2026)
+        Fuentes: IEP (21-25 abr, 22-26 may 2026) · Ipsos (5 feb, 27 mar, 2 abr, 23-24 abr, 17 may 2026) · Datum (17-20 may 2026) · CIT (14-17 may 2026)
       </div>
     </div>
   );
