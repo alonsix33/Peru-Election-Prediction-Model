@@ -657,7 +657,7 @@ function AntiVotoTrendChart({ antivoto }) {
         </LineChart>
       </ResponsiveContainer>
       <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 4 }}>
-        Fuentes: IEP (21-25 abr, 22-26 may 2026) · Ipsos (5 feb, 27 mar, 2 abr, 23-24 abr, 17 may 2026) · Datum (17-20 may 2026) · CIT (14-17 may 2026)
+        Fuentes: IEP (21-25 abr, 22-26 may 2026) · Ipsos (5 feb, 27 mar, 2 abr, 23-24 abr, 17 may 2026) · Datum (17-20 may 2026) · CPI (26-28 may 2026) · CIT (14-17 may 2026)
       </div>
     </div>
   );
