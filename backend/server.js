@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const { validateSystemIntegrity } = require('./startup');
 const { startPolymarketCron } = require('./scraper/polymarket');
+const { startOnpeCron } = require('./jobs/onpeCron');
 const routes = require('./api/routes');
 
 const app = express();
@@ -49,6 +50,7 @@ app.listen(PORT, () => {
     .then(() => {
       systemStatus = 'ready';
       startPolymarketCron();
+      startOnpeCron();
     })
     .catch(err => {
       console.error('⚠️  Sistema arrancó con errores:', err.message);
