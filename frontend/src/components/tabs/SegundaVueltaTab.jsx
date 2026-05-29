@@ -14,40 +14,58 @@ const KEIKO_ALLIANCES = [
   {
     name: 'Rafael López Aliaga',
     pct: 11.9,
-    status: 'parcial_el',
-    note: 'Renovación Popular. RLA rechazó dar apoyo personal a Keiko el 18/05 ("no tengo nada que hablar"). Parlamentarios del partido en diálogo con Fuerza Popular. Mayor bloque de votos en disputa.',
+    status: 'inducido',
+    note: 'Renovación Popular. El 25/05 dijo "no al voto blanco, no al comunismo de izquierda radical" — inducción implícita a votar por Keiko sin nombrarla. No dio apoyo formal ni personal.',
   },
   {
-    name: 'Jorge Nieto',
-    pct: 11.0,
-    status: 'ambiguo',
-    note: 'Partido del Buen Gobierno. Delegó decisión a su comité ejecutivo. No descartó el voto blanco/viciado como opción del partido (18/05). Sin señal hacia ningún candidato.',
+    name: 'PPC',
+    pct: null,
+    status: 'formal',
+    note: 'Partido Popular Cristiano. Apoyo institucional anunciado el 28/05 por "defensa de la democracia y el Estado de Derecho". Sin candidato propio en R1. Carlos Neuhaus (presidente PPC) participó en el debate técnico de Fuerza Popular.',
+  },
+  {
+    name: 'Carlos Espá',
+    pct: 3.35,
+    status: 'formal',
+    note: 'Si Creo. Declaró apoyo explícito a Keiko: "si era entre Sánchez y Keiko, yo dije Keiko".',
   },
 ];
 
 const SANCHEZ_ADJACENT = [
   {
-    name: 'Verónica Mendoza',
-    pct: 4.1,
+    name: 'Ricardo Belmont',
+    pct: 10.14,
     status: 'formal',
-    note: 'Nuevo Perú. Apoyo formal anunciado por Sánchez el 15/05. Uno de los cinco partidos que confirmaron respaldo.',
+    note: 'Partido Cívico Obras. Apoyo formal anunciado: "con responsabilidad democrática". El mayor bloque de votos que migra a Sánchez.',
   },
   {
-    name: 'López Chau',
-    pct: 7.3,
-    status: 'ambiguo',
-    note: 'Ahora Nación. Descartó votar por Keiko. Considera conversaciones con Juntos por el Perú en el Congreso. Sin anuncio formal de apoyo a Sánchez.',
+    name: 'Alfonso López Chau',
+    pct: 7.29,
+    status: 'formal',
+    note: 'Ahora Nación. Apoyo formal anunciado el 23/05: "nuestro voto por Juntos por el Perú es un voto crítico".',
+  },
+  {
+    name: 'Ronald Atencio',
+    pct: 0.84,
+    status: 'formal',
+    note: 'Alianza Electoral Venceremos (Nuevo Perú). Candidato 2026 del partido de Verónica Mendoza. Apoyo formal anunciado por Sánchez el 15/05.',
+  },
+  {
+    name: 'Yonhy Lescano',
+    pct: 1.28,
+    status: 'formal',
+    note: 'Cooperación Popular. Apoyo decidido por votación interna: "para que no caiga en la dictadura totalitaria del fujimorismo".',
   },
   {
     name: 'Marisol Pérez Tello',
-    pct: 3.4,
+    pct: 3.41,
     status: 'parcial',
     note: 'Primero la Gente. Partido apoya a Sánchez. Ella personalmente votará viciado.',
   },
 ];
 
 const SIN_POSICION = [
-  { name: 'Belmont', pct: 10.2, note: 'Retirado, sin pronunciamiento público.' },
+  { name: 'Jorge Nieto', pct: 11.0, note: 'Llama al voto viciado. "No estamos de acuerdo con esas dos alternativas".' },
 ];
 
 function parseDate(raw) {
@@ -451,10 +469,11 @@ function PMvsPollsSection({ polymarket, r2polls }) {
 
 function AllianceSection() {
   const statusLabel = {
-    formal:   { label: 'apoyo formal',        color: '#16A34A', bg: '#DCFCE7' },
-    incierto: { label: 'en negociaciones',    color: '#D97706', bg: '#FEF9C3' },
-    ambiguo:  { label: 'posición ambigua',    color: '#78716C', bg: '#F3F4F6' },
-    parcial:  { label: 'partido sí / ella no', color: '#78716C', bg: '#F3F4F6' },
+    formal:     { label: 'apoyo formal',        color: '#16A34A', bg: '#DCFCE7' },
+    incierto:   { label: 'en negociaciones',    color: '#D97706', bg: '#FEF9C3' },
+    inducido:   { label: 'inducción implícita', color: '#D97706', bg: '#FEF9C3' },
+    ambiguo:    { label: 'posición ambigua',    color: '#78716C', bg: '#F3F4F6' },
+    parcial:    { label: 'partido sí / ella no', color: '#78716C', bg: '#F3F4F6' },
     parcial_el: { label: 'partido sí / él no',  color: '#78716C', bg: '#F3F4F6' },
   };
 
@@ -464,7 +483,7 @@ function AllianceSection() {
         Alianzas y transferencia de voto
       </h3>
       <p style={{ color: '#A8A29E', fontSize: 12, margin: '0 0 14px' }}>
-        Verde = apoyo formal · amarillo = en negociación · gris = posición ambigua o dividida.
+        Verde = apoyo formal · amarillo = inducción implícita o en negociación · gris = posición ambigua o dividida.
       </p>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         {/* Sánchez side */}
@@ -478,7 +497,9 @@ function AllianceSection() {
               <div key={a.name} style={{ marginBottom: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, alignItems: 'center' }}>
                   <span style={{ color: '#1C1917', fontSize: 13 }}>{a.name}</span>
-                  <span style={{ color: SANCHEZ_COLOR, fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>{a.pct}% en R1</span>
+                  <span style={{ color: SANCHEZ_COLOR, fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>
+                    {a.pct != null ? `${a.pct}% en R1` : 'sin candidato R1'}
+                  </span>
                 </div>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
                   <span style={{
@@ -488,7 +509,7 @@ function AllianceSection() {
                 </div>
                 <div style={{ color: '#A8A29E', fontSize: 11 }}>{a.note}</div>
                 <div style={{ height: 4, borderRadius: 2, background: '#F0EDE8', marginTop: 5 }}>
-                  <div style={{ width: `${(a.pct / 15) * 100}%`, height: '100%', borderRadius: 2, background: SANCHEZ_COLOR }} />
+                  <div style={{ width: `${((a.pct ?? 0) / 15) * 100}%`, height: '100%', borderRadius: 2, background: SANCHEZ_COLOR }} />
                 </div>
               </div>
             );
@@ -506,7 +527,9 @@ function AllianceSection() {
               <div key={a.name} style={{ marginBottom: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, alignItems: 'center' }}>
                   <span style={{ color: '#1C1917', fontSize: 13 }}>{a.name}</span>
-                  <span style={{ color: KEIKO_COLOR, fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>{a.pct}% en R1</span>
+                  <span style={{ color: KEIKO_COLOR, fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>
+                    {a.pct != null ? `${a.pct}% en R1` : 'sin candidato R1'}
+                  </span>
                 </div>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 4 }}>
                   <span style={{
@@ -516,7 +539,7 @@ function AllianceSection() {
                 </div>
                 <div style={{ color: '#A8A29E', fontSize: 11 }}>{a.note}</div>
                 <div style={{ height: 4, borderRadius: 2, background: '#F0EDE8', marginTop: 5 }}>
-                  <div style={{ width: `${(a.pct / 15) * 100}%`, height: '100%', borderRadius: 2, background: KEIKO_COLOR }} />
+                  <div style={{ width: `${((a.pct ?? 0) / 15) * 100}%`, height: '100%', borderRadius: 2, background: KEIKO_COLOR }} />
                 </div>
               </div>
             );
@@ -526,7 +549,7 @@ function AllianceSection() {
 
       {/* Sin posición */}
       <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #F0EDE8' }}>
-        <div style={{ color: '#78716C', fontWeight: 600, fontSize: 12, marginBottom: 6 }}>Sin pronunciamiento</div>
+        <div style={{ color: '#78716C', fontWeight: 600, fontSize: 12, marginBottom: 6 }}>Otra posición</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {SIN_POSICION.map(a => (
             <div key={a.name} style={{ background: '#F7F4EF', borderRadius: 6, padding: '4px 10px', fontSize: 12 }}>
