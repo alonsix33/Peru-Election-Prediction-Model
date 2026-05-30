@@ -15,12 +15,12 @@ const DEMO = {
     ci_low:           57.5,
     ci_high:          60.1,
     pct_actas:        100,
-    kf_votos:         5_312_244,
-    rsp_votos:        3_714_080,
+    kf_votos:         2_877_678,  // ONPE R1 oficial
+    rsp_votos:        2_015_114,  // ONPE R1 oficial
   },
-  // Nacional doméstico (25 depts, sin exterior)
-  nacional: { kf_r2_share: 58.46, kf_votos: 5_259_790, rsp_votos: 3_706_086 },
-  // Exterior R1 real (r1_exterior.json aggregate)
+  // Nacional doméstico (total − exterior)
+  nacional: { kf_r2_share: 58.46, kf_votos: 2_825_224, rsp_votos: 2_007_120 },
+  // Exterior R1 real (r1_exterior.json)
   extranjero: { kf_r2_share: 86.78, kf_votos: 52_454, rsp_votos: 7_994 },
   pct_actas: 100,
   is_demo: true,
@@ -158,9 +158,9 @@ function CandidateCards({ kf_r2_share, proj_kf_r2_share, ci_low, ci_high, kf_vot
 }
 
 // ─── Horizontal vote bars (Nacional / Extranjero) ─────────────
-function VoteBars({ nacional, extranjero, isDemo }) {
-  const [view, setView] = useState('nacional');
-  const src = view === 'nacional' ? nacional : extranjero;
+function VoteBars({ total, nacional, extranjero, isDemo }) {
+  const [view, setView] = useState('total');
+  const src = view === 'total' ? total : view === 'nacional' ? nacional : extranjero;
 
   const kfShare  = src?.kf_r2_share ?? null;
   const rspShare = kfShare != null ? 100 - kfShare : null;
@@ -185,7 +185,7 @@ function VoteBars({ nacional, extranjero, isDemo }) {
           Votos emitidos{isDemo ? <span style={{ color: '#A8A29E', fontWeight: 400, fontSize: 12 }}> · Demo R1</span> : ''}
         </h3>
         <div style={{ display: 'flex', background: '#F7F4EF', borderRadius: 8, padding: 3, gap: 2 }}>
-          {['nacional', 'extranjero'].map(v => (
+          {['total', 'nacional', 'extranjero'].map(v => (
             <button key={v} onClick={() => setView(v)} style={{
               background: view === v ? '#FFFFFF' : 'transparent',
               border: 'none', borderRadius: 6, cursor: 'pointer',
@@ -194,7 +194,7 @@ function VoteBars({ nacional, extranjero, isDemo }) {
               boxShadow: view === v ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
               transition: 'all 0.15s',
             }}>
-              {v === 'nacional' ? 'Nacional' : 'Extranjero'}
+              {v === 'total' ? 'Total' : v === 'nacional' ? 'Nacional' : 'Extranjero'}
             </button>
           ))}
         </div>
@@ -242,6 +242,11 @@ function VoteBars({ nacional, extranjero, isDemo }) {
         }}>50%</span>
       </div>
 
+      {view === 'total' && isDemo && (
+        <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 8 }}>
+          Total R1: KF 2,877,678 votos · RSP 2,015,114 votos (ONPE oficial).
+        </div>
+      )}
       {view === 'extranjero' && isDemo && (
         <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 8 }}>
           Extranjero R1: 77 países · 52,454 votos KF / 7,994 votos RSP. KF dominó en todos los continentes.
@@ -420,7 +425,12 @@ export default function LiveResultsTab({ predictions }) {
       </div>
 
       {/* 4. Vote share bars */}
-      <VoteBars nacional={nacional} extranjero={extranjero} isDemo={isDemo} />
+      <VoteBars
+        total={isLive ? liveData?.national : DEMO.national}
+        nacional={nacional}
+        extranjero={extranjero}
+        isDemo={isDemo}
+      />
 
       {/* 5. Map + dept table */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
