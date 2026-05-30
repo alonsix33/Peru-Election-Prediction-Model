@@ -257,7 +257,7 @@ function VoteBars({ total, nacional, extranjero, isDemo }) {
 }
 
 // ─── Department table ─────────────────────────────────────────
-function DeptTable({ deptData, isDemo }) {
+function DeptTable({ deptData, extranjero, isDemo }) {
   const [sortBy, setSortBy] = useState('pct_actas');
 
   const rows = Object.values(deptData).sort((a, b) => {
@@ -332,6 +332,42 @@ function DeptTable({ deptData, isDemo }) {
                 </tr>
               );
             })}
+            {/* Separator + Extranjero row */}
+            {extranjero && (() => {
+              const share    = extranjero.kf_r2_share;
+              const rspShare = share != null ? 100 - share : null;
+              const margin   = share != null ? Math.abs(share - 50).toFixed(1) : null;
+              const kfLeads  = share != null && share >= 50;
+              const pct      = extranjero.pct_actas ?? 100;
+              return (
+                <>
+                  <tr><td colSpan={5} style={{ padding: '4px 0', borderTop: '2px solid #E5E0D8' }} /></tr>
+                  <tr style={{ background: '#F7F4EF' }}>
+                    <td style={{ padding: '7px 8px', color: '#78716C', fontWeight: 600, fontStyle: 'italic' }}>
+                      Extranjero
+                      <span style={{ color: '#A8A29E', fontSize: 10, marginLeft: 5, fontWeight: 400 }}>77 países</span>
+                    </td>
+                    <td style={{ padding: '7px 8px', textAlign: 'right' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>
+                        <div style={{ width: 40, height: 4, borderRadius: 2, background: '#E5E0D8', overflow: 'hidden' }}>
+                          <div style={{ width: `${pct}%`, height: '100%', background: '#16A34A', borderRadius: 2 }} />
+                        </div>
+                        <span style={{ color: '#78716C', fontVariantNumeric: 'tabular-nums' }}>{pct.toFixed(0)}%</span>
+                      </div>
+                    </td>
+                    <td style={{ padding: '7px 8px', textAlign: 'right', color: kfLeads ? KEIKO_COLOR : '#A8A29E', fontWeight: kfLeads ? 700 : 400, fontVariantNumeric: 'tabular-nums' }}>
+                      {share != null ? share.toFixed(1) + '%' : '—'}
+                    </td>
+                    <td style={{ padding: '7px 8px', textAlign: 'right', color: !kfLeads ? SANCHEZ_COLOR : '#A8A29E', fontWeight: !kfLeads ? 700 : 400, fontVariantNumeric: 'tabular-nums' }}>
+                      {rspShare != null ? rspShare.toFixed(1) + '%' : '—'}
+                    </td>
+                    <td style={{ padding: '7px 8px', textAlign: 'right', color: kfLeads ? KEIKO_COLOR : SANCHEZ_COLOR, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                      {margin != null ? `${kfLeads ? 'K' : 'S'}+${margin}` : '—'}
+                    </td>
+                  </tr>
+                </>
+              );
+            })()}
           </tbody>
         </table>
       </div>
@@ -451,9 +487,9 @@ export default function LiveResultsTab({ predictions }) {
 
         <div style={{ flex: 1, minWidth: 280, background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
           <h3 style={{ color: '#1C1917', fontSize: 14, fontWeight: 600, margin: '0 0 12px' }}>
-            Resultados por departamento
+            Resultados Detallados
           </h3>
-          <DeptTable deptData={deptData} isDemo={isDemo} />
+          <DeptTable deptData={deptData} extranjero={extranjero} isDemo={isDemo} />
         </div>
       </div>
     </div>
