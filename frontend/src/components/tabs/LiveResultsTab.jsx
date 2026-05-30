@@ -260,7 +260,19 @@ function VoteBars({ total, nacional, extranjero, isDemo }) {
 function DeptTable({ deptData, extranjero, isDemo }) {
   const [sortBy, setSortBy] = useState('pct_actas');
 
-  const rows = Object.values(deptData).sort((a, b) => {
+  const extRow = extranjero ? {
+    ubigeo: 'EXT',
+    nombre: 'Extranjero',
+    kf_r2_share: extranjero.kf_r2_share,
+    pct_actas:   extranjero.pct_actas ?? 100,
+    isExtranjero: true,
+    subLabel: '77 países',
+  } : null;
+
+  const rows = [
+    ...Object.values(deptData),
+    ...(extRow ? [extRow] : []),
+  ].sort((a, b) => {
     if (sortBy === 'pct_actas') return (a.pct_actas ?? 100) - (b.pct_actas ?? 100);
     if (sortBy === 'margin')    return Math.abs((b.kf_r2_share ?? 50) - 50) - Math.abs((a.kf_r2_share ?? 50) - 50);
     return a.nombre.localeCompare(b.nombre);
@@ -303,10 +315,15 @@ function DeptTable({ deptData, extranjero, isDemo }) {
               const kfLeads  = share != null && share >= 50;
               const pct      = dept.pct_actas ?? 100;
               return (
-                <tr key={dept.ubigeo} style={{ borderBottom: '1px solid #F0EDE8' }}>
-                  <td style={{ padding: '7px 8px', color: '#1C1917', fontWeight: 600 }}>
+                <tr key={dept.ubigeo} style={{ borderBottom: '1px solid #F0EDE8', background: dept.isExtranjero ? '#F7F4EF' : undefined }}>
+                  <td style={{ padding: '7px 8px', color: dept.isExtranjero ? '#78716C' : '#1C1917', fontWeight: 600, fontStyle: dept.isExtranjero ? 'italic' : 'normal' }}>
                     {dept.nombre}
-                    {pct < 100 && (
+                    {dept.subLabel && (
+                      <span style={{ color: '#A8A29E', fontSize: 10, marginLeft: 5, fontWeight: 400, fontStyle: 'normal' }}>
+                        {dept.subLabel}
+                      </span>
+                    )}
+                    {!dept.isExtranjero && pct < 100 && (
                       <span style={{ color: '#D97706', fontSize: 10, marginLeft: 5, fontWeight: 400 }}>
                         ⏳ {(100 - pct).toFixed(0)}% falta
                       </span>
@@ -332,42 +349,6 @@ function DeptTable({ deptData, extranjero, isDemo }) {
                 </tr>
               );
             })}
-            {/* Separator + Extranjero row */}
-            {extranjero && (() => {
-              const share    = extranjero.kf_r2_share;
-              const rspShare = share != null ? 100 - share : null;
-              const margin   = share != null ? Math.abs(share - 50).toFixed(1) : null;
-              const kfLeads  = share != null && share >= 50;
-              const pct      = extranjero.pct_actas ?? 100;
-              return (
-                <>
-                  <tr><td colSpan={5} style={{ padding: '4px 0', borderTop: '2px solid #E5E0D8' }} /></tr>
-                  <tr style={{ background: '#F7F4EF' }}>
-                    <td style={{ padding: '7px 8px', color: '#78716C', fontWeight: 600, fontStyle: 'italic' }}>
-                      Extranjero
-                      <span style={{ color: '#A8A29E', fontSize: 10, marginLeft: 5, fontWeight: 400 }}>77 países</span>
-                    </td>
-                    <td style={{ padding: '7px 8px', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>
-                        <div style={{ width: 40, height: 4, borderRadius: 2, background: '#E5E0D8', overflow: 'hidden' }}>
-                          <div style={{ width: `${pct}%`, height: '100%', background: '#16A34A', borderRadius: 2 }} />
-                        </div>
-                        <span style={{ color: '#78716C', fontVariantNumeric: 'tabular-nums' }}>{pct.toFixed(0)}%</span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '7px 8px', textAlign: 'right', color: kfLeads ? KEIKO_COLOR : '#A8A29E', fontWeight: kfLeads ? 700 : 400, fontVariantNumeric: 'tabular-nums' }}>
-                      {share != null ? share.toFixed(1) + '%' : '—'}
-                    </td>
-                    <td style={{ padding: '7px 8px', textAlign: 'right', color: !kfLeads ? SANCHEZ_COLOR : '#A8A29E', fontWeight: !kfLeads ? 700 : 400, fontVariantNumeric: 'tabular-nums' }}>
-                      {rspShare != null ? rspShare.toFixed(1) + '%' : '—'}
-                    </td>
-                    <td style={{ padding: '7px 8px', textAlign: 'right', color: kfLeads ? KEIKO_COLOR : SANCHEZ_COLOR, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
-                      {margin != null ? `${kfLeads ? 'K' : 'S'}+${margin}` : '—'}
-                    </td>
-                  </tr>
-                </>
-              );
-            })()}
           </tbody>
         </table>
       </div>
