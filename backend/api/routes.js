@@ -264,14 +264,14 @@ router.get('/antivoto', async (req, res) => {
     const { rows } = allRounds
       ? await db.query(`
           SELECT a.candidate, a.pct_no, a.field_end, a.published_date, a.notes,
-                 a.election_round, ps.name as pollster
+                 a.election_round, a.segments, ps.name as pollster
           FROM antivoto_snapshots a
           LEFT JOIN pollsters ps ON a.pollster_id = ps.id
           ORDER BY a.field_end ASC, a.candidate ASC
         `)
       : await db.query(`
           SELECT a.candidate, a.pct_no, a.field_end, a.published_date, a.notes,
-                 a.election_round, ps.name as pollster
+                 a.election_round, a.segments, ps.name as pollster
           FROM antivoto_snapshots a
           LEFT JOIN pollsters ps ON a.pollster_id = ps.id
           WHERE a.election_round = $1
@@ -283,12 +283,13 @@ router.get('/antivoto', async (req, res) => {
     for (const r of rows) {
       if (!byCandidate[r.candidate]) byCandidate[r.candidate] = [];
       byCandidate[r.candidate].push({
-        pct_no: parseFloat(r.pct_no),
-        field_end: r.field_end,
+        pct_no:         parseFloat(r.pct_no),
+        field_end:      r.field_end,
         published_date: r.published_date,
-        pollster: r.pollster,
-        notes: r.notes,
+        pollster:       r.pollster,
+        notes:          r.notes,
         election_round: r.election_round,
+        segments:       r.segments ?? null,
       });
     }
 
@@ -300,10 +301,11 @@ router.get('/antivoto', async (req, res) => {
         : snapshots[snapshots.length - 1];
       return {
         candidate,
-        latest_pct_no: latest.pct_no,
+        latest_pct_no:    latest.pct_no,
         latest_field_end: latest.field_end,
-        pollster: latest.pollster,
-        history: snapshots,
+        pollster:         latest.pollster,
+        latest_segments:  latest.segments ?? null,
+        history:          snapshots,
       };
     });
 

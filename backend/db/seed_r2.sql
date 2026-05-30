@@ -410,6 +410,73 @@ BEGIN
   END IF;
 END $$;
 
+-- ── IEP antivoto R2: mayo 22-26, 2026 ─────────────────────
+-- "¿Por cuál de los dos candidatos definitivamente no votaría?"
+-- KF: 37%, RSP: 40%. Primera vez que RSP supera el antivoto de KF (+3pp).
+-- KF bajó 13pp vs mayo III-21 2021 (50%→37%). Mínimo histórico de rechazo a KF.
+-- Nota: en Mayo III-21 (2021) se preguntaba vs Castillo, no comparable directamente.
+-- Segmentos (diferencia significativa en negrita en fuente):
+--   Ámbito:     Lima Met (RSP 56% KF 28%), Urbano (RSP 35% KF 39%), Rural (RSP 24% KF 51%)
+--   Macrozona:  Norte (RSP 36% KF 37%), Centro (RSP 27% KF 46%), Sur (RSP 33% KF 43%), Oriente (RSP 27% KF 49%)
+--   NSE:        A/B (RSP 55% KF 30%), C (RSP 45% KF 35%), D/E (RSP 30% KF 42%)
+--   No ninguno: 12%, NS/NP: 11%
+-- Base: n=1204 (total que irá a votar). Publicado: 28 mayo 2026.
+DO $$
+DECLARE
+  iep_id INT;
+  seg_json JSONB;
+BEGIN
+  SELECT id INTO iep_id FROM pollsters WHERE name = 'IEP';
+  IF iep_id IS NULL THEN RETURN; END IF;
+
+  seg_json := '{
+    "ambito": {
+      "lima_met":    {"kf": 28, "rsp": 56},
+      "peru_urbano": {"kf": 39, "rsp": 35},
+      "peru_rural":  {"kf": 51, "rsp": 24}
+    },
+    "macrozona": {
+      "norte":   {"kf": 37, "rsp": 36},
+      "centro":  {"kf": 46, "rsp": 27},
+      "sur":     {"kf": 43, "rsp": 33},
+      "oriente": {"kf": 49, "rsp": 27}
+    },
+    "nse": {
+      "ab": {"kf": 30, "rsp": 55},
+      "c":  {"kf": 35, "rsp": 45},
+      "de": {"kf": 42, "rsp": 30}
+    },
+    "no_ninguno": 12,
+    "ns_np": 11
+  }'::JSONB;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM antivoto_snapshots
+    WHERE candidate = 'Keiko Fujimori' AND field_end = '2026-05-26' AND election_round = 2
+  ) THEN
+    INSERT INTO antivoto_snapshots
+      (election_round, candidate, pct_no, pollster_id, field_end, published_date, notes, segments)
+    VALUES (
+      2, 'Keiko Fujimori', 37.0, iep_id, '2026-05-26', '2026-05-28',
+      'IEP may 22-26 2026. Antivoto KF: 37% — mínimo histórico. Bajó 13pp vs mayo 2021 (50%). RSP supera KF por primera vez (+3pp). Lima Met: RSP 56% vs KF 28%. Rural: KF 51% vs RSP 24%. NSE A/B: RSP 55% vs KF 30%. Base: n=1204.',
+      seg_json
+    );
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM antivoto_snapshots
+    WHERE candidate = 'Roberto Sánchez Palomino' AND field_end = '2026-05-26' AND election_round = 2
+  ) THEN
+    INSERT INTO antivoto_snapshots
+      (election_round, candidate, pct_no, pollster_id, field_end, published_date, notes, segments)
+    VALUES (
+      2, 'Roberto Sánchez Palomino', 40.0, iep_id, '2026-05-26', '2026-05-28',
+      'IEP may 22-26 2026. Antivoto RSP: 40% — supera a KF (37%) por primera vez (+3pp). Lima Met: RSP 56% vs KF 28%. NSE A/B: RSP 55% (rechazo alto en sector urbano educado). Rural/Oriente: KF 51%/49% (rechazo alto en zonas RSP-leaning). Base: n=1204.',
+      seg_json
+    );
+  END IF;
+END $$;
+
 -- ── CPI segunda vuelta: mayo 26-28, 2026 ────────────────────
 -- CPI / RPP. Intención de voto segunda vuelta (presencial, no simulacro).
 -- Keiko 32.5%, Sánchez 29.1%, Blanco/Viciado 22.6%, Indecisos 13.4%, No vota 2.4%.
