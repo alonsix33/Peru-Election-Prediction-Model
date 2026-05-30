@@ -865,6 +865,67 @@ router.get('/onpe/live', async (req, res) => {
   }
 });
 
+// ─── GET /api/onpe/projection ───────────────────────────────
+// Proyección de resultado final R2 basada en el último snapshot ONPE.
+// Lee de DB (no hace calls ONPE), aplica shift-from-baseline + corrección ZDA.
+// Devuelve { status: 'pre_election' } si no hay snapshots con datos.
+router.get('/onpe/projection', async (req, res) => {
+  try {
+    const { rows: [latest] } = await db.query(
+      `SELECT * FROM onpe_live_snapshots WHERE has_data = true ORDER BY captured_at DESC LIMIT 1`
+    );
+
+    if (!latest) {
+      return res.json({ status: 'pre_election', message: 'Sin datos ONPE aún' });
+    }
+
+    const { project } = require('../model/electionNightProjector');
+
+    const snapshot = {
+      pct_actas:      latest.pct_actas      != null ? parseFloat(latest.pct_actas)      : 0,
+      keiko_votos:    latest.keiko_votos     != null ? parseInt(latest.keiko_votos)       : 0,
+      sanchez_votos:  latest.sanchez_votos   != null ? parseInt(latest.sanchez_votos)     : 0,
+      dept_breakdown: Array.isArray(latest.dept_breakdown) ? latest.dept_breakdown : [],
+      captured_at:    latest.captured_at,
+    };
+
+    const result = project(snapshot);
+
+    // Also fetch projection history for trend line
+    const { rows: history } = await db.query(
+      `SELECT projected_at, proj_kf_r2_share, proj_ci95_lo, proj_ci95_hi, pct_actas, phase
+       FROM r2_election_projections
+       ORDER BY projected_at ASC`
+    );
+
+    const pf = v => (v != null ? parseFloat(v) : null);
+
+    res.json({
+      ...result,
+      snapshot_id:  latest.id,
+      history: history.map(h => ({
+        time:             h.projected_at,
+        pct_actas:        pf(h.pct_actas),
+        phase:            h.phase,
+        proj_kf_r2_share: pf(h.proj_kf_r2_share),
+        ci95_lo:          pf(h.proj_ci95_lo),
+        ci95_hi:          pf(h.proj_ci95_hi),
+      })),
+    });
+  } catch (err) {
+    // PostgreSQL error code 42P01 = undefined_table
+    if (err.code === '42P01') {
+      if (err.message?.includes('r2_election_projections')) {
+        return res.json({ status: 'table_missing', has_data: false,
+          hint: 'Run: psql $DATABASE_URL -f db/r2_projections.sql' });
+      }
+      return res.json({ status: 'pre_election', message: 'Sin datos ONPE aún' });
+    }
+    await handleError('DB_CONNECTION_FAILED', { module: 'api/onpe/projection' }, err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
 // ─── POST /api/results/onpe ─────────────────────────────────
 // Insertar resultados oficiales ONPE para post-mortem
 router.post('/results/onpe', async (req, res) => {
