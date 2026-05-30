@@ -3,54 +3,61 @@ import { getPartyColor } from '../../config/partyColors';
 import WinProbabilityNeedle from '../WinProbabilityNeedle';
 import PeruDeptMap from '../PeruDeptMap';
 
-const KEIKO_COLOR   = getPartyColor('Keiko Fujimori').primary;
-const SANCHEZ_COLOR = getPartyColor('Roberto Sánchez Palomino').primary;
+const KEIKO_COLOR   = getPartyColor('Keiko Fujimori').primary;           // #F97316
+const SANCHEZ_COLOR = getPartyColor('Roberto Sánchez Palomino').primary; // #16A34A
 const API_BASE      = import.meta.env.VITE_API_URL || '';
 
-// ─── R1 demo dept data (aggregated from province_baseline) ────
-// kf_r2_share = KF / (KF + RSP) in R1 — used to demo map colors
-const R1_DEPT_DEMO = {
-  '010000': { ubigeo: '010000', nombre: 'AMAZONAS',      kf_r2_share: 32.38, kfV: null, rspV: null, pct_actas: 100 },
-  '020000': { ubigeo: '020000', nombre: 'ÁNCASH',        kf_r2_share: 54.54, kfV: null, rspV: null, pct_actas: 100 },
-  '030000': { ubigeo: '030000', nombre: 'APURÍMAC',      kf_r2_share: 14.38, kfV: null, rspV: null, pct_actas: 100 },
-  '040000': { ubigeo: '040000', nombre: 'AREQUIPA',      kf_r2_share: 42.06, kfV: null, rspV: null, pct_actas: 100 },
-  '050000': { ubigeo: '050000', nombre: 'AYACUCHO',      kf_r2_share: 20.52, kfV: null, rspV: null, pct_actas: 100 },
-  '060000': { ubigeo: '060000', nombre: 'CAJAMARCA',     kf_r2_share: 24.92, kfV: null, rspV: null, pct_actas: 100 },
-  '240000': { ubigeo: '240000', nombre: 'CALLAO',        kf_r2_share: 87.30, kfV: null, rspV: null, pct_actas: 100 },
-  '070000': { ubigeo: '070000', nombre: 'CUSCO',         kf_r2_share: 21.17, kfV: null, rspV: null, pct_actas: 100 },
-  '080000': { ubigeo: '080000', nombre: 'HUANCAVELICA',  kf_r2_share: 14.02, kfV: null, rspV: null, pct_actas: 100 },
-  '090000': { ubigeo: '090000', nombre: 'HUÁNUCO',       kf_r2_share: 34.11, kfV: null, rspV: null, pct_actas: 100 },
-  '100000': { ubigeo: '100000', nombre: 'ICA',           kf_r2_share: 72.46, kfV: null, rspV: null, pct_actas: 100 },
-  '110000': { ubigeo: '110000', nombre: 'JUNÍN',         kf_r2_share: 58.14, kfV: null, rspV: null, pct_actas: 100 },
-  '120000': { ubigeo: '120000', nombre: 'LA LIBERTAD',   kf_r2_share: 68.16, kfV: null, rspV: null, pct_actas: 100 },
-  '130000': { ubigeo: '130000', nombre: 'LAMBAYEQUE',    kf_r2_share: 71.08, kfV: null, rspV: null, pct_actas: 100 },
-  '140000': { ubigeo: '140000', nombre: 'LIMA',          kf_r2_share: 84.53, kfV: null, rspV: null, pct_actas: 100 },
-  '150000': { ubigeo: '150000', nombre: 'LORETO',        kf_r2_share: 74.20, kfV: null, rspV: null, pct_actas: 100 },
-  '160000': { ubigeo: '160000', nombre: 'MADRE DE DIOS', kf_r2_share: 36.62, kfV: null, rspV: null, pct_actas: 100 },
-  '170000': { ubigeo: '170000', nombre: 'MOQUEGUA',      kf_r2_share: 33.96, kfV: null, rspV: null, pct_actas: 100 },
-  '180000': { ubigeo: '180000', nombre: 'PASCO',         kf_r2_share: 50.27, kfV: null, rspV: null, pct_actas: 100 },
-  '190000': { ubigeo: '190000', nombre: 'PIURA',         kf_r2_share: 70.97, kfV: null, rspV: null, pct_actas: 100 },
-  '200000': { ubigeo: '200000', nombre: 'PUNO',          kf_r2_share: 13.52, kfV: null, rspV: null, pct_actas: 100 },
-  '210000': { ubigeo: '210000', nombre: 'SAN MARTÍN',    kf_r2_share: 49.28, kfV: null, rspV: null, pct_actas: 100 },
-  '220000': { ubigeo: '220000', nombre: 'TACNA',         kf_r2_share: 36.51, kfV: null, rspV: null, pct_actas: 100 },
-  '230000': { ubigeo: '230000', nombre: 'TUMBES',        kf_r2_share: 83.01, kfV: null, rspV: null, pct_actas: 100 },
-  '250000': { ubigeo: '250000', nombre: 'UCAYALI',       kf_r2_share: 69.76, kfV: null, rspV: null, pct_actas: 100 },
+// ─── Demo data (R1 2026) ──────────────────────────────────────
+const DEMO = {
+  national: {
+    kf_r2_share:      58.81,
+    proj_kf_r2_share: 58.81,
+    ci_low:           57.5,
+    ci_high:          60.1,
+    pct_actas:        100,
+    kf_votos:         5_312_244,
+    rsp_votos:        3_714_080,
+  },
+  // Nacional doméstico (25 depts, sin exterior)
+  nacional: { kf_r2_share: 58.46, kf_votos: 5_259_790, rsp_votos: 3_706_086 },
+  // Exterior R1 real (r1_exterior.json aggregate)
+  extranjero: { kf_r2_share: 86.78, kf_votos: 52_454, rsp_votos: 7_994 },
+  pct_actas: 100,
+  is_demo: true,
 };
 
-// Demo national aggregate from R1 dept data
-const R1_NATIONAL_DEMO = {
-  kf_r2_share:      58.81, // known R1 national
-  proj_kf_r2_share: 58.81,
-  ci_low:           57.5,
-  ci_high:          60.1,
-  pct_actas:        100,
-  is_demo:          true,
+const DEMO_DEPTS = {
+  '010000': { ubigeo: '010000', nombre: 'AMAZONAS',      kf_r2_share: 32.38, pct_actas: 100 },
+  '020000': { ubigeo: '020000', nombre: 'ÁNCASH',        kf_r2_share: 54.54, pct_actas: 100 },
+  '030000': { ubigeo: '030000', nombre: 'APURÍMAC',      kf_r2_share: 14.38, pct_actas: 100 },
+  '040000': { ubigeo: '040000', nombre: 'AREQUIPA',      kf_r2_share: 42.06, pct_actas: 100 },
+  '050000': { ubigeo: '050000', nombre: 'AYACUCHO',      kf_r2_share: 20.52, pct_actas: 100 },
+  '060000': { ubigeo: '060000', nombre: 'CAJAMARCA',     kf_r2_share: 24.92, pct_actas: 100 },
+  '240000': { ubigeo: '240000', nombre: 'CALLAO',        kf_r2_share: 87.30, pct_actas: 100 },
+  '070000': { ubigeo: '070000', nombre: 'CUSCO',         kf_r2_share: 21.17, pct_actas: 100 },
+  '080000': { ubigeo: '080000', nombre: 'HUANCAVELICA',  kf_r2_share: 14.02, pct_actas: 100 },
+  '090000': { ubigeo: '090000', nombre: 'HUÁNUCO',       kf_r2_share: 34.11, pct_actas: 100 },
+  '100000': { ubigeo: '100000', nombre: 'ICA',           kf_r2_share: 72.46, pct_actas: 100 },
+  '110000': { ubigeo: '110000', nombre: 'JUNÍN',         kf_r2_share: 58.14, pct_actas: 100 },
+  '120000': { ubigeo: '120000', nombre: 'LA LIBERTAD',   kf_r2_share: 68.16, pct_actas: 100 },
+  '130000': { ubigeo: '130000', nombre: 'LAMBAYEQUE',    kf_r2_share: 71.08, pct_actas: 100 },
+  '140000': { ubigeo: '140000', nombre: 'LIMA',          kf_r2_share: 84.53, pct_actas: 100 },
+  '150000': { ubigeo: '150000', nombre: 'LORETO',        kf_r2_share: 74.20, pct_actas: 100 },
+  '160000': { ubigeo: '160000', nombre: 'MADRE DE DIOS', kf_r2_share: 36.62, pct_actas: 100 },
+  '170000': { ubigeo: '170000', nombre: 'MOQUEGUA',      kf_r2_share: 33.96, pct_actas: 100 },
+  '180000': { ubigeo: '180000', nombre: 'PASCO',         kf_r2_share: 50.27, pct_actas: 100 },
+  '190000': { ubigeo: '190000', nombre: 'PIURA',         kf_r2_share: 70.97, pct_actas: 100 },
+  '200000': { ubigeo: '200000', nombre: 'PUNO',          kf_r2_share: 13.52, pct_actas: 100 },
+  '210000': { ubigeo: '210000', nombre: 'SAN MARTÍN',    kf_r2_share: 49.28, pct_actas: 100 },
+  '220000': { ubigeo: '220000', nombre: 'TACNA',         kf_r2_share: 36.51, pct_actas: 100 },
+  '230000': { ubigeo: '230000', nombre: 'TUMBES',        kf_r2_share: 83.01, pct_actas: 100 },
+  '250000': { ubigeo: '250000', nombre: 'UCAYALI',       kf_r2_share: 69.76, pct_actas: 100 },
 };
 
 // ─── StatusBar ────────────────────────────────────────────────
-function StatusBar({ data, isDemo }) {
-  const ts = data?.snapshot_ts
-    ? new Date(data.snapshot_ts).toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit' })
+function StatusBar({ pct_actas, snapshot_ts, isDemo }) {
+  const ts = snapshot_ts
+    ? new Date(snapshot_ts).toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit' })
     : null;
 
   return (
@@ -60,125 +67,184 @@ function StatusBar({ data, isDemo }) {
       border: `1px solid ${isDemo ? '#FCD34D' : '#86EFAC'}`,
       borderRadius: 8, padding: '8px 14px', fontSize: 12,
     }}>
-      <span style={{
-        display: 'inline-flex', alignItems: 'center', gap: 5,
-        fontWeight: 700, color: isDemo ? '#92400E' : '#15803D', fontSize: 12,
-      }}>
-        {isDemo ? (
-          'DEMO · Datos R1 2026'
-        ) : (
-          <><span style={{ width: 7, height: 7, borderRadius: '50%', background: '#16A34A', display: 'inline-block', boxShadow: '0 0 0 2px rgba(22,163,74,0.3)', animation: 'pulse 1.5s infinite' }} />EN VIVO</>
+      <span style={{ fontWeight: 700, color: isDemo ? '#92400E' : '#15803D', display: 'flex', alignItems: 'center', gap: 5 }}>
+        {isDemo ? 'DEMO · Datos R1 2026' : (
+          <><span style={{ width: 7, height: 7, borderRadius: '50%', background: '#16A34A', display: 'inline-block' }} />EN VIVO</>
         )}
       </span>
-      {data?.pct_actas != null && (
+      {pct_actas != null && (
         <>
-          <span style={{ color: '#A8A29E' }}>·</span>
-          <span style={{ color: '#1C1917', fontWeight: 600 }}>
-            {data.pct_actas.toFixed(1)}% de actas procesadas
-          </span>
+          <span style={{ color: '#D4CEC8' }}>·</span>
+          <span style={{ color: '#1C1917', fontWeight: 600 }}>{pct_actas.toFixed(1)}% de actas procesadas</span>
         </>
       )}
       {ts && (
         <>
-          <span style={{ color: '#A8A29E' }}>·</span>
+          <span style={{ color: '#D4CEC8' }}>·</span>
           <span style={{ color: '#78716C' }}>Último snapshot: {ts} PET</span>
         </>
       )}
       {isDemo && (
-        <span style={{ color: '#92400E', fontSize: 11 }}>
-          — El mapa muestra resultados R1 reales por departamento. El needle muestra la proyección R2 del modelo.
-        </span>
+        <span style={{ color: '#92400E', fontSize: 11 }}>— colores del mapa y tabla usan resultados reales de R1 por departamento</span>
       )}
     </div>
   );
 }
 
-// ─── Result cards ─────────────────────────────────────────────
-function ResultCards({ data, predictions }) {
-  const isDemo = data?.is_demo;
+// ─── Candidate summary cards ──────────────────────────────────
+function CandidateCards({ kf_r2_share, proj_kf_r2_share, ci_low, ci_high, kf_votos, rsp_votos, isDemo }) {
+  const rsp_r2_share  = kf_r2_share  != null ? 100 - kf_r2_share  : null;
+  const proj_rsp      = proj_kf_r2_share != null ? 100 - proj_kf_r2_share : null;
+  const kfLeads       = kf_r2_share >= 50;
 
-  // For needle in demo: use R2 model prediction
-  const modelCands = predictions?.candidates || [];
-  const keikoModel  = modelCands.find(c => c.candidate?.includes('Keiko'));
-  const sanchezModel = modelCands.find(c => c.candidate?.includes('Sánchez') || c.candidate?.includes('Roberto'));
+  const fmtVotos = (v) => v != null ? v.toLocaleString('es-PE') : null;
 
-  // For cards: use live data if available, else demo
-  const kfShare   = data?.proj_kf_r2_share ?? data?.kf_r2_share;
-  const rspShare  = kfShare != null ? (100 - kfShare) : null;
-  const kfObs     = data?.kf_r2_share;
-  const kfProj    = data?.proj_kf_r2_share;
-  const ciLow     = data?.ci_low;
-  const ciHigh    = data?.ci_high;
-  const pWin      = isDemo
-    ? keikoModel?.prob_win
-    : (kfShare != null ? (kfShare > 50 ? 100 - (ciHigh - 50) / (ciHigh - ciLow) * 20 : null) : null);
-
-  const needleKeiko = isDemo && keikoModel ? keikoModel : kfShare != null ? {
-    mean:     kfShare,
-    p10:      ciLow ?? kfShare - 3,
-    p90:      ciHigh ?? kfShare + 3,
-    p25:      null,
-    p75:      null,
-    p40:      null,
-    p60:      null,
-    prob_win: pWin ?? 50,
-  } : null;
-
-  const needleSanchez = isDemo && sanchezModel ? sanchezModel : needleKeiko ? {
-    mean:     100 - needleKeiko.mean,
-    p10:      100 - needleKeiko.p90,
-    p90:      100 - needleKeiko.p10,
-    prob_win: 100 - (needleKeiko.prob_win ?? 50),
-  } : null;
+  const card = (name, color, share, proj, votos, isLeader) => (
+    <div style={{
+      flex: 1, minWidth: 200,
+      background: '#FFFFFF',
+      border: `2px solid ${isLeader ? color + '40' : '#E5E0D8'}`,
+      borderRadius: 14, padding: '18px 20px',
+      position: 'relative',
+    }}>
+      {isLeader && (
+        <div style={{
+          position: 'absolute', top: 10, right: 12,
+          background: color + '15', color, borderRadius: 20,
+          padding: '2px 8px', fontSize: 10, fontWeight: 700,
+        }}>
+          VA GANANDO
+        </div>
+      )}
+      <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>{name}</div>
+      <div style={{ color, fontWeight: 800, fontSize: 38, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+        {share != null ? share.toFixed(1) + '%' : '—'}
+      </div>
+      <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 3 }}>
+        votos válidos {isDemo ? '(baseline R1)' : 'contabilizados'}
+      </div>
+      {votos != null && (
+        <div style={{ color: '#78716C', fontSize: 12, marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>
+          {fmtVotos(votos)} votos
+        </div>
+      )}
+      {proj != null && (
+        <div style={{
+          marginTop: 12, paddingTop: 12, borderTop: '1px solid #F0EDE8',
+          display: 'flex', alignItems: 'baseline', gap: 6,
+        }}>
+          <span style={{ color, fontWeight: 700, fontSize: 20, fontVariantNumeric: 'tabular-nums' }}>
+            {proj.toFixed(1)}%
+          </span>
+          <span style={{ color: '#A8A29E', fontSize: 11 }}>proyectado al 100%</span>
+        </div>
+      )}
+      {isLeader && ci_low != null && !isDemo && (
+        <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 4 }}>
+          CI 90%: [{ci_low.toFixed(1)}, {ci_high.toFixed(1)}]
+        </div>
+      )}
+    </div>
+  );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* Needle */}
-      <WinProbabilityNeedle keiko={needleKeiko} sanchez={needleSanchez} />
+    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+      {kfLeads
+        ? <>{card('Keiko Fujimori', KEIKO_COLOR, kf_r2_share, proj_kf_r2_share, kf_votos, true)}{card('Roberto Sánchez', SANCHEZ_COLOR, rsp_r2_share, proj_rsp, rsp_votos, false)}</>
+        : <>{card('Roberto Sánchez', SANCHEZ_COLOR, rsp_r2_share, proj_rsp, rsp_votos, true)}{card('Keiko Fujimori', KEIKO_COLOR, kf_r2_share, proj_kf_r2_share, kf_votos, false)}</>
+      }
+    </div>
+  );
+}
 
-      {/* Number cards */}
-      {kfShare != null && (
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          {/* KF */}
-          <div style={{ flex: 1, minWidth: 150, background: '#FFF7ED', border: `2px solid ${KEIKO_COLOR}30`, borderRadius: 10, padding: 14 }}>
-            <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>Keiko Fujimori</div>
-            <div style={{ color: KEIKO_COLOR, fontWeight: 800, fontSize: 28, lineHeight: 1 }}>
-              {kfShare.toFixed(1)}%
+// ─── Horizontal vote bars (Nacional / Extranjero) ─────────────
+function VoteBars({ nacional, extranjero, isDemo }) {
+  const [view, setView] = useState('nacional');
+  const src = view === 'nacional' ? nacional : extranjero;
+
+  const kfShare  = src?.kf_r2_share ?? null;
+  const rspShare = kfShare != null ? 100 - kfShare : null;
+  const kfLeads  = kfShare != null && kfShare >= 50;
+
+  // Always put leader first
+  const bars = kfShare != null ? (
+    kfLeads
+      ? [{ name: 'Keiko Fujimori',  color: KEIKO_COLOR,   share: kfShare,  votos: src?.kf_votos  },
+         { name: 'Roberto Sánchez', color: SANCHEZ_COLOR,  share: rspShare, votos: src?.rsp_votos }]
+      : [{ name: 'Roberto Sánchez', color: SANCHEZ_COLOR,  share: rspShare, votos: src?.rsp_votos },
+         { name: 'Keiko Fujimori',  color: KEIKO_COLOR,   share: kfShare,  votos: src?.kf_votos  }]
+  ) : [];
+
+  const fmtV = (v) => v != null ? v.toLocaleString('es-PE') : null;
+
+  return (
+    <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 20 }}>
+      {/* Header + filter */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+        <h3 style={{ color: '#1C1917', fontSize: 15, fontWeight: 600, margin: 0 }}>
+          Votos emitidos{isDemo ? <span style={{ color: '#A8A29E', fontWeight: 400, fontSize: 12 }}> · Demo R1</span> : ''}
+        </h3>
+        <div style={{ display: 'flex', background: '#F7F4EF', borderRadius: 8, padding: 3, gap: 2 }}>
+          {['nacional', 'extranjero'].map(v => (
+            <button key={v} onClick={() => setView(v)} style={{
+              background: view === v ? '#FFFFFF' : 'transparent',
+              border: 'none', borderRadius: 6, cursor: 'pointer',
+              padding: '5px 14px', fontSize: 12, fontWeight: view === v ? 600 : 400,
+              color: view === v ? '#1C1917' : '#78716C',
+              boxShadow: view === v ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+              transition: 'all 0.15s',
+            }}>
+              {v === 'nacional' ? 'Nacional' : 'Extranjero'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Bars */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {bars.map(b => (
+          <div key={b.name}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, alignItems: 'baseline' }}>
+              <span style={{ color: '#1C1917', fontWeight: 600, fontSize: 13 }}>{b.name}</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                {b.votos != null && (
+                  <span style={{ color: '#A8A29E', fontSize: 11, fontVariantNumeric: 'tabular-nums' }}>
+                    {fmtV(b.votos)} votos
+                  </span>
+                )}
+                <span style={{ color: b.color, fontWeight: 700, fontSize: 18, fontVariantNumeric: 'tabular-nums' }}>
+                  {b.share.toFixed(2)}%
+                </span>
+              </div>
             </div>
-            <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 3 }}>votos válidos {isDemo ? '(R1 baseline)' : 'proyectados'}</div>
-            {!isDemo && kfObs != null && kfProj != null && Math.abs(kfObs - kfProj) > 0.1 && (
-              <div style={{ color: '#78716C', fontSize: 11, marginTop: 4 }}>
-                observado: {kfObs.toFixed(1)}% · proyectado: {kfProj.toFixed(1)}%
-              </div>
-            )}
-            {ciLow != null && !isDemo && (
-              <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 2 }}>
-                CI 90%: [{ciLow.toFixed(1)}, {ciHigh.toFixed(1)}]
-              </div>
-            )}
+            <div style={{ height: 28, borderRadius: 6, background: '#F0EDE8', overflow: 'hidden', position: 'relative' }}>
+              <div style={{
+                width: `${b.share}%`, height: '100%',
+                background: b.color,
+                borderRadius: 6,
+                transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+              }} />
+              {/* 50% line */}
+              <div style={{
+                position: 'absolute', left: '50%', top: 0, bottom: 0,
+                width: 1, background: 'rgba(0,0,0,0.12)',
+              }} />
+            </div>
           </div>
+        ))}
+      </div>
 
-          {/* RSP */}
-          <div style={{ flex: 1, minWidth: 150, background: '#F0FDF4', border: `2px solid ${SANCHEZ_COLOR}30`, borderRadius: 10, padding: 14 }}>
-            <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>Roberto Sánchez</div>
-            <div style={{ color: SANCHEZ_COLOR, fontWeight: 800, fontSize: 28, lineHeight: 1 }}>
-              {rspShare.toFixed(1)}%
-            </div>
-            <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 3 }}>votos válidos {isDemo ? '(R1 baseline)' : 'proyectados'}</div>
-          </div>
+      {/* 50% marker label */}
+      <div style={{ position: 'relative', marginTop: 4, height: 14 }}>
+        <span style={{
+          position: 'absolute', left: '50%', transform: 'translateX(-50%)',
+          color: '#A8A29E', fontSize: 10,
+        }}>50%</span>
+      </div>
 
-          {/* P(win) */}
-          {pWin != null && (
-            <div style={{ flex: 1, minWidth: 130, background: '#F7F4EF', borderRadius: 10, padding: 14, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>P(gana)</div>
-              <div style={{ color: kfShare >= 50 ? KEIKO_COLOR : SANCHEZ_COLOR, fontWeight: 800, fontSize: 24, lineHeight: 1 }}>
-                {pWin.toFixed(1)}%
-              </div>
-              <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 3 }}>
-                {kfShare >= 50 ? 'Keiko Fujimori' : 'Roberto Sánchez'}
-              </div>
-            </div>
-          )}
+      {view === 'extranjero' && isDemo && (
+        <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 8 }}>
+          Extranjero R1: 77 países · 52,454 votos KF / 7,994 votos RSP. KF dominó en todos los continentes.
         </div>
       )}
     </div>
@@ -187,73 +253,66 @@ function ResultCards({ data, predictions }) {
 
 // ─── Department table ─────────────────────────────────────────
 function DeptTable({ deptData, isDemo }) {
-  const [sortBy, setSortBy] = useState('pct_actas'); // asc: least counted first
+  const [sortBy, setSortBy] = useState('pct_actas');
 
   const rows = Object.values(deptData).sort((a, b) => {
     if (sortBy === 'pct_actas') return (a.pct_actas ?? 100) - (b.pct_actas ?? 100);
     if (sortBy === 'margin')    return Math.abs((b.kf_r2_share ?? 50) - 50) - Math.abs((a.kf_r2_share ?? 50) - 50);
-    if (sortBy === 'nombre')    return a.nombre.localeCompare(b.nombre);
-    return 0;
+    return a.nombre.localeCompare(b.nombre);
   });
 
   const colBtn = (key, label) => (
-    <button
-      onClick={() => setSortBy(key)}
-      style={{
-        background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0',
-        color: sortBy === key ? '#1C1917' : '#A8A29E',
-        fontWeight: sortBy === key ? 700 : 500,
-        fontSize: 11, textAlign: 'left',
-      }}
-    >{label}{sortBy === key ? ' ↑' : ''}</button>
+    <button onClick={() => setSortBy(key)} style={{
+      background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0',
+      color: sortBy === key ? '#1C1917' : '#A8A29E',
+      fontWeight: sortBy === key ? 700 : 500, fontSize: 11,
+    }}>
+      {label}{sortBy === key ? ' ↑' : ''}
+    </button>
   );
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-        <span style={{ color: '#8C877F', fontSize: 11 }}>Ordenar por:</span>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ color: '#8C877F', fontSize: 11 }}>Ordenar:</span>
         {colBtn('pct_actas', 'Menos contado primero')}
-        {colBtn('margin',    'Mayor margen primero')}
-        {colBtn('nombre',    'A-Z')}
+        {colBtn('margin', 'Mayor margen')}
+        {colBtn('nombre', 'A-Z')}
       </div>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
           <thead>
             <tr style={{ borderBottom: '2px solid #E5E0D8' }}>
-              <th style={{ textAlign: 'left',   padding: '5px 8px', color: '#78716C', fontWeight: 600 }}>Departamento</th>
-              <th style={{ textAlign: 'right',  padding: '5px 8px', color: '#78716C', fontWeight: 600 }}>% contado</th>
-              <th style={{ textAlign: 'right',  padding: '5px 8px', color: KEIKO_COLOR,   fontWeight: 600 }}>Keiko v.v.</th>
-              <th style={{ textAlign: 'right',  padding: '5px 8px', color: SANCHEZ_COLOR, fontWeight: 600 }}>Sánchez v.v.</th>
-              <th style={{ textAlign: 'right',  padding: '5px 8px', color: '#78716C', fontWeight: 600 }}>Margen</th>
+              <th style={{ textAlign: 'left',  padding: '5px 8px', color: '#78716C', fontWeight: 600 }}>Departamento</th>
+              <th style={{ textAlign: 'right', padding: '5px 8px', color: '#78716C', fontWeight: 600 }}>% contado</th>
+              <th style={{ textAlign: 'right', padding: '5px 8px', color: KEIKO_COLOR,   fontWeight: 600 }}>Keiko v.v.</th>
+              <th style={{ textAlign: 'right', padding: '5px 8px', color: SANCHEZ_COLOR, fontWeight: 600 }}>Sánchez v.v.</th>
+              <th style={{ textAlign: 'right', padding: '5px 8px', color: '#78716C', fontWeight: 600 }}>Margen</th>
             </tr>
           </thead>
           <tbody>
             {rows.map(dept => {
-              const share   = dept.kf_r2_share;
+              const share    = dept.kf_r2_share;
               const rspShare = share != null ? 100 - share : null;
-              const margin  = share != null ? Math.abs(share - 50).toFixed(1) : null;
-              const kfLeads = share != null && share >= 50;
-              const pct     = dept.pct_actas ?? 100;
-              const rowBg   = share == null ? '#F7F4EF'
-                : kfLeads ? `rgba(249,115,22,${Math.min(0.10, (share - 50) / 50 * 0.12)})`
-                : `rgba(22,163,74,${Math.min(0.10, (50 - share) / 50 * 0.12)})`;
-
+              const margin   = share != null ? Math.abs(share - 50).toFixed(1) : null;
+              const kfLeads  = share != null && share >= 50;
+              const pct      = dept.pct_actas ?? 100;
               return (
-                <tr key={dept.ubigeo} style={{ borderBottom: '1px solid #F0EDE8', background: rowBg }}>
+                <tr key={dept.ubigeo} style={{ borderBottom: '1px solid #F0EDE8' }}>
                   <td style={{ padding: '7px 8px', color: '#1C1917', fontWeight: 600 }}>
                     {dept.nombre}
                     {pct < 100 && (
                       <span style={{ color: '#D97706', fontSize: 10, marginLeft: 5, fontWeight: 400 }}>
-                        ⏳ {(100 - pct).toFixed(0)}% pendiente
+                        ⏳ {(100 - pct).toFixed(0)}% falta
                       </span>
                     )}
                   </td>
-                  <td style={{ padding: '7px 8px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                  <td style={{ padding: '7px 8px', textAlign: 'right' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>
-                      <div style={{ width: 36, height: 4, borderRadius: 2, background: '#E5E0D8', overflow: 'hidden' }}>
+                      <div style={{ width: 40, height: 4, borderRadius: 2, background: '#E5E0D8', overflow: 'hidden' }}>
                         <div style={{ width: `${pct}%`, height: '100%', background: pct === 100 ? '#16A34A' : '#D97706', borderRadius: 2 }} />
                       </div>
-                      <span style={{ color: pct < 50 ? '#D97706' : '#78716C' }}>{pct.toFixed(0)}%</span>
+                      <span style={{ color: '#78716C', fontVariantNumeric: 'tabular-nums' }}>{pct.toFixed(0)}%</span>
                     </div>
                   </td>
                   <td style={{ padding: '7px 8px', textAlign: 'right', color: kfLeads ? KEIKO_COLOR : '#A8A29E', fontWeight: kfLeads ? 700 : 400, fontVariantNumeric: 'tabular-nums' }}>
@@ -273,46 +332,9 @@ function DeptTable({ deptData, isDemo }) {
       </div>
       {isDemo && (
         <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 6 }}>
-          Datos demo: resultados R1 2026 reales por departamento (votos válidos KF/RSP de R1).
-          El 7J estos valores se reemplazarán por el conteo real de ONPE en tiempo real.
+          Demo: resultados R1 reales por departamento. El 7J se reemplazan por el conteo ONPE en tiempo real.
         </div>
       )}
-    </div>
-  );
-}
-
-// ─── Strata strip ─────────────────────────────────────────────
-function StrataStrip({ data, isDemo }) {
-  const strata = isDemo ? [
-    { label: 'Mesas regulares', pct_actas: 100, kf_share: 58.46, note: 'Baseline R1 doméstico' },
-    { label: 'ZDAs (4,703 mesas)', pct_actas: 0,   kf_share: 28.2,  note: 'Siempre proyectado desde snapshot 1' },
-    { label: 'Exterior (77 países)', pct_actas: 100, kf_share: 86.78, note: 'R1 cerró primero' },
-  ] : [
-    { label: 'Mesas regulares',    pct_actas: data?.regular?.pct_actas,  kf_share: data?.regular?.kf_r2_share,  note: null },
-    { label: 'ZDAs (4,703 mesas)', pct_actas: data?.zda?.reported_mesas ? Math.round(data.zda.reported_mesas / 4703 * 100) : 0, kf_share: data?.zda?.proj_kf_r2_share, note: 'Siempre proyectado' },
-    { label: 'Exterior',           pct_actas: data?.exterior?.pct_actas, kf_share: data?.exterior?.kf_r2_share, note: null },
-  ];
-
-  return (
-    <div style={{ background: '#F7F4EF', borderRadius: 10, padding: '12px 14px' }}>
-      <div style={{ color: '#78716C', fontWeight: 600, fontSize: 12, marginBottom: 10 }}>Desglose por estrato</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {strata.map(s => (
-          <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <div style={{ flex: '0 0 160px', color: '#1C1917', fontSize: 12, fontWeight: 500 }}>{s.label}</div>
-            <div style={{ width: 60, height: 4, borderRadius: 2, background: '#E5E0D8', overflow: 'hidden' }}>
-              <div style={{ width: `${s.pct_actas ?? 0}%`, height: '100%', background: s.pct_actas === 100 ? '#16A34A' : '#D97706', borderRadius: 2 }} />
-            </div>
-            <div style={{ color: '#78716C', fontSize: 11, minWidth: 60 }}>{(s.pct_actas ?? 0).toFixed(0)}% contado</div>
-            {s.kf_share != null && (
-              <div style={{ color: s.kf_share >= 50 ? KEIKO_COLOR : SANCHEZ_COLOR, fontWeight: 600, fontSize: 12 }}>
-                {s.kf_share >= 50 ? `KF ${s.kf_share.toFixed(1)}%` : `RSP ${(100 - s.kf_share).toFixed(1)}%`}
-              </div>
-            )}
-            {s.note && <div style={{ color: '#A8A29E', fontSize: 10 }}>{s.note}</div>}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -328,28 +350,40 @@ export default function LiveResultsTab({ predictions }) {
       const res = await fetch(`${API_BASE}/api/live-projection`);
       if (!res.ok) return;
       const json = await res.json();
-      // Only switch to live if we have real actas
-      if (json?.pct_actas > 0) {
-        setLiveData(json);
-        setIsLive(true);
-      }
-    } catch {
-      // Silently fail — keep showing demo
-    }
+      if (json?.pct_actas > 0) { setLiveData(json); setIsLive(true); }
+    } catch { /* stay in demo */ }
   }, []);
 
-  // Poll every 30s on election day; otherwise just check once on mount
   useEffect(() => {
     fetchLive();
-    const interval = setInterval(fetchLive, 30_000);
-    return () => clearInterval(interval);
+    const id = setInterval(fetchLive, 30_000);
+    return () => clearInterval(id);
   }, [fetchLive]);
 
-  const isDemo   = !isLive;
-  const data     = isLive ? liveData : R1_NATIONAL_DEMO;
-  const deptData = isLive && liveData?.departments
+  const isDemo = !isLive;
+  const data   = isLive ? liveData : DEMO.national;
+
+  const kfShare       = data?.kf_r2_share;
+  const projKfShare   = data?.proj_kf_r2_share;
+  const deptData      = isLive && liveData?.departments
     ? Object.fromEntries(liveData.departments.map(d => [d.ubigeo, d]))
-    : R1_DEPT_DEMO;
+    : DEMO_DEPTS;
+
+  // Needle data — live: from projector; demo: from R2 model predictions
+  const modelCands = predictions?.candidates || [];
+  const keikoModel  = modelCands.find(c => c.candidate?.includes('Keiko'));
+  const sanchezModel = modelCands.find(c => c.candidate?.includes('Sánchez') || c.candidate?.includes('Roberto'));
+  const needleKeiko = isDemo ? keikoModel : (projKfShare != null ? {
+    mean: projKfShare, p10: data.ci_low ?? projKfShare - 3, p90: data.ci_high ?? projKfShare + 3,
+    p25: null, p75: null, p40: null, p60: null, prob_win: projKfShare > 50 ? 72 : 28,
+  } : null);
+  const needleSanchez = isDemo ? sanchezModel : (needleKeiko ? {
+    mean: 100 - needleKeiko.mean, p10: 100 - needleKeiko.p90, p90: 100 - needleKeiko.p10,
+    prob_win: 100 - needleKeiko.prob_win,
+  } : null);
+
+  const nacional   = isLive ? liveData?.nacional   : DEMO.nacional;
+  const extranjero = isLive ? liveData?.extranjero  : DEMO.extranjero;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -363,50 +397,54 @@ export default function LiveResultsTab({ predictions }) {
         </p>
       </div>
 
-      {/* Status bar */}
-      <StatusBar data={data} isDemo={isDemo} />
+      {/* 1. Status bar */}
+      <StatusBar pct_actas={data?.pct_actas} snapshot_ts={liveData?.snapshot_ts} isDemo={isDemo} />
 
-      {/* Needle + cards */}
-      <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
-        <div style={{ color: '#8C877F', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>
-          {isDemo ? 'Proyección pre-electoral · Modelo R2' : 'Proyección · Conteo en vivo'}
+      {/* 2. Candidate cards */}
+      <CandidateCards
+        kf_r2_share={kfShare}
+        proj_kf_r2_share={projKfShare}
+        ci_low={data?.ci_low}
+        ci_high={data?.ci_high}
+        kf_votos={data?.kf_votos}
+        rsp_votos={data?.rsp_votos}
+        isDemo={isDemo}
+      />
+
+      {/* 3. Needle — hero */}
+      <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 14, padding: '24px 16px 20px' }}>
+        <div style={{ color: '#8C877F', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'center', marginBottom: 4 }}>
+          {isDemo ? 'Proyección pre-electoral · Modelo R2' : 'Proyección a 100% · Conteo en vivo'}
         </div>
-        <ResultCards data={data} predictions={predictions} />
+        <WinProbabilityNeedle keiko={needleKeiko} sanchez={needleSanchez} />
       </div>
 
-      {/* Map + dept table side by side (stacked on mobile) */}
+      {/* 4. Vote share bars */}
+      <VoteBars nacional={nacional} extranjero={extranjero} isDemo={isDemo} />
+
+      {/* 5. Map + dept table */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        {/* Map */}
         <div style={{
-          flex: '0 0 auto', width: 'clamp(280px, 40%, 360px)',
+          flex: '0 0 auto', width: 'clamp(280px, 38%, 340px)',
           background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16,
         }}>
           <h3 style={{ color: '#1C1917', fontSize: 14, fontWeight: 600, margin: '0 0 12px' }}>
             Mapa por departamento
             {hoveredDept && (
               <span style={{ color: '#A8A29E', fontSize: 11, fontWeight: 400, marginLeft: 8 }}>
-                {hoveredDept.nombre}
+                · {hoveredDept.nombre}
               </span>
             )}
           </h3>
           <PeruDeptMap deptData={deptData} onDeptHover={setHoveredDept} />
         </div>
 
-        {/* Dept table */}
-        <div style={{
-          flex: 1, minWidth: 300,
-          background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16,
-        }}>
+        <div style={{ flex: 1, minWidth: 280, background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
           <h3 style={{ color: '#1C1917', fontSize: 14, fontWeight: 600, margin: '0 0 12px' }}>
             Resultados por departamento
           </h3>
           <DeptTable deptData={deptData} isDemo={isDemo} />
         </div>
-      </div>
-
-      {/* Strata strip */}
-      <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
-        <StrataStrip data={liveData} isDemo={isDemo} />
       </div>
     </div>
   );
