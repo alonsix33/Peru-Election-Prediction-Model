@@ -280,38 +280,82 @@ ZZ = código distrito (01–N, 00 si nivel provincia)
 - Los ubigeos son **strings** en la API: `"010000"`, no `10000`.
 - En los parámetros de query también se pasan como string (la URL los serializa igual).
 
+### ⚠️ ONPE ubigeo ≠ INEI ubigeo — diferencia crítica
+
+**ONPE usa su propio sistema de códigos, distinto al INEI.**
+La diferencia clave: **Callao está en `240000`** (en INEI es `070000`).
+Como consecuencia todos los departamentos que siguen a Cajamarca están
+corridos una posición: Cusco = `070000` en ONPE, Lima = `140000`, etc.
+
+Tabla de equivalencias ONPE ↔ INEI:
+
+| ONPE ubigeo | Departamento | INEI ubigeo |
+|---|---|---|
+| 010000 | AMAZONAS | 010000 ✓ igual |
+| 020000 | ÁNCASH | 020000 ✓ igual |
+| 030000 | APURÍMAC | 030000 ✓ igual |
+| 040000 | AREQUIPA | 040000 ✓ igual |
+| 050000 | AYACUCHO | 050000 ✓ igual |
+| 060000 | CAJAMARCA | 060000 ✓ igual |
+| **070000** | **CUSCO** | 080000 distinto |
+| **080000** | **HUANCAVELICA** | 090000 distinto |
+| **090000** | **HUÁNUCO** | 100000 distinto |
+| **100000** | **ICA** | 110000 distinto |
+| **110000** | **JUNÍN** | 120000 distinto |
+| **120000** | **LA LIBERTAD** | 130000 distinto |
+| **130000** | **LAMBAYEQUE** | 140000 distinto |
+| **140000** | **LIMA** | 150000 distinto |
+| **150000** | **LORETO** | 160000 distinto |
+| **160000** | **MADRE DE DIOS** | 170000 distinto |
+| **170000** | **MOQUEGUA** | 180000 distinto |
+| **180000** | **PASCO** | 190000 distinto |
+| **190000** | **PIURA** | 200000 distinto |
+| **200000** | **PUNO** | 210000 distinto |
+| **210000** | **SAN MARTÍN** | 220000 distinto |
+| **220000** | **TACNA** | 230000 distinto |
+| **230000** | **TUMBES** | 240000 distinto |
+| **240000** | **CALLAO** | 070000 muy distinto |
+| **250000** | **UCAYALI** | 250000 ✓ igual |
+
+**Siempre usar `/ubigeos/departamentos` para obtener los ubigeos dinámicamente.**
+Nunca hardcodear asumiendo el sistema INEI.
+
 ### Departamentos de Perú (idAmbitoGeografico=1)
 
-Datos R1 2026 al 100% de actas.
+Datos R1 2026 al 100% de actas, con ubigeos ONPE correctos.
 `kf_r2_share` = KF_votos / (KF_votos + RSP_votos) × 100.
 
-| ubigeo | Departamento | KF% | RSP% | kf_r2_share |
+| ubigeo ONPE | Departamento | KF% R1 | RSP% R1 | kf_r2_share |
 |---|---|---|---|---|
 | 010000 | Amazonas | 17.37 | 36.27 | 32.4% |
-| 020000 | Ancash | 18.00 | 15.00 | 54.5% |
+| 020000 | Áncash | 18.00 | 15.00 | 54.5% |
 | 030000 | Apurímac | 6.90 | 41.06 | 14.4% |
 | 040000 | Arequipa | 7.33 | 10.09 | 42.1% |
 | 050000 | Ayacucho | 8.12 | 31.43 | 20.5% |
 | 060000 | Cajamarca | 13.85 | 41.72 | 24.9% |
-| 070000 | Callao | 6.14 | 22.85 | 21.2% |
-| 080000 | Cusco | 7.08 | 43.40 | 14.0% |
-| 090000 | Huancavelica | 15.46 | 29.88 | 34.1% |
-| 100000 | Huánuco | 20.33 | 7.73 | 72.5% |
-| 110000 | Ica | 17.11 | 12.32 | 58.1% |
-| 120000 | Junín | 20.26 | 9.46 | 68.2% |
-| 130000 | La Libertad | 26.41 | 10.74 | 71.1% |
-| 140000 | Lambayeque | 17.91 | 3.28 | 84.5% |
-| 150000 | Lima | 28.36 | 9.86 | 74.2% |
-| 160000 | Loreto | 13.55 | 23.45 | 36.6% |
-| 170000 | Madre de Dios | 6.64 | 12.92 | 34.0% |
-| 180000 | Moquegua | 18.87 | 18.67 | 50.3% |
-| 190000 | Pasco | 28.03 | 11.47 | 71.0% |
-| 200000 | Piura | 3.90 | 24.98 | 13.5% |
-| 210000 | Puno | 23.26 | 23.94 | 49.3% |
-| 220000 | San Martín | 6.85 | 11.92 | 36.5% |
-| 230000 | Tacna | 34.16 | 6.99 | 83.0% |
-| 240000 | Tumbes | 20.70 | 3.01 | 87.3% |
+| 070000 | Cusco | 6.14 | 22.85 | 21.2% |
+| 080000 | Huancavelica | 7.08 | 43.40 | 14.0% |
+| 090000 | Huánuco | 15.46 | 29.88 | 34.1% |
+| 100000 | Ica | 20.33 | 7.73 | 72.5% |
+| 110000 | Junín | 17.11 | 12.32 | 58.1% |
+| 120000 | La Libertad | 20.26 | 9.46 | 68.2% |
+| 130000 | Lambayeque | 26.41 | 10.74 | 71.1% |
+| 140000 | Lima | 17.91 | 3.28 | 84.5% |
+| 150000 | Loreto | 28.36 | 9.86 | 74.2% |
+| 160000 | Madre de Dios | 13.55 | 23.45 | 36.6% |
+| 170000 | Moquegua | 6.64 | 12.92 | 34.0% |
+| 180000 | Pasco | 18.87 | 18.67 | 50.3% |
+| 190000 | Piura | 28.03 | 11.47 | 71.0% |
+| 200000 | Puno | 3.90 | 24.98 | 13.5% |
+| 210000 | San Martín | 23.26 | 23.94 | 49.3% |
+| 220000 | Tacna | 6.85 | 11.92 | 36.5% |
+| 230000 | Tumbes | 34.16 | 6.99 | 83.0% |
+| 240000 | Callao | 20.70 | 3.01 | 87.3% |
 | 250000 | Ucayali | 29.71 | 12.88 | 69.8% |
+
+> Implicación para el modelo: los datos de 25 departamentos son solo el nivel
+> más grueso. Con ~196 provincias (promedio 8 por dept) la proyección es mucho
+> más precisa. Script de descarga masiva en §10.
 
 ### Extranjero (idAmbitoGeografico=2) — Continentes
 
