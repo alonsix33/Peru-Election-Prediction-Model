@@ -6,9 +6,12 @@ const KEIKO_COLOR_RGB   = '249, 115, 22';  // #F97316
 const SANCHEZ_COLOR_RGB = '22, 163, 74';   // #16A34A
 const GEO_URL = '/peru_dept.geojson';
 
+const normalize = s =>
+  s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toUpperCase().trim();
+
 function getDeptData(geoProps, deptData) {
-  const id = geoProps.FIRST_IDDP; // "01".."25"
-  return Object.values(deptData).find(d => d.ubigeo.slice(0, 2) === id) || null;
+  const geoName = normalize(geoProps.NOMBDEP);
+  return Object.values(deptData).find(d => normalize(d.nombre) === geoName) || null;
 }
 
 function getFillColor(kf_r2_share) {
@@ -84,7 +87,7 @@ function Tooltip({ tooltip }) {
   );
 }
 
-export default function PeruDeptMap({ deptData, onDeptHover }) {
+export default function PeruDeptMap({ deptData, onDeptHover, onDeptSelect }) {
   const [tooltip, setTooltip] = useState(null);
   const touchTimeoutRef = useRef(null);
   const containerRef = useRef(null);
@@ -98,7 +101,7 @@ export default function PeruDeptMap({ deptData, onDeptHover }) {
       x: evt.clientX - rect.left,
       y: evt.clientY - rect.top,
       isMobile: false,
-      dept: { nombre: geo.properties.NOMBDEP, ...data },
+      dept: { ...data, nombre: geo.properties.NOMBDEP },
     });
     onDeptHover?.(data);
   };
@@ -108,16 +111,24 @@ export default function PeruDeptMap({ deptData, onDeptHover }) {
     onDeptHover?.(null);
   };
 
+  // ── Desktop: click to select ────────────────────────────────
+  const handleClick = (geo) => {
+    const data = getDeptData(geo.properties, deptData);
+    onDeptSelect?.({ ...data, nombre: geo.properties.NOMBDEP });
+  };
+
   // ── Mobile: tap ─────────────────────────────────────────────
   const handleTouchStart = (geo, evt) => {
     evt.preventDefault(); // prevent ghost click
     const data = getDeptData(geo.properties, deptData);
+    const deptObj = { nombre: geo.properties.NOMBDEP, ...data };
     setTooltip({
       x: 0, y: 0,
       isMobile: true,
-      dept: { nombre: geo.properties.NOMBDEP, ...data },
+      dept: { ...data, nombre: geo.properties.NOMBDEP },
     });
     onDeptHover?.(data);
+    onDeptSelect?.({ ...data, nombre: geo.properties.NOMBDEP });
     // Auto-dismiss after 3s
     clearTimeout(touchTimeoutRef.current);
     touchTimeoutRef.current = setTimeout(() => {
@@ -156,6 +167,7 @@ export default function PeruDeptMap({ deptData, onDeptHover }) {
                     }}
                     onMouseMove={(evt) => handleMouseMove(geo, evt)}
                     onMouseLeave={handleMouseLeave}
+                    onClick={() => handleClick(geo)}
                     onTouchStart={(evt) => handleTouchStart(geo, evt)}
                   />
                 );
