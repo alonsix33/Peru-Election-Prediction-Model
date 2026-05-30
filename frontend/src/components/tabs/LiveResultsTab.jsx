@@ -21,7 +21,7 @@ const DEMO = {
   // Nacional doméstico (total − exterior)
   nacional: { kf_r2_share: 58.46, kf_votos: 2_825_224, rsp_votos: 2_007_120 },
   // Exterior R1 real (r1_exterior.json)
-  extranjero: { kf_r2_share: 86.78, kf_votos: 52_454, rsp_votos: 7_994 },
+  extranjero: { kf_r2_share: 86.78, kf_votos: 52_454, rsp_votos: 7_994, pct_actas: 100 },
   pct_actas: 100,
   is_demo: true,
 };
@@ -276,9 +276,12 @@ function DeptDetailPanel({ dept, districts, loading }) {
   const rsp     = kf != null ? 100 - kf : null;
   const margin  = kf != null ? Math.abs(kf - 50) : null;
   const kfLeads = kf != null && kf >= 50;
-  const sorted  = [...districts].sort(
-    (a, b) => Math.abs(b.kf_r2_share - 50) - Math.abs(a.kf_r2_share - 50)
-  );
+  const sorted  = [...districts].sort((a, b) => {
+    if (a.kf_r2_share == null && b.kf_r2_share == null) return 0;
+    if (a.kf_r2_share == null) return 1;
+    if (b.kf_r2_share == null) return -1;
+    return Math.abs(b.kf_r2_share - 50) - Math.abs(a.kf_r2_share - 50);
+  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -389,7 +392,7 @@ function DeptTable({ deptData, extranjero, isDemo }) {
       color: sortBy === key ? '#1C1917' : '#A8A29E',
       fontWeight: sortBy === key ? 700 : 500, fontSize: 11,
     }}>
-      {label}{sortBy === key ? ' ↑' : ''}
+      {label}{sortBy === key ? (key === 'margin' ? ' ↓' : ' ↑') : ''}
     </button>
   );
 
@@ -498,7 +501,7 @@ export default function LiveResultsTab({ predictions }) {
       .then(r => r.json())
       .then(json => { setDistrictData(json); setDistrictsLoading(false); })
       .catch(() => setDistrictsLoading(false));
-  }, [selectedDept, districtData]);
+  }, [selectedDept]); // districtData intentionally omitted: early-return guards re-fetch
 
   const isDemo = !isLive;
   const data   = isLive ? liveData : DEMO.national;
@@ -514,12 +517,21 @@ export default function LiveResultsTab({ predictions }) {
   const keikoModel   = modelCands.find(c => c.candidate?.includes('Keiko'));
   const sanchezModel = modelCands.find(c => c.candidate?.includes('Sánchez') || c.candidate?.includes('Roberto'));
   const needleKeiko  = isDemo ? keikoModel : (projKfShare != null ? {
-    mean: projKfShare, p10: data.ci_low ?? projKfShare - 3, p90: data.ci_high ?? projKfShare + 3,
-    p25: null, p75: null, p40: null, p60: null, prob_win: projKfShare > 50 ? 72 : 28,
+    mean: projKfShare,
+    p10:  data.ci_low  ?? projKfShare - 3,
+    p90:  data.ci_high ?? projKfShare + 3,
+    p25: null, p40: null, p60: null, p75: null,
+    prob_win: liveData?.prob_win_kf ?? (projKfShare > 50 ? 72 : 28),
   } : null);
   const needleSanchez = isDemo ? sanchezModel : (needleKeiko ? {
-    mean: 100 - needleKeiko.mean, p10: 100 - needleKeiko.p90, p90: 100 - needleKeiko.p10,
-    prob_win: 100 - needleKeiko.prob_win,
+    mean:     100 - needleKeiko.mean,
+    p10:      100 - needleKeiko.p90,
+    p25:      needleKeiko.p75 != null ? 100 - needleKeiko.p75 : null,
+    p40:      needleKeiko.p60 != null ? 100 - needleKeiko.p60 : null,
+    p60:      needleKeiko.p40 != null ? 100 - needleKeiko.p40 : null,
+    p75:      needleKeiko.p25 != null ? 100 - needleKeiko.p25 : null,
+    p90:      100 - needleKeiko.p10,
+    prob_win: liveData?.prob_win_kf != null ? 100 - liveData.prob_win_kf : 100 - needleKeiko.prob_win,
   } : null);
 
   const nacional   = isLive ? liveData?.nacional   : DEMO.nacional;

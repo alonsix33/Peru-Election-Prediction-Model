@@ -13,7 +13,9 @@ async function fetchJson(url) {
     const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(10_000) });
     if (res.status === 204) return null;
     if (!res.ok) return null;
-    return res.json();
+    const json = await res.json();
+    // Unwrap ONPE's {success, message, data} envelope when present
+    return json?.data !== undefined ? json.data : json;
   } catch {
     return null;
   }
@@ -66,13 +68,13 @@ async function fetchTotales() {
 }
 
 async function fetchDepartamentos() {
-  const ubigeoRes = await fetchJson(
+  const ubigeoList = await fetchJson(
     `${ONPE_BASE}/ubigeos/departamentos?idEleccion=${ID_ELECCION}&idAmbitoGeografico=${AMBITO_NAC}`
   );
-  if (!ubigeoRes?.data?.length) return [];
+  if (!Array.isArray(ubigeoList) || !ubigeoList.length) return [];
 
   const results = await Promise.all(
-    ubigeoRes.data.map(async dept => {
+    ubigeoList.map(async dept => {
       const data = await fetchJson(
         `${ONPE_BASE}/resumen-general/participantes?idEleccion=${ID_ELECCION}&idAmbitoGeografico=${AMBITO_NAC}` +
         `&tipoFiltro=ubigeo_nivel_01&idUbigeoDepartamento=${dept.ubigeo}`
@@ -95,13 +97,13 @@ async function fetchDepartamentos() {
 }
 
 async function fetchExtranjero() {
-  const continentesRes = await fetchJson(
+  const continentesList = await fetchJson(
     `${ONPE_BASE}/ubigeos/departamentos?idEleccion=${ID_ELECCION}&idAmbitoGeografico=${AMBITO_EXT}`
   );
-  if (!continentesRes?.data?.length) return [];
+  if (!Array.isArray(continentesList) || !continentesList.length) return [];
 
   const results = await Promise.all(
-    continentesRes.data.map(async cont => {
+    continentesList.map(async cont => {
       const data = await fetchJson(
         `${ONPE_BASE}/resumen-general/participantes?idEleccion=${ID_ELECCION}&idAmbitoGeografico=${AMBITO_EXT}` +
         `&tipoFiltro=ubigeo_nivel_01&idUbigeoDepartamento=${cont.ubigeo}`

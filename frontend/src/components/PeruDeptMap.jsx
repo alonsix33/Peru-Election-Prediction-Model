@@ -120,15 +120,11 @@ export default function PeruDeptMap({ deptData, onDeptHover, onDeptSelect }) {
   // ── Mobile: tap ─────────────────────────────────────────────
   const handleTouchStart = (geo, evt) => {
     evt.preventDefault(); // prevent ghost click
-    const data = getDeptData(geo.properties, deptData);
-    const deptObj = { nombre: geo.properties.NOMBDEP, ...data };
-    setTooltip({
-      x: 0, y: 0,
-      isMobile: true,
-      dept: { ...data, nombre: geo.properties.NOMBDEP },
-    });
+    const data    = getDeptData(geo.properties, deptData);
+    const deptObj = { ...data, nombre: geo.properties.NOMBDEP };
+    setTooltip({ x: 0, y: 0, isMobile: true, dept: deptObj });
     onDeptHover?.(data);
-    onDeptSelect?.({ ...data, nombre: geo.properties.NOMBDEP });
+    onDeptSelect?.(deptObj);
     // Auto-dismiss after 3s
     clearTimeout(touchTimeoutRef.current);
     touchTimeoutRef.current = setTimeout(() => {
