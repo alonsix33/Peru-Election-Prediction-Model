@@ -816,6 +816,55 @@ router.get('/post-mortem', async (req, res) => {
   }
 });
 
+// ─── GET /api/onpe/live ──────────────────────────────────────
+// Último snapshot de resultados ONPE R2 en tiempo real + historial de tendencia
+router.get('/onpe/live', async (req, res) => {
+  try {
+    const { rows: [latest] } = await db.query(
+      `SELECT * FROM onpe_live_snapshots ORDER BY captured_at DESC LIMIT 1`
+    );
+
+    if (!latest) {
+      return res.json({ status: 'no_snapshots', has_data: false });
+    }
+
+    const { rows: history } = await db.query(
+      `SELECT captured_at, keiko_pct, sanchez_pct, pct_actas
+       FROM onpe_live_snapshots
+       WHERE has_data = true
+       ORDER BY captured_at ASC`
+    );
+
+    res.json({
+      status: latest.has_data ? 'live' : 'waiting',
+      captured_at:     latest.captured_at,
+      has_data:        latest.has_data,
+      actas_total:     latest.actas_total,
+      actas_processed: latest.actas_processed,
+      pct_actas:       latest.pct_actas   != null ? parseFloat(latest.pct_actas)   : null,
+      keiko_pct:       latest.keiko_pct   != null ? parseFloat(latest.keiko_pct)   : null,
+      keiko_votos:     latest.keiko_votos  != null ? parseInt(latest.keiko_votos)   : null,
+      sanchez_pct:     latest.sanchez_pct != null ? parseFloat(latest.sanchez_pct) : null,
+      sanchez_votos:   latest.sanchez_votos != null ? parseInt(latest.sanchez_votos) : null,
+      departamentos:   latest.dept_breakdown,
+      extranjero:      latest.ext_breakdown,
+      history: history.map(h => ({
+        time:        h.captured_at,
+        keiko_pct:   parseFloat(h.keiko_pct),
+        sanchez_pct: parseFloat(h.sanchez_pct),
+        pct_actas:   parseFloat(h.pct_actas),
+      })),
+    });
+  } catch (err) {
+    if (err.message?.includes('onpe_live_snapshots') && err.message?.includes('exist')) {
+      return res.json({ status: 'table_missing', has_data: false,
+        hint: 'Run: psql $DATABASE_URL -f db/onpe_snapshots.sql' });
+    }
+    await handleError('DB_CONNECTION_FAILED', { module: 'api/onpe/live' }, err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
 // ─── POST /api/results/onpe ─────────────────────────────────
 // Insertar resultados oficiales ONPE para post-mortem
 router.post('/results/onpe', async (req, res) => {

@@ -399,12 +399,8 @@ function RiskScenarios({ risk, candidates, phase }) {
   if (!risk) return null;
   const isR2 = (candidates?.length ?? 0) <= 2;
 
-  const sanchezBase = candidates?.find(c => c.candidate?.includes('Sánchez') || c.candidate?.includes('Roberto'));
-  const sanchezBaseWin = sanchezBase?.prob_win != null ? sanchezBase.prob_win.toFixed(1) : null;
-
   const blankPct = risk.expected_blank_null;
-  const biasWin = risk.bias_5pts_sanchez_win;
-  const biasFlips = biasWin != null && biasWin > 50;
+  const votoOculto = risk.voto_oculto_sanchez_win_pct;
 
   const r2Cards = isR2 ? [
     {
@@ -422,13 +418,13 @@ function RiskScenarios({ risk, candidates, phase }) {
       bg: blankPct > 4 ? '#FFFBEB' : '#FAFAF9',
     },
     {
-      question: '¿Y si las encuestas subestiman a Sánchez?',
-      value: biasWin,
-      context: sanchezBaseWin != null && biasWin != null
-        ? `Con +5pp de sesgo (como ocurrió con Castillo en 2021, −6pp), el resultado${biasFlips ? ' se invierte' : ' se ajusta'}: Sánchez pasaría de ${sanchezBaseWin}% → ${biasWin}% de probabilidad de ganar.`
-        : 'Con +5pp de sesgo sistemático en las encuestas (como ocurrió con Castillo en 2021), la probabilidad de Sánchez aumentaría significativamente.',
-      color: biasWin > 50 ? '#D97706' : '#78716C',
-      bg: biasWin > 50 ? '#FFFBEB' : '#FAFAF9',
+      question: '¿Y si se activa el efecto Castillo?',
+      value: votoOculto,
+      context: votoOculto != null
+        ? `En el 10% de simulaciones donde se activa el sesgo rural (como Castillo 2021, −6pp en encuestas), Sánchez gana el ${votoOculto}% de esas simulaciones. El sesgo rural fue documentado en R1 2026: todas las encuestadoras subestimaron a Sánchez 3-5pp.`
+        : 'Probabilidad de que Sánchez gane en el escenario donde el sesgo rural se activa (como Castillo 2021).',
+      color: votoOculto != null && votoOculto > 50 ? '#D97706' : '#78716C',
+      bg: votoOculto != null && votoOculto > 50 ? '#FFFBEB' : '#FAFAF9',
     },
   ] : [];
 
@@ -498,6 +494,212 @@ function RiskScenarios({ risk, candidates, phase }) {
             : `Estos porcentajes se actualizan cada ${phase === 'election_day' ? '15 min' : phase === 'veda' ? '30 min' : '60 min'}. En Perú, 3 de las últimas 4 elecciones tuvieron sorpresas significativas en las últimas semanas. La incertidumbre es parte del proceso.`}
         </span>
       </div>
+    </div>
+  );
+}
+
+// ─── ONPE Live Results ──────────────────────────────────────
+const KEIKO_COLOR  = '#B45309';
+const SANCHEZ_COLOR = '#1D4ED8';
+
+function OnpeLiveSection() {
+  const [data, setData] = useState(null);
+  const [secsAgo, setSecsAgo] = useState(null);
+
+  useEffect(() => {
+    const load = () =>
+      fetch(`${API}/api/onpe/live`)
+        .then(r => r.json())
+        .then(d => { setData(d); setSecsAgo(0); })
+        .catch(() => {});
+    load();
+    const pollId = setInterval(load, 2 * 60 * 1000);
+    return () => clearInterval(pollId);
+  }, []);
+
+  useEffect(() => {
+    if (!data?.has_data) return;
+    const id = setInterval(() => setSecsAgo(s => s + 1), 1000);
+    return () => clearInterval(id);
+  }, [data]);
+
+  if (!data) return null;
+
+  const kColor = KEIKO_COLOR;
+  const sColor = SANCHEZ_COLOR;
+
+  const pctAcatas = data.pct_actas;
+  const totalValid = (data.keiko_votos ?? 0) + (data.sanchez_votos ?? 0);
+
+  const depts = Array.isArray(data.departamentos) ? [...data.departamentos]
+    .sort((a, b) => (b.keiko_votos + b.sanchez_votos) - (a.keiko_votos + a.sanchez_votos)) : [];
+
+  const ext = Array.isArray(data.extranjero) ? data.extranjero : [];
+
+  const timeLabel = secsAgo != null
+    ? (secsAgo < 60 ? `hace ${secsAgo}s` : `hace ${Math.floor(secsAgo / 60)}m`)
+    : '';
+
+  const cardStyle = {
+    background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 20,
+  };
+
+  if (!data.has_data) {
+    return (
+      <div style={cardStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <span style={{
+            width: 8, height: 8, borderRadius: '50%', background: '#A8A29E',
+            display: 'inline-block', flexShrink: 0,
+          }} />
+          <span style={{ color: '#1C1917', fontSize: 14, fontWeight: 600 }}>
+            Resultados ONPE — Segunda Vuelta
+          </span>
+        </div>
+        <p style={{ color: '#78716C', fontSize: 13, margin: 0, lineHeight: 1.5 }}>
+          Los resultados en tiempo real estarán disponibles el domingo 7 de junio desde las 8:00 PM (Lima).
+          El sistema está monitoreando la API de ONPE cada 2 minutos.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{
+            width: 8, height: 8, borderRadius: '50%', background: '#059669',
+            display: 'inline-block', animation: 'pulse-green 2s ease-in-out infinite',
+          }} />
+          <span style={{ color: '#1C1917', fontSize: 15, fontWeight: 700 }}>
+            Resultados ONPE — En vivo
+          </span>
+        </div>
+        <span style={{ color: '#A8A29E', fontSize: 11 }}>{timeLabel}</span>
+      </div>
+
+      {/* National results */}
+      <div style={cardStyle}>
+        {pctAcatas != null && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ color: '#78716C', fontSize: 12, fontWeight: 500 }}>Actas procesadas</span>
+              <span style={{ color: '#1C1917', fontSize: 12, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                {pctAcatas.toFixed(1)}%
+                {data.actas_processed != null && data.actas_total != null && (
+                  <span style={{ color: '#A8A29E', fontWeight: 400 }}>
+                    {' '}({data.actas_processed.toLocaleString()} / {data.actas_total.toLocaleString()})
+                  </span>
+                )}
+              </span>
+            </div>
+            <div style={{ height: 6, borderRadius: 3, background: '#F0EDE8', overflow: 'hidden' }}>
+              <div style={{
+                width: `${Math.min(100, pctAcatas)}%`, height: '100%',
+                background: '#059669', borderRadius: 3, transition: 'width 1s ease',
+              }} />
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          {[
+            { name: 'Keiko Fujimori',           pct: data.keiko_pct,   votos: data.keiko_votos,   color: kColor },
+            { name: 'Roberto Sánchez Palomino',  pct: data.sanchez_pct, votos: data.sanchez_votos, color: sColor },
+          ].map(({ name, pct, votos, color }) => (
+            <div key={name} style={{ textAlign: name.includes('Keiko') ? 'left' : 'right' }}>
+              <div style={{ color, fontSize: 12, fontWeight: 600, marginBottom: 4 }}>{name}</div>
+              <div style={{ color, fontSize: 42, fontWeight: 800, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+                {pct != null ? pct.toFixed(2) : '--'}%
+              </div>
+              {votos != null && (
+                <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 2 }}>
+                  {votos.toLocaleString()} votos
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {totalValid > 0 && (
+          <div style={{ marginTop: 16, height: 6, borderRadius: 3, overflow: 'hidden', display: 'flex' }}>
+            <div style={{
+              width: `${(data.keiko_votos / totalValid) * 100}%`,
+              background: kColor, transition: 'width 1s ease',
+            }} />
+            <div style={{ flex: 1, background: sColor }} />
+          </div>
+        )}
+      </div>
+
+      {/* Regional breakdown */}
+      {depts.length > 0 && (
+        <div style={cardStyle}>
+          <div style={{ color: '#1C1917', fontSize: 13, fontWeight: 600, marginBottom: 12 }}>
+            Por departamento
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '4px 12px', fontSize: 12 }}>
+            <span style={{ color: '#A8A29E', fontWeight: 500 }}>Dpto</span>
+            <span style={{ color: kColor, fontWeight: 500, textAlign: 'right' }}>KF</span>
+            <span style={{ color: sColor, fontWeight: 500, textAlign: 'right' }}>RSP</span>
+            {depts.map(d => {
+              const leader = d.keiko_pct > d.sanchez_pct ? kColor : sColor;
+              return [
+                <span key={`n-${d.ubigeo}`} style={{ color: '#1C1917', padding: '3px 0',
+                  borderTop: '1px solid #F0EDE8', whiteSpace: 'nowrap', overflow: 'hidden',
+                  textOverflow: 'ellipsis' }}>
+                  {d.nombre.replace('PROVINCIA CONSTITUCIONAL DE ', '').replace('REGIÓN ', '')}
+                </span>,
+                <span key={`k-${d.ubigeo}`} style={{ color: d.keiko_pct >= d.sanchez_pct ? kColor : '#78716C',
+                  textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: d.keiko_pct >= d.sanchez_pct ? 700 : 400,
+                  borderTop: '1px solid #F0EDE8', padding: '3px 0' }}>
+                  {d.keiko_pct?.toFixed(1)}%
+                </span>,
+                <span key={`s-${d.ubigeo}`} style={{ color: d.sanchez_pct > d.keiko_pct ? sColor : '#78716C',
+                  textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: d.sanchez_pct > d.keiko_pct ? 700 : 400,
+                  borderTop: '1px solid #F0EDE8', padding: '3px 0' }}>
+                  {d.sanchez_pct?.toFixed(1)}%
+                </span>,
+              ];
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Extranjero */}
+      {ext.length > 0 && (
+        <div style={cardStyle}>
+          <div style={{ color: '#1C1917', fontSize: 13, fontWeight: 600, marginBottom: 12 }}>
+            Extranjero — por continente
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '4px 12px', fontSize: 12 }}>
+            <span style={{ color: '#A8A29E', fontWeight: 500 }}>Continente</span>
+            <span style={{ color: kColor, fontWeight: 500, textAlign: 'right' }}>KF</span>
+            <span style={{ color: sColor, fontWeight: 500, textAlign: 'right' }}>RSP</span>
+            {ext.map(c => [
+              <span key={`n-${c.ubigeo}`} style={{ color: '#1C1917', padding: '3px 0', borderTop: '1px solid #F0EDE8' }}>
+                {c.nombre}
+              </span>,
+              <span key={`k-${c.ubigeo}`} style={{ color: c.keiko_pct >= c.sanchez_pct ? kColor : '#78716C',
+                textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: c.keiko_pct >= c.sanchez_pct ? 700 : 400,
+                borderTop: '1px solid #F0EDE8', padding: '3px 0' }}>
+                {c.keiko_pct?.toFixed(1)}%
+              </span>,
+              <span key={`s-${c.ubigeo}`} style={{ color: c.sanchez_pct > c.keiko_pct ? sColor : '#78716C',
+                textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: c.sanchez_pct > c.keiko_pct ? 700 : 400,
+                borderTop: '1px solid #F0EDE8', padding: '3px 0' }}>
+                {c.sanchez_pct?.toFixed(1)}%
+              </span>,
+            ])}
+          </div>
+        </div>
+      )}
+
+      <style>{`.pulse-green { animation: pulse-green 2s ease-in-out infinite; }
+        @keyframes pulse-green { 0%,100% { opacity:1; } 50% { opacity:0.4; } }`}
+      </style>
     </div>
   );
 }
@@ -632,6 +834,9 @@ export default function DashboardTab({ predictions, polymarket, polls, status })
 
         {/* Risk Scenarios */}
         <RiskScenarios risk={predictions.risk_scenarios} candidates={predictions.candidates} phase={status?.electoral_phase} />
+
+        {/* ONPE Live Results — solo en R2 */}
+        {isR2 && <OnpeLiveSection />}
       </div>
 
       <style>{`

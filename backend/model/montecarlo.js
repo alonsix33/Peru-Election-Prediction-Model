@@ -429,6 +429,8 @@ function runMonteCarlo(posterior, nSimulations = 10_000, dynamicRejection = {}) 
   const runoffCount = candidates.map(() => 0);
   const winCount = candidates.map(() => 0);
   let closeRunoffCount = 0; // runoff con margen < 5 pts entre finalistas
+  let votoOcultoCount = 0;  // sims where voto oculto activated (R2 only)
+  let votoOcultoWins = 0;   // of those, Sánchez wins
 
   // Acumuladores de segunda vuelta por par
   const runoffPairStats = {};
@@ -456,6 +458,7 @@ function runMonteCarlo(posterior, nSimulations = 10_000, dynamicRejection = {}) 
     });
 
     // 3. Shocks estocásticos (calibrados para volatilidad peruana)
+    let simVotoOculto = false;
     const roll = Math.random();
 
     // 3a. Shock negativo al líder: 15% de simulaciones
@@ -517,6 +520,8 @@ function runMonteCarlo(posterior, nSimulations = 10_000, dynamicRejection = {}) 
     //     vs Ipsos 8.57%, Datum 7.45%). El efecto es candidato-específico, NO al que vaya
     //     atrás en esa simulación (Keiko también puede ir atrás en sims y no tiene este sesgo).
     else if (roll < 0.45 && nCandidates === 2) {
+      votoOcultoCount++;
+      simVotoOculto = true;
       const sanchezIdx = candidates.indexOf('Roberto Sánchez Palomino');
       if (sanchezIdx !== -1) {
         perturbed[sanchezIdx] += 3 + Math.random() * 3;
@@ -582,6 +587,7 @@ function runMonteCarlo(posterior, nSimulations = 10_000, dynamicRejection = {}) 
       winCount[secondIdx]++;
     }
     if (Math.abs(runoff.votesA - runoff.votesB) < 5) closeRunoffCount++;
+    if (simVotoOculto && runoff.winner === 'Roberto Sánchez Palomino') votoOcultoWins++;
 
     // Acumular stats del par
     const pairKey = [finalistA, finalistB].sort().join(' vs ');
@@ -652,6 +658,9 @@ function runMonteCarlo(posterior, nSimulations = 10_000, dynamicRejection = {}) 
     }))
   } : {
     p_close_race: pct(closeRunoffCount),
+    voto_oculto_sanchez_win_pct: votoOcultoCount > 0
+      ? parseFloat(((votoOcultoWins / votoOcultoCount) * 100).toFixed(1))
+      : null,
     candidates: topByMean.slice(0, 2).map(([name, data]) => ({
       candidate: name,
       prob_win: data.prob_win,
