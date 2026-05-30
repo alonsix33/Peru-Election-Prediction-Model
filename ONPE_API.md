@@ -392,6 +392,22 @@ van de 920100 a 920N00 (N = número de países).
 
 Patrón: `{contCode}{PP}{ZZ}` — misma lógica que Perú.
 
+**Resultados por país confirmados:** Keiko en Antillas Holandesas = 24.535% ✅
+El endpoint `resumen-general/participantes` funciona con `idAmbitoGeografico=2`
+hasta nivel_03 (ciudad).
+
+### Consistencia de ubigeos entre niveles — CONFIRMADO
+
+El sistema ONPE es consistente en todos los niveles:
+- Dept `140000` (Lima) → prov `140100` (Lima-prov) → dist `140102` (Ancón), etc.
+- Los distritos de Lima-prov tienen 43 entradas con prefijo `1401xx`.
+- Pasar el código INEI `150100` (Lima en INEI) NO devuelve Lima — devuelve
+  Loreto/Maynas (porque ONPE `150000` = Loreto). Esto confirma que el sistema
+  ONPE se aplica de manera uniforme en todos los niveles.
+
+**Regla:** obtener ubigeos siempre desde `/ubigeos/departamentos` → `/ubigeos/provincias`
+→ `/ubigeos/distritos` en cadena. Nunca asumir el código INEI.
+
 ---
 
 ## 9. Candidatos R2 — nombres y códigos
@@ -519,13 +535,13 @@ async function downloadAll() {
 
 - [ ] **Confirmar idEleccion R2** — el 7 de junio, interceptar XHR del sitio
       cuando cargue los primeros resultados; confirmar que es 11
-- [ ] **Confirmar ubigeos/provincias para Lambayeque** — una prueba devolvió
-      10 provincias con BARRANCA (Lima) en lugar de las 3 de Lambayeque.
-      Re-correr desde XHR intercept (no fetch) para confirmar el comportamiento
-      real del endpoint
-- [ ] **Confirmar ubigeos/provincias para Lima** — verificar si Lima está
-      dividida en Lima Metropolitana y Lima Provincias como circumscripciones
-      separadas (lo cual explicaría el resultado anterior)
+- [x] **Confirmar ubigeos/provincias** — el endpoint devuelve correctamente
+      las provincias de Lima (140000) con prefijo `140xxx`. La confusión
+      inicial era por usar el código INEI (140000=Lambayeque) en lugar del
+      ONPE (140000=Lima). Resuelto.
+- [ ] **Lima Metropolitana vs Lima Provincias** — verificar si para la
+      elección presidencial Lima aparece como una sola circumscripción (140000)
+      o si hay separación. Actualmente aparece como una sola con 10 provincias.
 - [ ] **Datos de actas por nivel** — probar `resumen-general/totales` con
       nivel_02 y nivel_03 para ver si devuelve % de actas por provincia/distrito
 - [ ] **R2 candidatos** — confirmar que los `codigoAgrupacionPolitica` de
