@@ -142,19 +142,27 @@ GET /ubigeos/distritos?idEleccion={IE}&idAmbitoGeografico=1&idUbigeoProvincia={p
 Ejemplo flujo Lambayeque → Chiclayo → distritos:
 ```
 /ubigeos/departamentos?idEleccion=10&idAmbitoGeografico=1
-  → [..., { ubigeo:"140000", nombre:"LAMBAYEQUE" }, ...]
+  → [..., { ubigeo:"130000", nombre:"LAMBAYEQUE" }, ...]
 
-/ubigeos/provincias?idEleccion=10&idAmbitoGeografico=1&idUbigeoDepartamento=140000
-  → [{ ubigeo:"140100", nombre:"CHICLAYO" }, ...]  (3 provincias)
+/ubigeos/provincias?idEleccion=10&idAmbitoGeografico=1&idUbigeoDepartamento=130000
+  → [{ ubigeo:"130100", nombre:"CHICLAYO" }, ...]  (3 provincias)
 
-/ubigeos/distritos?idEleccion=10&idAmbitoGeografico=1&idUbigeoProvincia=140100
-  → [{ ubigeo:"140101", nombre:"CHICLAYO" }, { ubigeo:"140102", nombre:"..." }, ...]
+/ubigeos/distritos?idEleccion=10&idAmbitoGeografico=1&idUbigeoProvincia=130100
+  → [{ ubigeo:"130101", nombre:"CHICLAYO" }, { ubigeo:"130102", nombre:"..." }, ...]
 ```
 
-> ⚠️ Nota: una prueba con `idUbigeoDepartamento=140000` devolvió 10 provincias
-> con BARRANCA (Lima) como primera entrada en lugar de Lambayeque (3 provincias).
-> Esto puede ser un defecto del parámetro cuando se llama desde fetch (no XHR)
-> o un problema de mapeo. **Confirmar con el XHR intercept del sitio.**
+Ejemplo flujo Lima (ONPE 140000) → provincias:
+```
+/ubigeos/provincias?idEleccion=10&idAmbitoGeografico=1&idUbigeoDepartamento=140000
+  → 10 provincias: BARRANCA, CAJATAMBO, CANTA, CAÑETE, HUARAL,
+                   HUAROCHIRÍ, HUAURA, LIMA (la ciudad), OYÓN, YAUYOS
+
+/ubigeos/distritos?idEleccion=10&idAmbitoGeografico=1&idUbigeoProvincia=140100
+  → 43 distritos (Lima-prov): ANCÓN, ATE, BARRANCO, ... (prefijos 1401xx)
+```
+
+> ✅ **BARRANCA es correcta** — ONPE `140000` = LIMA (no Lambayeque).
+> La confusión inicial fue asumir el código INEI. Lambayeque en ONPE = `130000`.
 
 ### 5.2 Extranjero (idAmbitoGeografico=2)
 
@@ -357,6 +365,46 @@ Datos R1 2026 al 100% de actas, con ubigeos ONPE correctos.
 > más grueso. Con ~196 provincias (promedio 8 por dept) la proyección es mucho
 > más precisa. Script de descarga masiva en §10.
 
+### Provincias R1 2026 — baseline descargado ✅
+
+196 provincias descargadas el 2026-05-30. Guardado en `backend/data/r1_province_baseline.json`.
+
+| ubigeo | Departamento | # Provs | kf_r2_share prom |
+|---|---|---|---|
+| 010000 | Amazonas | 7 | 36.0% |
+| 020000 | Áncash | 20 | 43.8% |
+| 030000 | Apurímac | 7 | 13.2% |
+| 040000 | Arequipa | 8 | 32.9% |
+| 050000 | Ayacucho | 11 | 17.0% |
+| 060000 | Cajamarca | 13 | 24.0% |
+| 070000 | Cusco | 13 | 15.5% |
+| 080000 | Huancavelica | 7 | 18.6% |
+| 090000 | Huánuco | 11 | 26.6% |
+| 100000 | Ica | 5 | 69.2% |
+| 110000 | Junín | 9 | 57.2% |
+| 120000 | La Libertad | 12 | 56.5% |
+| 130000 | Lambayeque | 3 | 65.7% |
+| 140000 | Lima | 10 | 72.4% |
+| 150000 | Loreto | 8 | 69.2% |
+| 160000 | Madre de Dios | 3 | 36.6% |
+| 170000 | Moquegua | 3 | 31.0% |
+| 180000 | Pasco | 3 | 42.4% |
+| 190000 | Piura | 8 | 66.1% |
+| 200000 | Puno | 13 | 11.2% |
+| 210000 | San Martín | 10 | 47.1% |
+| 220000 | Tacna | 4 | 25.3% |
+| 230000 | Tumbes | 3 | 84.6% |
+| 240000 | Callao | 1 | 87.3% |
+| 250000 | Ucayali | 4 | 63.9% |
+
+**Extremos más RSP** (candidato Sánchez)  
+`CHUMBIVILCAS/CUSCO: 3.33%`, `CANAS/CUSCO: 4.47%`, `CONDORCANQUI/AMAZONAS: 5.53%`, `AZÁNGARO/PUNO: 5.9%`
+
+**Extremos más KF** (candidata Fujimori)  
+`PUTUMAYO/LORETO: 91.19%`, `MARISCAL RAMÓN CASTILLA/LORETO: 89.86%`, `CONTRALMIRANTE VILLAR/TUMBES: 88.29%`, `MAYNAS/LORETO: 88.72%`
+
+**Alta varianza intra-dept:** Piura: `AYABACA=22.74%` vs `SULLANA=87.72%`
+
 ### Extranjero (idAmbitoGeografico=2) — Continentes
 
 | ubigeo | Continente | KF% | RSP% | kf_r2_share |
@@ -539,6 +587,7 @@ async function downloadAll() {
       las provincias de Lima (140000) con prefijo `140xxx`. La confusión
       inicial era por usar el código INEI (140000=Lambayeque) en lugar del
       ONPE (140000=Lima). Resuelto.
+- [x] **196 provincias R1 descargadas** — `backend/data/r1_province_baseline.json`
 - [ ] **Lima Metropolitana vs Lima Provincias** — verificar si para la
       elección presidencial Lima aparece como una sola circumscripción (140000)
       o si hay separación. Actualmente aparece como una sola con 10 provincias.

@@ -1,0 +1,1916 @@
+{
+  "100000": {
+    "ubigeo": "100000",
+    "nombre": "ICA",
+    "provincias": [
+      {
+        "ubigeo": "100200",
+        "nombre": "CHINCHA",
+        "kfPct": 22.039,
+        "rspPct": 6.947,
+        "kfV": 27608,
+        "rspV": 8702,
+        "kf_r2_share": 76.03
+      },
+      {
+        "ubigeo": "100100",
+        "nombre": "ICA",
+        "kfPct": 19.023,
+        "rspPct": 7.118,
+        "kfV": 43055,
+        "rspV": 16110,
+        "kf_r2_share": 72.77
+      },
+      {
+        "ubigeo": "100300",
+        "nombre": "NASCA",
+        "kfPct": 19.279,
+        "rspPct": 10.349,
+        "kfV": 7813,
+        "rspV": 4194,
+        "kf_r2_share": 65.07
+      },
+      {
+        "ubigeo": "100500",
+        "nombre": "PALPA",
+        "kfPct": 24.072,
+        "rspPct": 15.71,
+        "kfV": 1920,
+        "rspV": 1253,
+        "kf_r2_share": 60.51
+      },
+      {
+        "ubigeo": "100400",
+        "nombre": "PISCO",
+        "kfPct": 21.488,
+        "rspPct": 8.525,
+        "kfV": 17656,
+        "rspV": 7005,
+        "kf_r2_share": 71.59
+      }
+    ]
+  },
+  "110000": {
+    "ubigeo": "110000",
+    "nombre": "JUNÍN",
+    "provincias": [
+      {
+        "ubigeo": "110800",
+        "nombre": "CHANCHAMAYO",
+        "kfPct": 23.776,
+        "rspPct": 17.327,
+        "kfV": 17237,
+        "rspV": 12562,
+        "kf_r2_share": 57.84
+      },
+      {
+        "ubigeo": "110900",
+        "nombre": "CHUPACA",
+        "kfPct": 14.4,
+        "rspPct": 11.494,
+        "kfV": 4831,
+        "rspV": 3856,
+        "kf_r2_share": 55.61
+      },
+      {
+        "ubigeo": "110200",
+        "nombre": "CONCEPCIÓN",
+        "kfPct": 22.177,
+        "rspPct": 14.91,
+        "kfV": 6277,
+        "rspV": 4220,
+        "kf_r2_share": 59.8
+      },
+      {
+        "ubigeo": "110100",
+        "nombre": "HUANCAYO",
+        "kfPct": 13.159,
+        "rspPct": 8.706,
+        "kfV": 40832,
+        "rspV": 27014,
+        "kf_r2_share": 60.18
+      },
+      {
+        "ubigeo": "110300",
+        "nombre": "JAUJA",
+        "kfPct": 19.232,
+        "rspPct": 8.97,
+        "kfV": 8548,
+        "rspV": 3987,
+        "kf_r2_share": 68.19
+      },
+      {
+        "ubigeo": "110400",
+        "nombre": "JUNÍN",
+        "kfPct": 12.997,
+        "rspPct": 20.039,
+        "kfV": 1279,
+        "rspV": 1972,
+        "kf_r2_share": 39.34
+      },
+      {
+        "ubigeo": "110700",
+        "nombre": "SATIPO",
+        "kfPct": 21.803,
+        "rspPct": 24.233,
+        "kfV": 16258,
+        "rspV": 18070,
+        "kf_r2_share": 47.36
+      },
+      {
+        "ubigeo": "110500",
+        "nombre": "TARMA",
+        "kfPct": 25.211,
+        "rspPct": 10.9,
+        "kfV": 11021,
+        "rspV": 4765,
+        "kf_r2_share": 69.82
+      },
+      {
+        "ubigeo": "110600",
+        "nombre": "YAULI",
+        "kfPct": 13.133,
+        "rspPct": 9.962,
+        "kfV": 2348,
+        "rspV": 1781,
+        "kf_r2_share": 56.87
+      }
+    ]
+  },
+  "120000": {
+    "ubigeo": "120000",
+    "nombre": "LA LIBERTAD",
+    "provincias": [
+      {
+        "ubigeo": "120800",
+        "nombre": "ASCOPE",
+        "kfPct": 25.464,
+        "rspPct": 4.378,
+        "kfV": 15581,
+        "rspV": 2679,
+        "kf_r2_share": 85.33
+      },
+      {
+        "ubigeo": "120200",
+        "nombre": "BOLÍVAR",
+        "kfPct": 19.916,
+        "rspPct": 31.92,
+        "kfV": 808,
+        "rspV": 1295,
+        "kf_r2_share": 38.42
+      },
+      {
+        "ubigeo": "120900",
+        "nombre": "CHEPÉN",
+        "kfPct": 27.188,
+        "rspPct": 12.656,
+        "kfV": 11607,
+        "rspV": 5403,
+        "kf_r2_share": 68.24
+      },
+      {
+        "ubigeo": "121100",
+        "nombre": "GRAN CHIMÚ",
+        "kfPct": 40.633,
+        "rspPct": 11.213,
+        "kfV": 4316,
+        "rspV": 1191,
+        "kf_r2_share": 78.37
+      },
+      {
+        "ubigeo": "121000",
+        "nombre": "JULCÁN",
+        "kfPct": 20.043,
+        "rspPct": 28.181,
+        "kfV": 2325,
+        "rspV": 3269,
+        "kf_r2_share": 41.56
+      },
+      {
+        "ubigeo": "120400",
+        "nombre": "OTUZCO",
+        "kfPct": 22.083,
+        "rspPct": 27.538,
+        "kfV": 7636,
+        "rspV": 9522,
+        "kf_r2_share": 44.5
+      },
+      {
+        "ubigeo": "120500",
+        "nombre": "PACASMAYO",
+        "kfPct": 24.698,
+        "rspPct": 9.423,
+        "kfV": 12675,
+        "rspV": 4836,
+        "kf_r2_share": 72.38
+      },
+      {
+        "ubigeo": "120600",
+        "nombre": "PATAZ",
+        "kfPct": 18.327,
+        "rspPct": 36.429,
+        "kfV": 4329,
+        "rspV": 8605,
+        "kf_r2_share": 33.47
+      },
+      {
+        "ubigeo": "120300",
+        "nombre": "SÁNCHEZ CARRIÓN",
+        "kfPct": 23.287,
+        "rspPct": 35.317,
+        "kfV": 13076,
+        "rspV": 19831,
+        "kf_r2_share": 39.74
+      },
+      {
+        "ubigeo": "120700",
+        "nombre": "SANTIAGO DE CHUCO",
+        "kfPct": 20.134,
+        "rspPct": 30.385,
+        "kfV": 3954,
+        "rspV": 5967,
+        "kf_r2_share": 39.85
+      },
+      {
+        "ubigeo": "120100",
+        "nombre": "TRUJILLO",
+        "kfPct": 18.372,
+        "rspPct": 3.022,
+        "kfV": 104101,
+        "rspV": 17124,
+        "kf_r2_share": 85.87
+      },
+      {
+        "ubigeo": "121200",
+        "nombre": "VIRÚ",
+        "kfPct": 16.933,
+        "rspPct": 16.901,
+        "kfV": 8585,
+        "rspV": 8569,
+        "kf_r2_share": 50.05
+      }
+    ]
+  },
+  "130000": {
+    "ubigeo": "130000",
+    "nombre": "LAMBAYEQUE",
+    "provincias": [
+      {
+        "ubigeo": "130100",
+        "nombre": "CHICLAYO",
+        "kfPct": 24.294,
+        "rspPct": 8.027,
+        "kfV": 111748,
+        "rspV": 36925,
+        "kf_r2_share": 75.16
+      },
+      {
+        "ubigeo": "130200",
+        "nombre": "FERREÑAFE",
+        "kfPct": 25.654,
+        "rspPct": 22.229,
+        "kfV": 12209,
+        "rspV": 10579,
+        "kf_r2_share": 53.58
+      },
+      {
+        "ubigeo": "130300",
+        "nombre": "LAMBAYEQUE",
+        "kfPct": 32.748,
+        "rspPct": 15.16,
+        "kfV": 52146,
+        "rspV": 24140,
+        "kf_r2_share": 68.36
+      }
+    ]
+  },
+  "140000": {
+    "ubigeo": "140000",
+    "nombre": "LIMA",
+    "provincias": [
+      {
+        "ubigeo": "140900",
+        "nombre": "BARRANCA",
+        "kfPct": 25.996,
+        "rspPct": 7.431,
+        "kfV": 19875,
+        "rspV": 5681,
+        "kf_r2_share": 77.77
+      },
+      {
+        "ubigeo": "140200",
+        "nombre": "CAJATAMBO",
+        "kfPct": 36.653,
+        "rspPct": 12.112,
+        "kfV": 920,
+        "rspV": 304,
+        "kf_r2_share": 75.16
+      },
+      {
+        "ubigeo": "140300",
+        "nombre": "CANTA",
+        "kfPct": 27.354,
+        "rspPct": 11.712,
+        "kfV": 2144,
+        "rspV": 918,
+        "kf_r2_share": 70.02
+      },
+      {
+        "ubigeo": "140400",
+        "nombre": "CAÑETE",
+        "kfPct": 23.563,
+        "rspPct": 6.592,
+        "kfV": 31702,
+        "rspV": 8869,
+        "kf_r2_share": 78.14
+      },
+      {
+        "ubigeo": "140800",
+        "nombre": "HUARAL",
+        "kfPct": 25.649,
+        "rspPct": 9.632,
+        "kfV": 27117,
+        "rspV": 10183,
+        "kf_r2_share": 72.7
+      },
+      {
+        "ubigeo": "140600",
+        "nombre": "HUAROCHIRÍ",
+        "kfPct": 22.665,
+        "rspPct": 9.199,
+        "kfV": 13512,
+        "rspV": 5484,
+        "kf_r2_share": 71.13
+      },
+      {
+        "ubigeo": "140500",
+        "nombre": "HUAURA",
+        "kfPct": 21.957,
+        "rspPct": 7.293,
+        "kfV": 27294,
+        "rspV": 9066,
+        "kf_r2_share": 75.07
+      },
+      {
+        "ubigeo": "140100",
+        "nombre": "LIMA",
+        "kfPct": 17.333,
+        "rspPct": 2.795,
+        "kfV": 962242,
+        "rspV": 155140,
+        "kf_r2_share": 86.12
+      },
+      {
+        "ubigeo": "141000",
+        "nombre": "OYÓN",
+        "kfPct": 26.399,
+        "rspPct": 12.186,
+        "kfV": 1863,
+        "rspV": 860,
+        "kf_r2_share": 68.42
+      },
+      {
+        "ubigeo": "140700",
+        "nombre": "YAUYOS",
+        "kfPct": 22.348,
+        "rspPct": 22.886,
+        "kfV": 2865,
+        "rspV": 2934,
+        "kf_r2_share": 49.41
+      }
+    ]
+  },
+  "150000": {
+    "ubigeo": "150000",
+    "nombre": "LORETO",
+    "provincias": [
+      {
+        "ubigeo": "150200",
+        "nombre": "ALTO AMAZONAS",
+        "kfPct": 16.269,
+        "rspPct": 20.974,
+        "kfV": 7728,
+        "rspV": 9963,
+        "kf_r2_share": 43.68
+      },
+      {
+        "ubigeo": "150700",
+        "nombre": "DATEM DEL MARAÑÓN",
+        "kfPct": 16.824,
+        "rspPct": 43.645,
+        "kfV": 2753,
+        "rspV": 7142,
+        "kf_r2_share": 27.82
+      },
+      {
+        "ubigeo": "150300",
+        "nombre": "LORETO",
+        "kfPct": 32.146,
+        "rspPct": 10.952,
+        "kfV": 6798,
+        "rspV": 2316,
+        "kf_r2_share": 74.59
+      },
+      {
+        "ubigeo": "150600",
+        "nombre": "MARISCAL RAMÓN CASTILLA",
+        "kfPct": 57.2,
+        "rspPct": 6.452,
+        "kfV": 8342,
+        "rspV": 941,
+        "kf_r2_share": 89.86
+      },
+      {
+        "ubigeo": "150100",
+        "nombre": "MAYNAS",
+        "kfPct": 28.304,
+        "rspPct": 3.6,
+        "kfV": 56723,
+        "rspV": 7214,
+        "kf_r2_share": 88.72
+      },
+      {
+        "ubigeo": "150900",
+        "nombre": "PUTUMAYO",
+        "kfPct": 50.827,
+        "rspPct": 4.912,
+        "kfV": 1014,
+        "rspV": 98,
+        "kf_r2_share": 91.19
+      },
+      {
+        "ubigeo": "150400",
+        "nombre": "REQUENA",
+        "kfPct": 34.341,
+        "rspPct": 12.503,
+        "kfV": 7534,
+        "rspV": 2743,
+        "kf_r2_share": 73.31
+      },
+      {
+        "ubigeo": "150500",
+        "nombre": "UCAYALI",
+        "kfPct": 34.056,
+        "rspPct": 18.618,
+        "kfV": 5923,
+        "rspV": 3238,
+        "kf_r2_share": 64.65
+      }
+    ]
+  },
+  "160000": {
+    "ubigeo": "160000",
+    "nombre": "MADRE DE DIOS",
+    "provincias": [
+      {
+        "ubigeo": "160200",
+        "nombre": "MANÚ",
+        "kfPct": 10.734,
+        "rspPct": 36.147,
+        "kfV": 931,
+        "rspV": 3135,
+        "kf_r2_share": 22.9
+      },
+      {
+        "ubigeo": "160300",
+        "nombre": "TAHUAMANÚ",
+        "kfPct": 20.754,
+        "rspPct": 21.646,
+        "kfV": 1024,
+        "rspV": 1068,
+        "kf_r2_share": 48.95
+      },
+      {
+        "ubigeo": "160100",
+        "nombre": "TAMBOPATA",
+        "kfPct": 13.385,
+        "rspPct": 21.946,
+        "kfV": 8993,
+        "rspV": 14745,
+        "kf_r2_share": 37.88
+      }
+    ]
+  },
+  "170000": {
+    "ubigeo": "170000",
+    "nombre": "MOQUEGUA",
+    "provincias": [
+      {
+        "ubigeo": "170200",
+        "nombre": "GENERAL SÁNCHEZ CERRO",
+        "kfPct": 6.258,
+        "rspPct": 25.659,
+        "kfV": 558,
+        "rspV": 2288,
+        "kf_r2_share": 19.61
+      },
+      {
+        "ubigeo": "170300",
+        "nombre": "ILO",
+        "kfPct": 8.595,
+        "rspPct": 10.397,
+        "kfV": 4083,
+        "rspV": 4939,
+        "kf_r2_share": 45.26
+      },
+      {
+        "ubigeo": "170100",
+        "nombre": "MARISCAL NIETO",
+        "kfPct": 5.089,
+        "rspPct": 13.023,
+        "kfV": 2928,
+        "rspV": 7492,
+        "kf_r2_share": 28.1
+      }
+    ]
+  },
+  "180000": {
+    "ubigeo": "180000",
+    "nombre": "PASCO",
+    "provincias": [
+      {
+        "ubigeo": "180200",
+        "nombre": "DANIEL ALCIDES CARRIÓN",
+        "kfPct": 7.509,
+        "rspPct": 37.299,
+        "kfV": 1071,
+        "rspV": 5320,
+        "kf_r2_share": 16.76
+      },
+      {
+        "ubigeo": "180300",
+        "nombre": "OXAPAMPA",
+        "kfPct": 32.814,
+        "rspPct": 15.802,
+        "kfV": 13367,
+        "rspV": 6437,
+        "kf_r2_share": 67.5
+      },
+      {
+        "ubigeo": "180100",
+        "nombre": "PASCO",
+        "kfPct": 12.187,
+        "rspPct": 16.212,
+        "kfV": 7404,
+        "rspV": 9849,
+        "kf_r2_share": 42.91
+      }
+    ]
+  },
+  "190000": {
+    "ubigeo": "190000",
+    "nombre": "PIURA",
+    "provincias": [
+      {
+        "ubigeo": "190200",
+        "nombre": "AYABACA",
+        "kfPct": 14.57,
+        "rspPct": 49.5,
+        "kfV": 5621,
+        "rspV": 19097,
+        "kf_r2_share": 22.74
+      },
+      {
+        "ubigeo": "190300",
+        "nombre": "HUANCABAMBA",
+        "kfPct": 15.981,
+        "rspPct": 49.372,
+        "kfV": 7035,
+        "rspV": 21734,
+        "kf_r2_share": 24.45
+      },
+      {
+        "ubigeo": "190400",
+        "nombre": "MORROPÓN",
+        "kfPct": 35.557,
+        "rspPct": 13.986,
+        "kfV": 27320,
+        "rspV": 10746,
+        "kf_r2_share": 71.77
+      },
+      {
+        "ubigeo": "190500",
+        "nombre": "PAITA",
+        "kfPct": 26.751,
+        "rspPct": 7.046,
+        "kfV": 16615,
+        "rspV": 4376,
+        "kf_r2_share": 79.15
+      },
+      {
+        "ubigeo": "190100",
+        "nombre": "PIURA",
+        "kfPct": 26.551,
+        "rspPct": 7.902,
+        "kfV": 105881,
+        "rspV": 31513,
+        "kf_r2_share": 77.06
+      },
+      {
+        "ubigeo": "190800",
+        "nombre": "SECHURA",
+        "kfPct": 28.67,
+        "rspPct": 7.139,
+        "kfV": 11272,
+        "rspV": 2807,
+        "kf_r2_share": 80.06
+      },
+      {
+        "ubigeo": "190600",
+        "nombre": "SULLANA",
+        "kfPct": 37.469,
+        "rspPct": 5.247,
+        "kfV": 58308,
+        "rspV": 8165,
+        "kf_r2_share": 87.72
+      },
+      {
+        "ubigeo": "190700",
+        "nombre": "TALARA",
+        "kfPct": 22.615,
+        "rspPct": 3.814,
+        "kfV": 14644,
+        "rspV": 2470,
+        "kf_r2_share": 85.57
+      }
+    ]
+  },
+  "200000": {
+    "ubigeo": "200000",
+    "nombre": "PUNO",
+    "provincias": [
+      {
+        "ubigeo": "200200",
+        "nombre": "AZÁNGARO",
+        "kfPct": 2.211,
+        "rspPct": 35.27,
+        "kfV": 1560,
+        "rspV": 24883,
+        "kf_r2_share": 5.9
+      },
+      {
+        "ubigeo": "200300",
+        "nombre": "CARABAYA",
+        "kfPct": 4.325,
+        "rspPct": 34.342,
+        "kfV": 1337,
+        "rspV": 10615,
+        "kf_r2_share": 11.19
+      },
+      {
+        "ubigeo": "200400",
+        "nombre": "CHUCUITO",
+        "kfPct": 2.909,
+        "rspPct": 36.068,
+        "kfV": 1138,
+        "rspV": 14110,
+        "kf_r2_share": 7.46
+      },
+      {
+        "ubigeo": "201200",
+        "nombre": "EL COLLAO",
+        "kfPct": 2.808,
+        "rspPct": 36.484,
+        "kfV": 957,
+        "rspV": 12436,
+        "kf_r2_share": 7.15
+      },
+      {
+        "ubigeo": "200500",
+        "nombre": "HUANCANÉ",
+        "kfPct": 2.352,
+        "rspPct": 35.346,
+        "kfV": 869,
+        "rspV": 13062,
+        "kf_r2_share": 6.24
+      },
+      {
+        "ubigeo": "200600",
+        "nombre": "LAMPA",
+        "kfPct": 3.402,
+        "rspPct": 27.045,
+        "kfV": 927,
+        "rspV": 7370,
+        "kf_r2_share": 11.17
+      },
+      {
+        "ubigeo": "200700",
+        "nombre": "MELGAR",
+        "kfPct": 3.047,
+        "rspPct": 26.502,
+        "kfV": 1157,
+        "rspV": 10063,
+        "kf_r2_share": 10.31
+      },
+      {
+        "ubigeo": "201300",
+        "nombre": "MOHO",
+        "kfPct": 2.498,
+        "rspPct": 35.805,
+        "kfV": 317,
+        "rspV": 4543,
+        "kf_r2_share": 6.52
+      },
+      {
+        "ubigeo": "200100",
+        "nombre": "PUNO",
+        "kfPct": 4.273,
+        "rspPct": 16.153,
+        "kfV": 5526,
+        "rspV": 20890,
+        "kf_r2_share": 20.92
+      },
+      {
+        "ubigeo": "201100",
+        "nombre": "SAN ANTONIO DE PUTINA",
+        "kfPct": 2.503,
+        "rspPct": 34.696,
+        "kfV": 431,
+        "rspV": 5975,
+        "kf_r2_share": 6.73
+      },
+      {
+        "ubigeo": "200800",
+        "nombre": "SANDIA",
+        "kfPct": 5.209,
+        "rspPct": 35.135,
+        "kfV": 1355,
+        "rspV": 9139,
+        "kf_r2_share": 12.91
+      },
+      {
+        "ubigeo": "200900",
+        "nombre": "SAN ROMÁN",
+        "kfPct": 5.312,
+        "rspPct": 14.148,
+        "kfV": 9135,
+        "rspV": 24330,
+        "kf_r2_share": 27.3
+      },
+      {
+        "ubigeo": "201000",
+        "nombre": "YUNGUYO",
+        "kfPct": 4.158,
+        "rspPct": 30.841,
+        "kfV": 680,
+        "rspV": 5044,
+        "kf_r2_share": 11.88
+      }
+    ]
+  },
+  "210000": {
+    "ubigeo": "210000",
+    "nombre": "SAN MARTÍN",
+    "provincias": [
+      {
+        "ubigeo": "210700",
+        "nombre": "BELLAVISTA",
+        "kfPct": 19.714,
+        "rspPct": 36.146,
+        "kfV": 4582,
+        "rspV": 8401,
+        "kf_r2_share": 35.29
+      },
+      {
+        "ubigeo": "211000",
+        "nombre": "EL DORADO",
+        "kfPct": 21.741,
+        "rspPct": 39.19,
+        "kfV": 3419,
+        "rspV": 6163,
+        "kf_r2_share": 35.68
+      },
+      {
+        "ubigeo": "210200",
+        "nombre": "HUALLAGA",
+        "kfPct": 22.179,
+        "rspPct": 28.757,
+        "kfV": 2559,
+        "rspV": 3318,
+        "kf_r2_share": 43.54
+      },
+      {
+        "ubigeo": "210300",
+        "nombre": "LAMAS",
+        "kfPct": 30.592,
+        "rspPct": 25.222,
+        "kfV": 11079,
+        "rspV": 9134,
+        "kf_r2_share": 54.81
+      },
+      {
+        "ubigeo": "210400",
+        "nombre": "MARISCAL CÁCERES",
+        "kfPct": 27.754,
+        "rspPct": 22.87,
+        "kfV": 7229,
+        "rspV": 5957,
+        "kf_r2_share": 54.82
+      },
+      {
+        "ubigeo": "210100",
+        "nombre": "MOYOBAMBA",
+        "kfPct": 19.32,
+        "rspPct": 26.875,
+        "kfV": 11592,
+        "rspV": 16125,
+        "kf_r2_share": 41.82
+      },
+      {
+        "ubigeo": "210900",
+        "nombre": "PICOTA",
+        "kfPct": 27.895,
+        "rspPct": 27.62,
+        "kfV": 5587,
+        "rspV": 5532,
+        "kf_r2_share": 50.25
+      },
+      {
+        "ubigeo": "210500",
+        "nombre": "RIOJA",
+        "kfPct": 21.789,
+        "rspPct": 31.906,
+        "kfV": 13901,
+        "rspV": 20355,
+        "kf_r2_share": 40.58
+      },
+      {
+        "ubigeo": "210600",
+        "nombre": "SAN MARTÍN",
+        "kfPct": 24.281,
+        "rspPct": 9.063,
+        "kfV": 24300,
+        "rspV": 9070,
+        "kf_r2_share": 72.82
+      },
+      {
+        "ubigeo": "210800",
+        "nombre": "TOCACHE",
+        "kfPct": 19.378,
+        "rspPct": 27.925,
+        "kfV": 6407,
+        "rspV": 9233,
+        "kf_r2_share": 40.97
+      }
+    ]
+  },
+  "220000": {
+    "ubigeo": "220000",
+    "nombre": "TACNA",
+    "provincias": [
+      {
+        "ubigeo": "220400",
+        "nombre": "CANDARAVE",
+        "kfPct": 4.871,
+        "rspPct": 26.045,
+        "kfV": 190,
+        "rspV": 1016,
+        "kf_r2_share": 15.75
+      },
+      {
+        "ubigeo": "220300",
+        "nombre": "JORGE BASADRE",
+        "kfPct": 5.365,
+        "rspPct": 18.606,
+        "kfV": 451,
+        "rspV": 1564,
+        "kf_r2_share": 22.38
+      },
+      {
+        "ubigeo": "220100",
+        "nombre": "TACNA",
+        "kfPct": 6.954,
+        "rspPct": 11.148,
+        "kfV": 14141,
+        "rspV": 22669,
+        "kf_r2_share": 38.42
+      },
+      {
+        "ubigeo": "220200",
+        "nombre": "TARATA",
+        "kfPct": 6.745,
+        "rspPct": 20.708,
+        "kfV": 343,
+        "rspV": 1053,
+        "kf_r2_share": 24.57
+      }
+    ]
+  },
+  "230000": {
+    "ubigeo": "230000",
+    "nombre": "TUMBES",
+    "provincias": [
+      {
+        "ubigeo": "230200",
+        "nombre": "CONTRALMIRANTE VILLAR",
+        "kfPct": 41.285,
+        "rspPct": 5.475,
+        "kfV": 4313,
+        "rspV": 572,
+        "kf_r2_share": 88.29
+      },
+      {
+        "ubigeo": "230100",
+        "nombre": "TUMBES",
+        "kfPct": 29.138,
+        "rspPct": 6.557,
+        "kfV": 22366,
+        "rspV": 5033,
+        "kf_r2_share": 81.63
+      },
+      {
+        "ubigeo": "230300",
+        "nombre": "ZARUMILLA",
+        "kfPct": 47.365,
+        "rspPct": 9.086,
+        "kfV": 11171,
+        "rspV": 2143,
+        "kf_r2_share": 83.9
+      }
+    ]
+  },
+  "240000": {
+    "ubigeo": "240000",
+    "nombre": "CALLAO",
+    "provincias": [
+      {
+        "ubigeo": "240100",
+        "nombre": "CALLAO",
+        "kfPct": 20.696,
+        "rspPct": 3.01,
+        "kfV": 119476,
+        "rspV": 17377,
+        "kf_r2_share": 87.3
+      }
+    ]
+  },
+  "250000": {
+    "ubigeo": "250000",
+    "nombre": "UCAYALI",
+    "provincias": [
+      {
+        "ubigeo": "250300",
+        "nombre": "ATALAYA",
+        "kfPct": 36.67,
+        "rspPct": 17.32,
+        "kfV": 5128,
+        "rspV": 2422,
+        "kf_r2_share": 67.92
+      },
+      {
+        "ubigeo": "250100",
+        "nombre": "CORONEL PORTILLO",
+        "kfPct": 30.831,
+        "rspPct": 8.689,
+        "kfV": 55036,
+        "rspV": 15511,
+        "kf_r2_share": 78.01
+      },
+      {
+        "ubigeo": "250200",
+        "nombre": "PADRE ABAD",
+        "kfPct": 19.752,
+        "rspPct": 34.015,
+        "kfV": 6344,
+        "rspV": 10925,
+        "kf_r2_share": 36.74
+      },
+      {
+        "ubigeo": "250400",
+        "nombre": "PURÚS",
+        "kfPct": 54.607,
+        "rspPct": 20.225,
+        "kfV": 486,
+        "rspV": 180,
+        "kf_r2_share": 72.97
+      }
+    ]
+  },
+  "010000": {
+    "ubigeo": "010000",
+    "nombre": "AMAZONAS",
+    "provincias": [
+      {
+        "ubigeo": "010200",
+        "nombre": "BAGUA",
+        "kfPct": 14.972,
+        "rspPct": 43.562,
+        "kfV": 4844,
+        "rspV": 14094,
+        "kf_r2_share": 25.58
+      },
+      {
+        "ubigeo": "010300",
+        "nombre": "BONGARÁ",
+        "kfPct": 23.949,
+        "rspPct": 27.804,
+        "kfV": 2739,
+        "rspV": 3180,
+        "kf_r2_share": 46.27
+      },
+      {
+        "ubigeo": "010100",
+        "nombre": "CHACHAPOYAS",
+        "kfPct": 18.312,
+        "rspPct": 17.127,
+        "kfV": 4684,
+        "rspV": 4381,
+        "kf_r2_share": 51.67
+      },
+      {
+        "ubigeo": "010600",
+        "nombre": "CONDORCANQUI",
+        "kfPct": 4.203,
+        "rspPct": 71.786,
+        "kfV": 627,
+        "rspV": 10709,
+        "kf_r2_share": 5.53
+      },
+      {
+        "ubigeo": "010400",
+        "nombre": "LUYA",
+        "kfPct": 22.494,
+        "rspPct": 29.658,
+        "kfV": 4135,
+        "rspV": 5452,
+        "kf_r2_share": 43.13
+      },
+      {
+        "ubigeo": "010500",
+        "nombre": "RODRÍGUEZ DE MENDOZA",
+        "kfPct": 19.976,
+        "rspPct": 22.356,
+        "kfV": 2291,
+        "rspV": 2564,
+        "kf_r2_share": 47.19
+      },
+      {
+        "ubigeo": "010700",
+        "nombre": "UTCUBAMBA",
+        "kfPct": 18.408,
+        "rspPct": 38.349,
+        "kfV": 9083,
+        "rspV": 18922,
+        "kf_r2_share": 32.43
+      }
+    ]
+  },
+  "020000": {
+    "ubigeo": "020000",
+    "nombre": "ÁNCASH",
+    "provincias": [
+      {
+        "ubigeo": "020200",
+        "nombre": "AIJA",
+        "kfPct": 21.46,
+        "rspPct": 18.734,
+        "kfV": 732,
+        "rspV": 639,
+        "kf_r2_share": 53.39
+      },
+      {
+        "ubigeo": "021600",
+        "nombre": "ANTONIO RAIMONDI",
+        "kfPct": 6.713,
+        "rspPct": 44.715,
+        "kfV": 289,
+        "rspV": 1925,
+        "kf_r2_share": 13.05
+      },
+      {
+        "ubigeo": "021800",
+        "nombre": "ASUNCIÓN",
+        "kfPct": 11.939,
+        "rspPct": 23.703,
+        "kfV": 343,
+        "rspV": 681,
+        "kf_r2_share": 33.5
+      },
+      {
+        "ubigeo": "020300",
+        "nombre": "BOLOGNESI",
+        "kfPct": 19.349,
+        "rspPct": 17.601,
+        "kfV": 1992,
+        "rspV": 1812,
+        "kf_r2_share": 52.37
+      },
+      {
+        "ubigeo": "020400",
+        "nombre": "CARHUAZ",
+        "kfPct": 17.396,
+        "rspPct": 27.884,
+        "kfV": 4085,
+        "rspV": 6548,
+        "kf_r2_share": 38.42
+      },
+      {
+        "ubigeo": "021700",
+        "nombre": "CARLOS FERMÍN FITZCARRALD",
+        "kfPct": 7.521,
+        "rspPct": 41.115,
+        "kfV": 452,
+        "rspV": 2471,
+        "kf_r2_share": 15.46
+      },
+      {
+        "ubigeo": "020500",
+        "nombre": "CASMA",
+        "kfPct": 29.397,
+        "rspPct": 10.436,
+        "kfV": 7411,
+        "rspV": 2631,
+        "kf_r2_share": 73.8
+      },
+      {
+        "ubigeo": "020600",
+        "nombre": "CORONGO",
+        "kfPct": 18.85,
+        "rspPct": 20.545,
+        "kfV": 567,
+        "rspV": 618,
+        "kf_r2_share": 47.85
+      },
+      {
+        "ubigeo": "020100",
+        "nombre": "HUARAZ",
+        "kfPct": 15.335,
+        "rspPct": 12.426,
+        "kfV": 12619,
+        "rspV": 10225,
+        "kf_r2_share": 55.24
+      },
+      {
+        "ubigeo": "020800",
+        "nombre": "HUARI",
+        "kfPct": 9.595,
+        "rspPct": 27.882,
+        "kfV": 3557,
+        "rspV": 10336,
+        "kf_r2_share": 25.6
+      },
+      {
+        "ubigeo": "021900",
+        "nombre": "HUARMEY",
+        "kfPct": 31.349,
+        "rspPct": 10.479,
+        "kfV": 5008,
+        "rspV": 1674,
+        "kf_r2_share": 74.95
+      },
+      {
+        "ubigeo": "020700",
+        "nombre": "HUAYLAS",
+        "kfPct": 28.875,
+        "rspPct": 15.367,
+        "kfV": 6911,
+        "rspV": 3678,
+        "kf_r2_share": 65.27
+      },
+      {
+        "ubigeo": "020900",
+        "nombre": "MARISCAL LUZURIAGA",
+        "kfPct": 7.748,
+        "rspPct": 49.783,
+        "kfV": 588,
+        "rspV": 3778,
+        "kf_r2_share": 13.47
+      },
+      {
+        "ubigeo": "022000",
+        "nombre": "OCROS",
+        "kfPct": 31.885,
+        "rspPct": 12.708,
+        "kfV": 976,
+        "rspV": 389,
+        "kf_r2_share": 71.5
+      },
+      {
+        "ubigeo": "021000",
+        "nombre": "PALLASCA",
+        "kfPct": 14.501,
+        "rspPct": 28.261,
+        "kfV": 1156,
+        "rspV": 2253,
+        "kf_r2_share": 33.91
+      },
+      {
+        "ubigeo": "021100",
+        "nombre": "POMABAMBA",
+        "kfPct": 11.841,
+        "rspPct": 44.626,
+        "kfV": 1007,
+        "rspV": 3795,
+        "kf_r2_share": 20.97
+      },
+      {
+        "ubigeo": "021200",
+        "nombre": "RECUAY",
+        "kfPct": 13.97,
+        "rspPct": 14.697,
+        "kfV": 1364,
+        "rspV": 1435,
+        "kf_r2_share": 48.73
+      },
+      {
+        "ubigeo": "021300",
+        "nombre": "SANTA",
+        "kfPct": 18.325,
+        "rspPct": 6.781,
+        "kfV": 43049,
+        "rspV": 15930,
+        "kf_r2_share": 72.99
+      },
+      {
+        "ubigeo": "021400",
+        "nombre": "SIHUAS",
+        "kfPct": 13.111,
+        "rspPct": 34.81,
+        "kfV": 1261,
+        "rspV": 3348,
+        "kf_r2_share": 27.36
+      },
+      {
+        "ubigeo": "021500",
+        "nombre": "YUNGAY",
+        "kfPct": 18.438,
+        "rspPct": 30.805,
+        "kfV": 4376,
+        "rspV": 7311,
+        "kf_r2_share": 37.44
+      }
+    ]
+  },
+  "030000": {
+    "ubigeo": "030000",
+    "nombre": "APURÍMAC",
+    "provincias": [
+      {
+        "ubigeo": "030100",
+        "nombre": "ABANCAY",
+        "kfPct": 10.235,
+        "rspPct": 26.793,
+        "kfV": 5630,
+        "rspV": 14739,
+        "kf_r2_share": 27.64
+      },
+      {
+        "ubigeo": "030300",
+        "nombre": "ANDAHUAYLAS",
+        "kfPct": 5.39,
+        "rspPct": 43.739,
+        "kfV": 4026,
+        "rspV": 32672,
+        "kf_r2_share": 10.97
+      },
+      {
+        "ubigeo": "030400",
+        "nombre": "ANTABAMBA",
+        "kfPct": 5.154,
+        "rspPct": 49.022,
+        "kfV": 266,
+        "rspV": 2530,
+        "kf_r2_share": 9.51
+      },
+      {
+        "ubigeo": "030200",
+        "nombre": "AYMARAES",
+        "kfPct": 8.404,
+        "rspPct": 39.09,
+        "kfV": 1125,
+        "rspV": 5233,
+        "kf_r2_share": 17.69
+      },
+      {
+        "ubigeo": "030700",
+        "nombre": "CHINCHEROS",
+        "kfPct": 6.399,
+        "rspPct": 51.311,
+        "kfV": 1423,
+        "rspV": 11410,
+        "kf_r2_share": 11.09
+      },
+      {
+        "ubigeo": "030500",
+        "nombre": "COTABAMBAS",
+        "kfPct": 4.559,
+        "rspPct": 49.521,
+        "kfV": 952,
+        "rspV": 10340,
+        "kf_r2_share": 8.43
+      },
+      {
+        "ubigeo": "030600",
+        "nombre": "GRAU",
+        "kfPct": 4.565,
+        "rspPct": 58.303,
+        "kfV": 439,
+        "rspV": 5607,
+        "kf_r2_share": 7.26
+      }
+    ]
+  },
+  "040000": {
+    "ubigeo": "040000",
+    "nombre": "AREQUIPA",
+    "provincias": [
+      {
+        "ubigeo": "040100",
+        "nombre": "AREQUIPA",
+        "kfPct": 6.761,
+        "rspPct": 7.615,
+        "kfV": 48027,
+        "rspV": 54095,
+        "kf_r2_share": 47.03
+      },
+      {
+        "ubigeo": "040300",
+        "nombre": "CAMANÁ",
+        "kfPct": 13.926,
+        "rspPct": 16.197,
+        "kfV": 4728,
+        "rspV": 5499,
+        "kf_r2_share": 46.23
+      },
+      {
+        "ubigeo": "040400",
+        "nombre": "CARAVELÍ",
+        "kfPct": 22.432,
+        "rspPct": 22.659,
+        "kfV": 4238,
+        "rspV": 4281,
+        "kf_r2_share": 49.75
+      },
+      {
+        "ubigeo": "040500",
+        "nombre": "CASTILLA",
+        "kfPct": 9.659,
+        "rspPct": 17.146,
+        "kfV": 1481,
+        "rspV": 2629,
+        "kf_r2_share": 36.03
+      },
+      {
+        "ubigeo": "040200",
+        "nombre": "CAYLLOMA",
+        "kfPct": 4.546,
+        "rspPct": 24.014,
+        "kfV": 2498,
+        "rspV": 13195,
+        "kf_r2_share": 15.92
+      },
+      {
+        "ubigeo": "040600",
+        "nombre": "CONDESUYOS",
+        "kfPct": 7.675,
+        "rspPct": 33.946,
+        "kfV": 539,
+        "rspV": 2384,
+        "kf_r2_share": 18.44
+      },
+      {
+        "ubigeo": "040700",
+        "nombre": "ISLAY",
+        "kfPct": 7.635,
+        "rspPct": 14.902,
+        "kfV": 2628,
+        "rspV": 5129,
+        "kf_r2_share": 33.88
+      },
+      {
+        "ubigeo": "040800",
+        "nombre": "LA UNIÓN",
+        "kfPct": 6.253,
+        "rspPct": 33.391,
+        "kfV": 291,
+        "rspV": 1554,
+        "kf_r2_share": 15.77
+      }
+    ]
+  },
+  "050000": {
+    "ubigeo": "050000",
+    "nombre": "AYACUCHO",
+    "provincias": [
+      {
+        "ubigeo": "050200",
+        "nombre": "CANGALLO",
+        "kfPct": 5.301,
+        "rspPct": 47.671,
+        "kfV": 759,
+        "rspV": 6826,
+        "kf_r2_share": 10.01
+      },
+      {
+        "ubigeo": "050100",
+        "nombre": "HUAMANGA",
+        "kfPct": 7.972,
+        "rspPct": 23.698,
+        "kfV": 11619,
+        "rspV": 34540,
+        "kf_r2_share": 25.17
+      },
+      {
+        "ubigeo": "050800",
+        "nombre": "HUANCA SANCOS",
+        "kfPct": 4.666,
+        "rspPct": 41.841,
+        "kfV": 181,
+        "rspV": 1623,
+        "kf_r2_share": 10.03
+      },
+      {
+        "ubigeo": "050300",
+        "nombre": "HUANTA",
+        "kfPct": 8.524,
+        "rspPct": 32.438,
+        "kfV": 3389,
+        "rspV": 12897,
+        "kf_r2_share": 20.81
+      },
+      {
+        "ubigeo": "050400",
+        "nombre": "LA MAR",
+        "kfPct": 8.731,
+        "rspPct": 44.178,
+        "kfV": 2496,
+        "rspV": 12630,
+        "kf_r2_share": 16.5
+      },
+      {
+        "ubigeo": "050500",
+        "nombre": "LUCANAS",
+        "kfPct": 12.183,
+        "rspPct": 36.109,
+        "kfV": 2275,
+        "rspV": 6743,
+        "kf_r2_share": 25.23
+      },
+      {
+        "ubigeo": "050600",
+        "nombre": "PARINACOCHAS",
+        "kfPct": 6.963,
+        "rspPct": 41.557,
+        "kfV": 626,
+        "rspV": 3736,
+        "kf_r2_share": 14.35
+      },
+      {
+        "ubigeo": "051000",
+        "nombre": "PÁUCAR DEL SARA SARA",
+        "kfPct": 11.666,
+        "rspPct": 34.303,
+        "kfV": 453,
+        "rspV": 1332,
+        "kf_r2_share": 25.38
+      },
+      {
+        "ubigeo": "051100",
+        "nombre": "SUCRE",
+        "kfPct": 9.308,
+        "rspPct": 42.328,
+        "kfV": 347,
+        "rspV": 1578,
+        "kf_r2_share": 18.03
+      },
+      {
+        "ubigeo": "050700",
+        "nombre": "VÍCTOR FAJARDO",
+        "kfPct": 4.353,
+        "rspPct": 41.342,
+        "kfV": 364,
+        "rspV": 3457,
+        "kf_r2_share": 9.53
+      },
+      {
+        "ubigeo": "050900",
+        "nombre": "VILCAS HUAMÁN",
+        "kfPct": 6.697,
+        "rspPct": 48.207,
+        "kfV": 549,
+        "rspV": 3952,
+        "kf_r2_share": 12.2
+      }
+    ]
+  },
+  "060000": {
+    "ubigeo": "060000",
+    "nombre": "CAJAMARCA",
+    "provincias": [
+      {
+        "ubigeo": "060200",
+        "nombre": "CAJABAMBA",
+        "kfPct": 22.656,
+        "rspPct": 34.841,
+        "kfV": 6186,
+        "rspV": 9513,
+        "kf_r2_share": 39.4
+      },
+      {
+        "ubigeo": "060100",
+        "nombre": "CAJAMARCA",
+        "kfPct": 17.264,
+        "rspPct": 25.436,
+        "kfV": 32277,
+        "rspV": 47554,
+        "kf_r2_share": 40.43
+      },
+      {
+        "ubigeo": "060300",
+        "nombre": "CELENDÍN",
+        "kfPct": 9.114,
+        "rspPct": 53.021,
+        "kfV": 2988,
+        "rspV": 17383,
+        "kf_r2_share": 14.67
+      },
+      {
+        "ubigeo": "060600",
+        "nombre": "CHOTA",
+        "kfPct": 8.75,
+        "rspPct": 56.478,
+        "kfV": 5995,
+        "rspV": 38695,
+        "kf_r2_share": 13.41
+      },
+      {
+        "ubigeo": "060400",
+        "nombre": "CONTUMAZA",
+        "kfPct": 22.408,
+        "rspPct": 34.559,
+        "kfV": 2639,
+        "rspV": 4070,
+        "kf_r2_share": 39.34
+      },
+      {
+        "ubigeo": "060500",
+        "nombre": "CUTERVO",
+        "kfPct": 12.842,
+        "rspPct": 48.987,
+        "kfV": 6434,
+        "rspV": 24543,
+        "kf_r2_share": 20.77
+      },
+      {
+        "ubigeo": "060700",
+        "nombre": "HUALGAYOC",
+        "kfPct": 6.09,
+        "rspPct": 64.957,
+        "kfV": 2444,
+        "rspV": 26068,
+        "kf_r2_share": 8.57
+      },
+      {
+        "ubigeo": "060800",
+        "nombre": "JAÉN",
+        "kfPct": 14.036,
+        "rspPct": 35.405,
+        "kfV": 13640,
+        "rspV": 34406,
+        "kf_r2_share": 28.39
+      },
+      {
+        "ubigeo": "061100",
+        "nombre": "SAN IGNACIO",
+        "kfPct": 9.395,
+        "rspPct": 51.953,
+        "kfV": 5640,
+        "rspV": 31187,
+        "kf_r2_share": 15.31
+      },
+      {
+        "ubigeo": "061200",
+        "nombre": "SAN MARCOS",
+        "kfPct": 16.05,
+        "rspPct": 45.051,
+        "kfV": 3394,
+        "rspV": 9527,
+        "kf_r2_share": 26.27
+      },
+      {
+        "ubigeo": "061000",
+        "nombre": "SAN MIGUEL",
+        "kfPct": 17.829,
+        "rspPct": 50.797,
+        "kfV": 3872,
+        "rspV": 11032,
+        "kf_r2_share": 25.98
+      },
+      {
+        "ubigeo": "061300",
+        "nombre": "SAN PABLO",
+        "kfPct": 12.501,
+        "rspPct": 57.268,
+        "kfV": 1394,
+        "rspV": 6386,
+        "kf_r2_share": 17.92
+      },
+      {
+        "ubigeo": "060900",
+        "nombre": "SANTA CRUZ",
+        "kfPct": 15.007,
+        "rspPct": 54.298,
+        "kfV": 2376,
+        "rspV": 8597,
+        "kf_r2_share": 21.65
+      }
+    ]
+  },
+  "070000": {
+    "ubigeo": "070000",
+    "nombre": "CUSCO",
+    "provincias": [
+      {
+        "ubigeo": "070200",
+        "nombre": "ACOMAYO",
+        "kfPct": 3.486,
+        "rspPct": 30.455,
+        "kfV": 428,
+        "rspV": 3739,
+        "kf_r2_share": 10.27
+      },
+      {
+        "ubigeo": "070300",
+        "nombre": "ANTA",
+        "kfPct": 6.32,
+        "rspPct": 23.711,
+        "kfV": 2055,
+        "rspV": 7710,
+        "kf_r2_share": 21.04
+      },
+      {
+        "ubigeo": "070400",
+        "nombre": "CALCA",
+        "kfPct": 5.381,
+        "rspPct": 30.318,
+        "kfV": 1844,
+        "rspV": 10389,
+        "kf_r2_share": 15.07
+      },
+      {
+        "ubigeo": "070500",
+        "nombre": "CANAS",
+        "kfPct": 1.855,
+        "rspPct": 39.652,
+        "kfV": 335,
+        "rspV": 7162,
+        "kf_r2_share": 4.47
+      },
+      {
+        "ubigeo": "070600",
+        "nombre": "CANCHIS",
+        "kfPct": 2.85,
+        "rspPct": 26.561,
+        "kfV": 1539,
+        "rspV": 14345,
+        "kf_r2_share": 9.69
+      },
+      {
+        "ubigeo": "070700",
+        "nombre": "CHUMBIVILCAS",
+        "kfPct": 1.574,
+        "rspPct": 45.755,
+        "kfV": 527,
+        "rspV": 15317,
+        "kf_r2_share": 3.33
+      },
+      {
+        "ubigeo": "070100",
+        "nombre": "CUSCO",
+        "kfPct": 8.455,
+        "rspPct": 7.134,
+        "kfV": 21916,
+        "rspV": 18492,
+        "kf_r2_share": 54.24
+      },
+      {
+        "ubigeo": "070800",
+        "nombre": "ESPINAR",
+        "kfPct": 2.873,
+        "rspPct": 30.723,
+        "kfV": 1105,
+        "rspV": 11818,
+        "kf_r2_share": 8.55
+      },
+      {
+        "ubigeo": "070900",
+        "nombre": "LA CONVENCIÓN",
+        "kfPct": 7.8,
+        "rspPct": 32.797,
+        "kfV": 6817,
+        "rspV": 28663,
+        "kf_r2_share": 19.21
+      },
+      {
+        "ubigeo": "071000",
+        "nombre": "PARURO",
+        "kfPct": 4.746,
+        "rspPct": 31.781,
+        "kfV": 650,
+        "rspV": 4353,
+        "kf_r2_share": 12.99
+      },
+      {
+        "ubigeo": "071100",
+        "nombre": "PAUCARTAMBO",
+        "kfPct": 3.54,
+        "rspPct": 46.864,
+        "kfV": 811,
+        "rspV": 10736,
+        "kf_r2_share": 7.02
+      },
+      {
+        "ubigeo": "071200",
+        "nombre": "QUISPICANCHI",
+        "kfPct": 4.71,
+        "rspPct": 39.317,
+        "kfV": 2252,
+        "rspV": 18799,
+        "kf_r2_share": 10.7
+      },
+      {
+        "ubigeo": "071300",
+        "nombre": "URUBAMBA",
+        "kfPct": 5.791,
+        "rspPct": 17.579,
+        "kfV": 2274,
+        "rspV": 6903,
+        "kf_r2_share": 24.78
+      }
+    ]
+  },
+  "080000": {
+    "ubigeo": "080000",
+    "nombre": "HUANCAVELICA",
+    "provincias": [
+      {
+        "ubigeo": "080200",
+        "nombre": "ACOBAMBA",
+        "kfPct": 6.249,
+        "rspPct": 53.661,
+        "kfV": 1147,
+        "rspV": 9849,
+        "kf_r2_share": 10.43
+      },
+      {
+        "ubigeo": "080300",
+        "nombre": "ANGARAES",
+        "kfPct": 5.011,
+        "rspPct": 48.555,
+        "kfV": 1087,
+        "rspV": 10532,
+        "kf_r2_share": 9.36
+      },
+      {
+        "ubigeo": "080400",
+        "nombre": "CASTROVIRREYNA",
+        "kfPct": 19.493,
+        "rspPct": 33.208,
+        "kfV": 1552,
+        "rspV": 2644,
+        "kf_r2_share": 36.99
+      },
+      {
+        "ubigeo": "080700",
+        "nombre": "CHURCAMPA",
+        "kfPct": 6.504,
+        "rspPct": 45.947,
+        "kfV": 913,
+        "rspV": 6450,
+        "kf_r2_share": 12.4
+      },
+      {
+        "ubigeo": "080100",
+        "nombre": "HUANCAVELICA",
+        "kfPct": 5.283,
+        "rspPct": 36.97,
+        "kfV": 3136,
+        "rspV": 21947,
+        "kf_r2_share": 12.5
+      },
+      {
+        "ubigeo": "080600",
+        "nombre": "HUAYTARA",
+        "kfPct": 17.329,
+        "rspPct": 30.201,
+        "kfV": 1621,
+        "rspV": 2825,
+        "kf_r2_share": 36.46
+      },
+      {
+        "ubigeo": "080500",
+        "nombre": "TAYACAJA",
+        "kfPct": 6.594,
+        "rspPct": 49.335,
+        "kfV": 2782,
+        "rspV": 20816,
+        "kf_r2_share": 11.79
+      }
+    ]
+  },
+  "090000": {
+    "ubigeo": "090000",
+    "nombre": "HUÁNUCO",
+    "provincias": [
+      {
+        "ubigeo": "090200",
+        "nombre": "AMBO",
+        "kfPct": 16.833,
+        "rspPct": 35.163,
+        "kfV": 4407,
+        "rspV": 9206,
+        "kf_r2_share": 32.37
+      },
+      {
+        "ubigeo": "090300",
+        "nombre": "DOS DE MAYO",
+        "kfPct": 10.897,
+        "rspPct": 45.587,
+        "kfV": 1505,
+        "rspV": 6296,
+        "kf_r2_share": 19.29
+      },
+      {
+        "ubigeo": "090900",
+        "nombre": "HUACAYBAMBA",
+        "kfPct": 8.318,
+        "rspPct": 55.798,
+        "kfV": 373,
+        "rspV": 2502,
+        "kf_r2_share": 12.97
+      },
+      {
+        "ubigeo": "090400",
+        "nombre": "HUAMALIES",
+        "kfPct": 9.351,
+        "rspPct": 40.154,
+        "kfV": 1939,
+        "rspV": 8326,
+        "kf_r2_share": 18.89
+      },
+      {
+        "ubigeo": "090100",
+        "nombre": "HUÁNUCO",
+        "kfPct": 14.45,
+        "rspPct": 22.307,
+        "kfV": 21526,
+        "rspV": 33231,
+        "kf_r2_share": 39.31
+      },
+      {
+        "ubigeo": "091000",
+        "nombre": "LAURICOCHA",
+        "kfPct": 7.266,
+        "rspPct": 55.444,
+        "kfV": 614,
+        "rspV": 4685,
+        "kf_r2_share": 11.59
+      },
+      {
+        "ubigeo": "090600",
+        "nombre": "LEONCIO PRADO",
+        "kfPct": 23.129,
+        "rspPct": 17.622,
+        "kfV": 14362,
+        "rspV": 10942,
+        "kf_r2_share": 56.76
+      },
+      {
+        "ubigeo": "090500",
+        "nombre": "MARAÑÓN",
+        "kfPct": 18.053,
+        "rspPct": 41.495,
+        "kfV": 1819,
+        "rspV": 4181,
+        "kf_r2_share": 30.32
+      },
+      {
+        "ubigeo": "090700",
+        "nombre": "PACHITEA",
+        "kfPct": 8.513,
+        "rspPct": 52.784,
+        "kfV": 1884,
+        "rspV": 11681,
+        "kf_r2_share": 13.89
+      },
+      {
+        "ubigeo": "090800",
+        "nombre": "PUERTO INCA",
+        "kfPct": 28.638,
+        "rspPct": 31.132,
+        "kfV": 3859,
+        "rspV": 4195,
+        "kf_r2_share": 47.91
+      },
+      {
+        "ubigeo": "091100",
+        "nombre": "YAROWILCA",
+        "kfPct": 5.716,
+        "rspPct": 58.235,
+        "kfV": 699,
+        "rspV": 7121,
+        "kf_r2_share": 8.94
+      }
+    ]
+  }
+}
