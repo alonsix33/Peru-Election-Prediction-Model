@@ -510,3 +510,33 @@ BEGIN
       (poll_id, 'Roberto Sánchez Palomino', 'Juntos por el Perú', 29.1);
   END IF;
 END $$;
+
+-- ── CIT segunda vuelta: mayo 26-29, 2026 ─────────────────────
+-- Última encuesta CIT antes de veda electoral (arranca 31 may).
+-- Keiko 41.1%, Sánchez ~33.4%, B/V 14.2%, NS/NR 12.3%. n≈1220.
+-- Nota: raw suma ~101% por redondeo. pool válido = 100-14.2-12.3 = 73.5%.
+DO $$
+DECLARE
+  p_id    INT;
+  poll_id INT;
+BEGIN
+  SELECT id INTO p_id FROM pollsters WHERE name = 'CIT';
+
+  IF NOT EXISTS (
+    SELECT 1 FROM polls WHERE pollster_id = p_id AND field_end = '2026-05-29' AND election_round = 2
+  ) THEN
+    INSERT INTO polls (pollster_id, field_start, field_end, published_date, sample_n, margin_error,
+                       confidence_lvl, scope, technique, poll_type,
+                       pct_undecided, pct_blank_null, notes, election_round)
+    VALUES (p_id, '2026-05-26', '2026-05-29', '2026-05-30', 1220, 2.80, 95.0,
+            'nacional', 'presencial', 'intencion_voto',
+            12.3, 14.2,
+            'CIT segunda vuelta mayo 26-29. Keiko 41.1%, Sánchez ~33.4%, B/V 14.2%, NS/NR 12.3%. Última encuesta CIT antes de veda electoral 31 may.',
+            2)
+    RETURNING id INTO poll_id;
+
+    INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
+      (poll_id, 'Keiko Fujimori',           'Fuerza Popular',     41.1),
+      (poll_id, 'Roberto Sánchez Palomino', 'Juntos por el Perú', 33.4);
+  END IF;
+END $$;
