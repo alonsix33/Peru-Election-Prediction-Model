@@ -683,6 +683,44 @@ router.get('/force-run', async (req, res) => {
       inserted.push('Ipsos intención 3-4 abr');
     }
 
+    // --- CIT R2 — intención mayo 14-17 ---
+    const { rows: exCitR2a } = await db.query(
+      `SELECT id FROM polls WHERE pollster_id = 5 AND field_end = '2026-05-17' AND election_round = 2`
+    );
+    if (exCitR2a.length === 0) {
+      const { rows: [p] } = await db.query(`
+        INSERT INTO polls (pollster_id, field_start, field_end, published_date, sample_n, margin_error,
+                           confidence_lvl, scope, technique, poll_type, pct_blank_null, notes, election_round)
+        VALUES (5, '2026-05-14', '2026-05-17', '2026-05-21', 1220, 2.80, 95.0,
+                'nacional', 'presencial', 'intencion_voto', 23.5,
+                'CIT/Panamericana segunda vuelta mayo 14-17. Keiko 40.5% Sánchez 36% B/N 23.5%. Normalizado: KF 52.9% RSP 47.1%. Fuente: Expreso/Panamericana.',
+                2)
+        RETURNING id`);
+      await db.query(`INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
+        ($1,'Keiko Fujimori','Fuerza Popular',40.5),
+        ($1,'Roberto Sánchez Palomino','Juntos por el Perú',36.0)`, [p.id]);
+      inserted.push('CIT R2 mayo 14-17 (KF 40.5% RSP 36.0%)');
+    }
+
+    // --- CIT R2 — intención mayo 25-28 (publicada 30 may — última antes de veda) ---
+    const { rows: exCitR2b } = await db.query(
+      `SELECT id FROM polls WHERE pollster_id = 5 AND field_end = '2026-05-28' AND election_round = 2`
+    );
+    if (exCitR2b.length === 0) {
+      const { rows: [p] } = await db.query(`
+        INSERT INTO polls (pollster_id, field_start, field_end, published_date, sample_n, margin_error,
+                           confidence_lvl, scope, technique, poll_type, pct_blank_null, notes, election_round)
+        VALUES (5, '2026-05-25', '2026-05-28', '2026-05-30', 1200, 2.80, 95.0,
+                'nacional', 'presencial', 'intencion_voto', 24.0,
+                'CIT/Panamericana segunda vuelta mayo 25-28. Normalizado: KF 54.4% RSP 45.6% (fuente: Wikipedia tabla sondeos). Raw derivado (pct_blank_null 24%): KF 41.3% RSP 34.7%. Última encuesta CIT antes de veda electoral 31 may.',
+                2)
+        RETURNING id`);
+      await db.query(`INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
+        ($1,'Keiko Fujimori','Fuerza Popular',41.3),
+        ($1,'Roberto Sánchez Palomino','Juntos por el Perú',34.7)`, [p.id]);
+      inserted.push('CIT R2 mayo 25-28 (KF 41.3% RSP 34.7% — raw derivado de normalizado 54.4/45.6)');
+    }
+
     console.log('Encuestas insertadas:', inserted.length > 0 ? inserted.join(', ') : 'ninguna nueva');
 
     // Forzar pipeline R2 — si es post-cierre del 7 junio, guardar como foto final R2

@@ -165,8 +165,10 @@ Aliaga aparece ~+3pp en todas las encuestas pre-R1. Sin corrección (modelo corr
 - [x] Cholesky para errores correlacionados entre encuestadoras
 - [x] seed_r2.sql: Ipsos ×1.30, Datum ×1.05 (mejor desempeño R1 en R2)
 - [x] Encuesta IEP mayo 22-26 ingresada (KF 36%, RSP 30%, n=1204) — nota metodológica: B/N no se leyó como opción → 6% espontáneo (no comparable con abr 24%)
+- [x] CIT mayo 14-17 ingresada (KF 40.5% RSP 36.0% B/N 23.5% n=1220) — normalizado KF 52.9% RSP 47.1%
+- [x] CIT mayo 25-28 ingresada (raw derivado: KF 41.3% RSP 34.7% B/N 24% n=1200) — normalizado KF 54.4% RSP 45.6% — última CIT antes de veda (arranca 31 may)
 - [ ] Pesos IEP en seed_r2.sql: verificar que refleja desempeño R1 (cerca a ONPE)
-- [ ] Encuesta CIT mayo 2026 — buscar e ingresar si ya fue publicada
+- [ ] Verificar raw CIT mayo 30 vs fuente primaria (Expreso 403 al buscar; raw estimado con pool 76%)
 
 ---
 
