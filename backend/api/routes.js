@@ -1017,6 +1017,105 @@ router.get('/live-projection', async (req, res) => {
   }
 });
 
+// ─── POST /api/admin/inject-snapshot ────────────────────────
+// Election night: browser bookmarklet fetches ONPE data from within
+// the ONPE domain and POSTs it here. ONPE's API is only accessible
+// same-origin (Nginx internal proxy), so external Railway polling
+// always gets HTML. The bookmarklet is the relay.
+// Requires Authorization: Bearer <ADMIN_SECRET> header.
+router.post('/admin/inject-snapshot', async (req, res) => {
+  const adminSecret = process.env.ADMIN_SECRET;
+  if (!adminSecret) {
+    return res.status(503).json({ error: 'ADMIN_SECRET not configured on Railway' });
+  }
+  const authHeader = req.headers['authorization'] || '';
+  if (authHeader !== `Bearer ${adminSecret}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const snap = req.body;
+    if (typeof snap !== 'object' || snap === null) {
+      return res.status(400).json({ error: 'Body must be a JSON object' });
+    }
+
+    const hasData = snap.has_data === true &&
+      ((snap.keiko_votos > 0) || (snap.sanchez_votos > 0));
+
+    const { rows: [{ id: snapshotId }] } = await db.query(
+      `INSERT INTO onpe_live_snapshots
+         (captured_at, has_data, actas_total, actas_processed, pct_actas,
+          keiko_votos, keiko_pct, sanchez_votos, sanchez_pct,
+          dept_breakdown, ext_breakdown, totales_raw)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       RETURNING id`,
+      [
+        snap.captured_at || new Date().toISOString(),
+        hasData,
+        snap.actas_total     ?? null,
+        snap.actas_processed ?? null,
+        snap.pct_actas       ?? null,
+        snap.keiko_votos     ?? null,
+        snap.keiko_pct       ?? null,
+        snap.sanchez_votos   ?? null,
+        snap.sanchez_pct     ?? null,
+        JSON.stringify(snap.dept_breakdown || []),
+        JSON.stringify(snap.ext_breakdown  || []),
+        snap.totales_raw ? JSON.stringify(snap.totales_raw) : null,
+      ]
+    );
+
+    if (hasData) {
+      console.log(
+        `📊 ONPE inject [bookmarklet]: K=${snap.keiko_pct}% S=${snap.sanchez_pct}%` +
+        ` actas=${snap.pct_actas ?? '?'}%`
+      );
+      const { project } = require('../model/electionNightProjector');
+      try {
+        const pr = project({
+          pct_actas:      snap.pct_actas     ?? 0,
+          keiko_votos:    snap.keiko_votos   ?? 0,
+          sanchez_votos:  snap.sanchez_votos ?? 0,
+          dept_breakdown: Array.isArray(snap.dept_breakdown) ? snap.dept_breakdown : [],
+          ext_breakdown:  Array.isArray(snap.ext_breakdown)  ? snap.ext_breakdown  : [],
+          captured_at:    snap.captured_at,
+        });
+        if (pr.status === 'ok') {
+          await db.query(
+            `INSERT INTO r2_election_projections
+               (snapshot_id, pct_actas, phase,
+                obs_kf_r2_share, obs_keiko_votos, obs_sanchez_votos,
+                proj_kf_r2_share, proj_ci95_lo, proj_ci95_hi, proj_ci80_lo, proj_ci80_hi,
+                proj_winner, proj_margin_pp, proj_sigma_pp,
+                zda_correction_applied, zda_remaining_mesas, zda_proj_kf_r2_share, zda_effect_pp,
+                national_shift_pp, dept_shifts, full_result)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)`,
+            [
+              snapshotId, pr.pct_actas, pr.phase,
+              pr.observed.kf_r2_share, pr.observed.keiko_votos, pr.observed.sanchez_votos,
+              pr.projected.kf_r2_share, pr.projected.ci_95.lo, pr.projected.ci_95.hi,
+              pr.projected.ci_80.lo, pr.projected.ci_80.hi,
+              pr.projected.winner, pr.projected.margin_pp, pr.projected.sigma_pp,
+              pr.zda.always_projected, pr.zda.remaining_mesas,
+              pr.zda.proj_kf_r2_share, pr.zda.effect_pp,
+              pr.national_shift_pp, JSON.stringify(pr.dept_shifts), JSON.stringify(pr),
+            ]
+          );
+        }
+      } catch (projErr) {
+        console.error('📊 Projection save failed:', projErr.message);
+      }
+    } else {
+      console.log('📊 ONPE inject [bookmarklet]: sin datos (has_data=false)');
+    }
+
+    res.json({ ok: true, snapshot_id: snapshotId, has_data: hasData });
+  } catch (err) {
+    console.error('📊 Error en inject-snapshot:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── POST /api/results/onpe ─────────────────────────────────
 // Insertar resultados oficiales ONPE para post-mortem
 router.post('/results/onpe', async (req, res) => {
