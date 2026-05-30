@@ -688,6 +688,67 @@ function AntiVotoTrendChart({ antivoto }) {
 
 }
 
+function AntiVotoSegments({ keiko, sanchez }) {
+  const seg = keiko?.latest_segments || sanchez?.latest_segments;
+  if (!seg) return null;
+
+  const rows = [
+    { label: 'Lima Met.',     kf: seg.ambito?.lima_met?.kf,    rsp: seg.ambito?.lima_met?.rsp },
+    { label: 'Perú urbano',   kf: seg.ambito?.peru_urbano?.kf, rsp: seg.ambito?.peru_urbano?.rsp },
+    { label: 'Perú rural',    kf: seg.ambito?.peru_rural?.kf,  rsp: seg.ambito?.peru_rural?.rsp },
+    { label: '─', kf: null, rsp: null },
+    { label: 'Norte',         kf: seg.macrozona?.norte?.kf,    rsp: seg.macrozona?.norte?.rsp },
+    { label: 'Centro',        kf: seg.macrozona?.centro?.kf,   rsp: seg.macrozona?.centro?.rsp },
+    { label: 'Sur',           kf: seg.macrozona?.sur?.kf,      rsp: seg.macrozona?.sur?.rsp },
+    { label: 'Oriente',       kf: seg.macrozona?.oriente?.kf,  rsp: seg.macrozona?.oriente?.rsp },
+    { label: '─', kf: null, rsp: null },
+    { label: 'NSE A/B',       kf: seg.nse?.ab?.kf,             rsp: seg.nse?.ab?.rsp },
+    { label: 'NSE C',         kf: seg.nse?.c?.kf,              rsp: seg.nse?.c?.rsp },
+    { label: 'NSE D/E',       kf: seg.nse?.de?.kf,             rsp: seg.nse?.de?.rsp },
+  ].filter(r => r.label === '─' || (r.kf != null && r.rsp != null));
+
+  const cellStyle = (val, other) => ({
+    fontWeight: val > other ? 700 : 400,
+    color: val > other ? '#DC2626' : '#78716C',
+    textAlign: 'center',
+    fontSize: 12,
+    padding: '3px 8px',
+  });
+
+  return (
+    <div style={{ marginTop: 14 }}>
+      <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 6 }}>
+        Antivoto por segmento — IEP mayo 22-26 · Base n=1,204
+      </div>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+        <thead>
+          <tr style={{ borderBottom: '1px solid #E5E0D8' }}>
+            <th style={{ textAlign: 'left', color: '#A8A29E', fontWeight: 500, fontSize: 11, padding: '3px 8px 5px 0' }}>Segmento</th>
+            <th style={{ textAlign: 'center', color: KEIKO_COLOR, fontWeight: 600, fontSize: 11, padding: '3px 8px 5px' }}>Keiko</th>
+            <th style={{ textAlign: 'center', color: SANCHEZ_COLOR, fontWeight: 600, fontSize: 11, padding: '3px 8px 5px' }}>Sánchez</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) =>
+            r.label === '─'
+              ? <tr key={i}><td colSpan={3} style={{ borderTop: '1px solid #F0EDE8', padding: '2px 0' }} /></tr>
+              : (
+                <tr key={i} style={{ borderBottom: '1px solid #F7F4EF' }}>
+                  <td style={{ color: '#78716C', fontSize: 12, padding: '3px 8px 3px 0' }}>{r.label}</td>
+                  <td style={cellStyle(r.kf, r.rsp)}>{r.kf}%</td>
+                  <td style={cellStyle(r.rsp, r.kf)}>{r.rsp}%</td>
+                </tr>
+              )
+          )}
+        </tbody>
+      </table>
+      <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 4 }}>
+        Negrita = mayor antivoto en ese segmento. Fuente: IEP / La República, mayo 28, 2026.
+      </div>
+    </div>
+  );
+}
+
 function AntiVotoSection({ antivoto }) {
   const candidates = antivoto?.candidates || [];
   const keiko = candidates.find(c => c.candidate?.includes('Keiko'));
@@ -695,7 +756,6 @@ function AntiVotoSection({ antivoto }) {
 
   const renderCard = (data, color, shortName) => {
     if (!data) return null;
-    // Delta vs. the previous R2 snapshot only (ignore R1 history for the card delta)
     const r2hist = (data.history || []).filter(h => h.election_round === 2);
     const prev = r2hist.length > 1 ? r2hist[r2hist.length - 2] : null;
     const delta = prev ? (data.latest_pct_no - prev.pct_no).toFixed(0) : null;
@@ -724,6 +784,12 @@ function AntiVotoSection({ antivoto }) {
     );
   };
 
+  // Determine the narrative based on latest data
+  const kfLatest  = keiko?.latest_pct_no;
+  const rspLatest = sanchez?.latest_pct_no;
+  const rspLeads  = kfLatest != null && rspLatest != null && rspLatest > kfLatest;
+  const gap       = kfLatest != null && rspLatest != null ? Math.abs(rspLatest - kfLatest) : null;
+
   return (
     <div style={{
       background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12,
@@ -742,10 +808,12 @@ function AntiVotoSection({ antivoto }) {
           </div>
           <AntiVotoTrendChart antivoto={antivoto} />
           <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: '12px 0 8px' }}>
-            Los datos muestran una convergencia: Keiko bajó 20pp en rechazo (64%→44%) de febrero a mayo,
-            mientras Sánchez subió de 7% a 40% a medida que fue conocido.
-            La brecha entre ambos se redujo a 4pp, lo que podría ampliar el voto blanco/nulo el día de la elección.
+            {rspLeads
+              ? `IEP mayo: el antivoto de Sánchez (${rspLatest}%) supera al de Keiko (${kfLatest}%) por ${gap}pp — primera vez en la campaña. Keiko alcanzó su mínimo histórico de rechazo (bajó 27pp desde 64% en febrero), pero Sánchez sube a medida que se expone más al electorado. El rechazo a ambos es mayor en Lima metropolitana y el NSE A/B, donde cada candidato pierde por razones distintas.`
+              : `El antivoto converge: Keiko bajó desde 64% (feb) a ${kfLatest ?? '–'}%, mientras Sánchez subió de 7% a ${rspLatest ?? '–'}% a medida que fue conocido. La brecha se redujo a ${gap != null ? gap + 'pp' : '–'}, lo que amplía el voto blanco/nulo el día de la elección.`
+            }
           </p>
+          <AntiVotoSegments keiko={keiko} sanchez={sanchez} />
         </>
       )}
     </div>

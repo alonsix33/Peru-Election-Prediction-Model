@@ -177,8 +177,47 @@ Aliaga aparece ~+3pp en todas las encuestas pre-R1. Sin corrección (modelo corr
 | `backend/model/bayesian.js` | Blend polls+PM, Φ⁻¹ conversion |
 | `backend/model/montecarlo.js` | 10k sims, shocks, voto oculto |
 | `backend/model/weights.js` | α schedule, λ decay |
+| `backend/model/electionNightProjector.js` | Motor de proyección noche electoral (3 estratos) |
 | `backend/db/seed_r2.sql` | Pesos encuestadoras R2 |
+| `backend/db/r2_projections.sql` | Tabla proyecciones noche electoral |
+| `backend/data/r1_exterior.json` | Baseline exterior R1 (86.78% KF, 77 países) |
+| `backend/data/r1_zda_dept_model.json` | Modelo ZDA por dept (25 depts, fuentes A/B/C/D) |
+| `backend/data/r1_province_baseline.json` | Baseline provincial R1 (196 provincias, 100% cobertura) |
+| `backend/data/r1_districts_flat.json` | Baseline distrital R1 (1518/1892 con datos) |
+| `scripts/verify_r2_onpe.js` | Verificación pre-electoral (correr 7J ~19:45 PET) |
 | `POST_MORTEM_2026.md` | Análisis completo post R1, incluye §8 contrafactual |
+| `ELECTION_NIGHT_PLAN.md` | Especificación técnica projector (metodología, activación) |
+| `ONPE_API.md` | Documentación ingeniería inversa ONPE API |
 | `scripts/sandbox_r1_corrections.py` | Pruebas de correcciones (MAE 4.00→1.59pp) |
-| `scripts/sandbox_r1_pm_correction.py` | Pruebas integración PM en R1 |
 | `frontend/src/components/tabs/BacktestingTab.jsx` | Visualización histórica |
+
+---
+
+## Hallazgos verificados — proyector noche electoral
+
+### Nacional ONPE incluye exterior
+Verificado el 30 may 2026: `province_baseline sum (25 depts) = 58.46%` y
+`province + r1_exterior = 58.81%` — el total nacional publicado por ONPE incluye
+los votos del exterior. El endpoint `tipoFiltro=nacional` los embebe.
+
+Consecuencia: cuando se obtiene `keiko_votos` del nacional endpoint en R2, ya trae
+los votos del exterior. El projector los resta vía `ext_breakdown` para obtener
+`dom_kf_r2_share` limpio antes de calcular el shift.
+
+Constantes en `electionNightProjector.js`:
+- `R1_KF_R2_SHARE_DOMESTIC = 58.46` — usado como baseline del shift (correcto)
+- `R1_KF_R2_SHARE_NATIONAL = 58.81` — referencia solo
+
+### Impacto de la separación exterior
+A 40% de actas con el exterior ya completamente contado (caso típico: mesas
+exteriores cierran primero por husos horarios), no separar el exterior produce
+un sesgo de **+0.85pp** en el kf_r2_share proyectado (sobreestima KF). La
+separación correcta elimina esa contaminación.
+
+### ZDAs siempre proyectadas desde snapshot 1
+Las 4,703 mesas ZDAs (900001–904703) están **siempre pre-bakeadas** en la
+proyección desde el primer snapshot. No hay "activación" en ningún umbral.
+- Antes de que reporten: proyectadas al 28.2% + shift nacional
+- Cuando reportan (~94%): sus valores reales reemplazan el prior
+- El campo `zda.always_projected = true` lo confirma en la API
+- La variación al llegar sus datos reales es acotada por el CI bootstrap

@@ -70,7 +70,7 @@ async function autoMigrate() {
     console.log('   ✅ migration_r2.sql ejecutado (columna election_round agregada)');
   }
 
-  // Migration antivoto_snapshots: crear tabla si no existe (independiente del seed R2)
+  // Migration antivoto_snapshots: crear tabla + columna segments (idempotent)
   try {
     await db.query(`
       CREATE TABLE IF NOT EXISTS antivoto_snapshots (
@@ -85,7 +85,12 @@ async function autoMigrate() {
         created_at     TIMESTAMPTZ  DEFAULT NOW()
       )
     `);
-    console.log('   ✅ antivoto_snapshots: tabla verificada');
+    // Agregar columna segments si no existe (almacena breakdown por ámbito/macrozona/NSE)
+    await db.query(`
+      ALTER TABLE antivoto_snapshots
+      ADD COLUMN IF NOT EXISTS segments JSONB
+    `);
+    console.log('   ✅ antivoto_snapshots: tabla y columna segments verificadas');
   } catch (e) {
     console.warn('⚠️  antivoto_snapshots migration falló:', e.message);
   }
@@ -190,6 +195,17 @@ async function autoMigrate() {
     console.log('   ✅ seed_r2.sql ejecutado (pesos R2 + encuestas segunda vuelta)');
   } catch (e) {
     console.warn('⚠️  seed_r2.sql falló (no fatal):', e.message);
+  }
+
+  // Tablas de noche electoral (idempotent — IF NOT EXISTS)
+  try {
+    const onpeSql = fs.readFileSync(path.join(__dirname, 'db', 'onpe_snapshots.sql'), 'utf8');
+    await db.query(onpeSql);
+    const projSql = fs.readFileSync(path.join(__dirname, 'db', 'r2_projections.sql'), 'utf8');
+    await db.query(projSql);
+    console.log('   ✅ Tablas ONPE noche electoral: verificadas');
+  } catch (e) {
+    console.warn('⚠️  ONPE tables migration falló (no fatal):', e.message);
   }
 
   return false;

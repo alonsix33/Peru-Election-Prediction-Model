@@ -4,9 +4,11 @@ Registro exhaustivo de todos los endpoints, parámetros y estructuras descubiert
 interactuando con `resultadoelectoral.onpe.gob.pe`. Actualizar cada vez que
 se confirme algo nuevo.
 
-**Última actualización:** 2026-05-30  
+**Última actualización:** 2026-05-30 (v1.1)  
 **Basado en:** R1 2026 (idEleccion=10), datos al 100% de actas  
-**Método de descubrimiento:** XHR intercept + fetch desde consola dentro del dominio ONPE
+**Método de descubrimiento:** XHR intercept + fetch desde consola dentro del dominio ONPE  
+**Script de extracción exterior:** `scripts/onpe_r1_exterior.js` → descarga `r1_exterior.json`  
+**Datos guardados:** `backend/data/r1_exterior.json` ✅
 
 ---
 
@@ -405,19 +407,33 @@ Datos R1 2026 al 100% de actas, con ubigeos ONPE correctos.
 
 **Alta varianza intra-dept:** Piura: `AYABACA=22.74%` vs `SULLANA=87.72%`
 
-### Extranjero (idAmbitoGeografico=2) — Continentes
+### Extranjero (idAmbitoGeografico=2) — Continentes — ✅ COMPLETO
 
-| ubigeo | Continente | KF% | RSP% | kf_r2_share |
-|---|---|---|---|---|
-| 910000 | ÁFRICA | 13.91 | 2.29 | 85.9% |
-| 920000 | AMÉRICA | 18.85 | 2.98 | 86.3% |
-| 930000 | ASIA | (pendiente) | | |
-| 940000 | EUROPA | 36.66 | 0.54 | 98.6% |
-| 950000 | OCEANÍA | (pendiente) | | |
+Datos finales R1 2026 al 100% de actas. Guardado en `backend/data/r1_exterior.json`.
 
-> Nota: el primer test agrupaba los continentes diferente (América Norte,
-> América Sur, etc.) — ese resultado era incorrecto. La agrupación real de
-> ONPE es: África, América, Asia, Europa, Oceanía.
+| ubigeo | Continente | KF votos | RSP votos | kf_r2_share | actas |
+|---|---|---|---|---|---|
+| 910000 | ÁFRICA | 3 | 0 | **100.0%** | 100/6 |
+| 920000 | AMÉRICA | 30,571 | 4,838 | **86.34%** | 100/1,570 |
+| 930000 | ASIA | 2,930 | 43 | **98.55%** | 100/107 |
+| 940000 | EUROPA | 18,787 | 3,090 | **85.88%** | 100/839 |
+| 950000 | OCEANÍA | 163 | 23 | **87.63%** | 100/21 |
+| **TOTAL** | **5 continentes** | **52,454** | **7,994** | **86.78%** | **77 países** |
+
+**Países top por volumen (América):**  
+- CHILE: 83.72% KF (mayor concentración de comunidad peruana)  
+- ESTADOS UNIDOS: 91.77% KF  
+- ESPAÑA: 88.30% KF  
+- JAPÓN: 98.77% KF (2,891 vs 36)
+
+**Nota crítica para el projector de R2:**  
+Los votos del exterior están embedidos en `keiko_votos`/`sanchez_votos` nacionales  
+pero `pct_actas` solo cuenta actas domésticas. Si el exterior ya reportó al inicio  
+de la noche (cierra según huso horario), el kf_r2_share aparente nacional estará  
+sesgado ~+1.2pp hacia KF. El projector corrige esto con `ext_breakdown` del snapshot.
+
+> Nota anterior: el primer test agrupaba continentes como "América Norte/Sur" —
+> eso era incorrecto. ONPE agrupa: África, América (unificada), Asia, Europa, Oceanía.
 
 ### Extranjero — Países (muestra: América 920000)
 
@@ -634,20 +650,15 @@ async function downloadAll() {
 - [ ] **Confirmar idEleccion R2** — el 7 de junio, interceptar XHR del sitio
       cuando cargue los primeros resultados; confirmar que es 11
 - [x] **Confirmar ubigeos/provincias** — el endpoint devuelve correctamente
-      las provincias de Lima (140000) con prefijo `140xxx`. La confusión
-      inicial era por usar el código INEI (140000=Lambayeque) en lugar del
-      ONPE (140000=Lima). Resuelto.
+      las provincias de Lima (140000) con prefijo `140xxx`. Resuelto.
 - [x] **196 provincias R1 descargadas** — `backend/data/r1_province_baseline.json`
-- [x] **1892 distritos R1 descargados** — `backend/data/r1_districts_baseline.json`
+- [x] **1892 distritos R1 descargados** — `backend/data/r1_districts_baseline.json` y `r1_districts_flat.json`
+- [x] **Exterior R1 completo** — `backend/data/r1_exterior.json` (5 continentes, 77 países, 86.78% KF)
 - [ ] **Lima Metropolitana vs Lima Provincias** — verificar si para la
       elección presidencial Lima aparece como una sola circumscripción (140000)
       o si hay separación. Actualmente aparece como una sola con 10 provincias.
-- [ ] **Datos de actas por nivel** — probar `resumen-general/totales` con
-      nivel_02 y nivel_03 para ver si devuelve % de actas por provincia/distrito
 - [ ] **R2 candidatos** — confirmar que los `codigoAgrupacionPolitica` de
       Keiko (8) y Sánchez (10) se mantienen igual en idEleccion=11
-- [ ] **Países extranjero con resultados** — confirmar `resPais(cont, pais)`
-      funciona para todos los países (solo probamos estructura, no resultados)
 - [ ] **idEleccion=15** — identificar a qué elección pertenece (¿Senadores DEM?)
 
 ---
