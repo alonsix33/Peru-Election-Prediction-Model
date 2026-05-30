@@ -683,26 +683,8 @@ router.get('/force-run', async (req, res) => {
       inserted.push('Ipsos intención 3-4 abr');
     }
 
-    // --- CIT R2 — intención mayo 14-17 (publicada 21 may) ---
-    const { rows: exCitR2a } = await db.query(
-      `SELECT id FROM polls WHERE pollster_id = 5 AND field_end = '2026-05-17' AND election_round = 2`
-    );
-    if (exCitR2a.length === 0) {
-      const { rows: [p] } = await db.query(`
-        INSERT INTO polls (pollster_id, field_start, field_end, published_date, sample_n, margin_error,
-                           confidence_lvl, scope, technique, poll_type, pct_blank_null, pct_no_answer, notes, election_round)
-        VALUES (5, '2026-05-14', '2026-05-17', '2026-05-21', 1220, 2.80, 95.0,
-                'nacional', 'presencial', 'intencion_voto', 23.5, NULL,
-                'CIT/Panamericana segunda vuelta mayo 14-17. Keiko 40.5% Sánchez 36% B/N 23.5%. Normalizado (sobre votos válidos): KF 52.9% RSP 47.1%. Fuentes: Expreso + Panamericana. Nota: Wikipedia ES listaba "30 May" como fecha de campo — error de carga confirmado.',
-                2)
-        RETURNING id`);
-      await db.query(`INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
-        ($1,'Keiko Fujimori','Fuerza Popular',40.5),
-        ($1,'Roberto Sánchez Palomino','Juntos por el Perú',36.0)`, [p.id]);
-      inserted.push('CIT R2 mayo 14-17 (KF 40.5% RSP 36.0%)');
-    }
-
     // --- CIT R2 — intención mayo 26-29 (publicada 30 may — última antes de veda 31 may) ---
+    // Nota: CIT mayo 14-17 (simulacro, KF 40.5% RSP 36%) ya está en seed_r2.sql — no re-insertar.
     const { rows: exCitR2b } = await db.query(
       `SELECT id FROM polls WHERE pollster_id = 5 AND field_end = '2026-05-29' AND election_round = 2`
     );
