@@ -809,11 +809,10 @@ function AntiVotoSection({ antivoto }) {
           <AntiVotoTrendChart antivoto={antivoto} />
           <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: '12px 0 8px' }}>
             {rspLeads
-              ? `IEP mayo: el antivoto de Sánchez (${rspLatest}%) supera al de Keiko (${kfLatest}%) por ${gap}pp — primera vez en la campaña. Keiko alcanzó su mínimo histórico de rechazo (bajó 27pp desde 64% en febrero), pero Sánchez sube a medida que se expone más al electorado. El rechazo a ambos es mayor en Lima metropolitana y el NSE A/B, donde cada candidato pierde por razones distintas.`
+              ? `IEP mayo: el antivoto de Sánchez (${rspLatest}%) supera al de Keiko (${kfLatest}%) por ${gap}pp — primera vez en la campaña. Keiko alcanzó su mínimo histórico de rechazo (bajó 27pp desde 64% en febrero), pero Sánchez sube a medida que se expone más al electorado. Con ambos por encima del 37%, el 7 de junio se espera un porcentaje de voto blanco y nulo mayor que en las dos últimas segundas vueltas.`
               : `El antivoto converge: Keiko bajó desde 64% (feb) a ${kfLatest ?? '–'}%, mientras Sánchez subió de 7% a ${rspLatest ?? '–'}% a medida que fue conocido. La brecha se redujo a ${gap != null ? gap + 'pp' : '–'}, lo que amplía el voto blanco/nulo el día de la elección.`
             }
           </p>
-          <AntiVotoSegments keiko={keiko} sanchez={sanchez} />
         </>
       )}
     </div>
