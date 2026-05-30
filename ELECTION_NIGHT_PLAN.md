@@ -1,8 +1,8 @@
 # Plan de Proyección Electoral — Segunda Vuelta 7 de Junio 2026
 
-**Versión:** 1.0 | **Fecha:** 30 mayo 2026  
+**Versión:** 1.1 | **Fecha:** 30 mayo 2026  
 **Autores:** Alonso Javier T. + Claude Code  
-**Estado:** Implementación en curso — activación programada para 7J 18:00 PET
+**Estado:** ✅ Implementación completa — activación programada para 7J 20:00 PET
 
 ---
 
@@ -23,18 +23,21 @@ La métrica central es **kf_r2_share** = `votos KF / (votos KF + votos RSP) × 1
 
 ### 2.1 Datos base (R1 — ya construidos)
 
-| Archivo | Descripción | Cobertura |
-|---|---|---|
-| `backend/data/r1_districts_flat.json` | kf_r2_share R1 por distrito (1,892 distritos) | 1,518/1,892 con votos KF+RSP |
-| `backend/data/r1_province_baseline.json` | kf_r2_share R1 por provincia (196 provincias) | 100% |
-| `backend/data/r1_zda_mesas.json` | Datos de 490 mesas ZDA individuales (900001–900500) | Amazonas + Áncash parcial |
-| `backend/data/r1_zda_dept_model.json` | Modelo ZDA por departamento con niveles de confianza | 25 depts |
+| Archivo | Descripción | Cobertura | Estado |
+|---|---|---|---|
+| `backend/data/r1_districts_flat.json` | kf_r2_share R1 por distrito | 1,518/1,892 con votos reales; 374 distritos en 11 depts sin datos de R1 | ✅ |
+| `backend/data/r1_province_baseline.json` | kf_r2_share R1 por provincia (196 provs) | 25 depts — fallback para los 374 distritos sin datos | ✅ |
+| `backend/data/r1_exterior.json` | Votos exterior R1 por continente y país | 5 continentes, 77 países; KF 86.78% total (52,454 vs 7,994 RSP) | ✅ nuevo |
+| `backend/data/r1_zda_mesas.json` | Datos de 490 mesas ZDA individuales (900001–900500) | Amazonas + Áncash parcial — 490/4,703 mesas | ✅ |
+| `backend/data/r1_zda_dept_model.json` | Modelo ZDA por departamento con niveles de confianza | 25 depts (ver §4 para desglose de fuentes) | ✅ |
+
+**Cobertura efectiva baseline**: 100% — los 1,892 distritos tienen algún nivel de baseline (distrital o provincial).
 
 **Backtest de calibración:** Proyectar el kf_r2_share R1 desde datos distritales produce un error de **+1.30pp** (sobreestima KF). La fuente del error son los 374 distritos remotos (0 votos KF+RSP en R1, principalmente Loreto selva y Madre de Dios) que en R2 serán territorio RSP. Corregido con prior ZDA = 28.2% KF para esos distritos.
 
 ### 2.2 Datos live (R2 — activan el 7J)
 
-La tabla `onpe_live_snapshots` (PostgreSQL/Railway) recibe un snapshot cada 2 minutos cuando `ONPE_POLLING_ENABLED=true`. Cada snapshot incluye:
+La tabla `onpe_live_snapshots` (PostgreSQL/Railway) recibe un snapshot cada **30 minutos** (ONPE no publica resultados más rápido) cuando `ONPE_POLLING_ENABLED=true`. Cada snapshot incluye:
 
 ```json
 {
@@ -87,6 +90,9 @@ El sistema opera en **tres estratos** con comportamientos electorales distintos:
 | **Mesas regulares urbanas** (Lima, Callao, costa norte) | ~35,000 | 70–87% KF | Primeras en reportar |
 | **Mesas regulares rurales/sierra** (Cajamarca, Ayacucho, Cusco) | ~53,015 | 14–35% KF | Reportan en medio |
 | **Mesas ZDA** (900001–904703) | 4,703 | **28.2% KF** | **Últimas en reportar** |
+| **Exterior** (5 continentes, 77 países) | ~2,543 actas | **86.78% KF** | **Primeras en reportar** (cierran según huso local) |
+
+> **Sesgo exterior**: los votos del exterior (KF-heavy, 86.78%) llegan embedidos en `keiko_votos` nacional desde el inicio, **pero `pct_actas` solo cuenta actas domésticas**. El projector separa explícitamente el exterior para calcular el shift sobre solo el universo doméstico.
 
 El "mirage" electoral de la noche — donde KF aparece ganando cómodamente al 70% pero el margen se estrecha al 95% — es un artefacto de composición: primero llegan las urbanas (KF-favorable), al final las ZDAs (RSP-favorable).
 
@@ -179,18 +185,19 @@ Ver `backend/data/r1_zda_dept_model.json` para el modelo completo. Los departame
 
 ## 5. Protocolo de activación — 7 de junio 2026
 
-### 5.1 Antes de las 18:00 PET (cierre de mesas)
+### 5.1 Antes de las 20:00 PET
 
 - `ONPE_POLLING_ENABLED` = `false` en Railway ✅ (sin costo de cómputo)
 - El endpoint `/api/onpe/projection` existe pero devuelve `{ status: "pre_election" }`
 - La tabla `r2_election_projections` existe pero está vacía
 
-### 5.2 18:00 PET — activación
+### 5.2 20:00 PET — activación (ONPE publica desde ~20:00)
 
 1. Setear `ONPE_POLLING_ENABLED=true` en Railway Environment Variables
-2. El cron cada 2 minutos inicia: llama `fetchOnpeLiveSnapshot()` → guarda en `onpe_live_snapshots`
+2. El cron cada **30 minutos** inicia: llama `fetchOnpeLiveSnapshot()` → guarda en `onpe_live_snapshots`
 3. Tras cada snapshot, el projector calcula automáticamente y guarda en `r2_election_projections`
 4. El frontend comienza a mostrar la proyección en tiempo real
+5. Verificar que `ONPE_ID_ELECCION=11` está seteado (o auto-detectado via `/proceso/proceso-electoral-activo`)
 
 ### 5.3 Criterios de calidad por fase
 
@@ -205,19 +212,30 @@ Ver `backend/data/r1_zda_dept_model.json` para el modelo completo. Los departame
 
 ---
 
-## 6. Estructura del código
+## 6. Estructura del código — ✅ Implementado
 
 ```
 backend/
 ├── model/
-│   └── electionNightProjector.js   ← Fase 2: motor puro (sin side effects)
+│   └── electionNightProjector.js   ← ✅ Motor puro (sin side effects)
+│       • Tres estratos: regulares + ZDA + exterior
+│       • Separación exterior de doméstico para shift correcto
+│       • Bootstrap 10k sims t-Student df=4
+│       • Carga lazy de r1_exterior.json si existe
 ├── db/
-│   └── r2_projections.sql          ← Fase 3: migración DB
+│   ├── r2_projections.sql          ← ✅ Tabla r2_election_projections
+│   └── onpe_snapshots.sql          ← ✅ Tabla onpe_live_snapshots
 ├── jobs/
-│   └── onpeCron.js                 ← Fase 5: integración (ya existe, se actualiza)
-└── api/
-    └── routes.js                   ← Fase 4: endpoint GET /api/onpe/projection
+│   └── onpeCron.js                 ← ✅ Cron cada 30 min + guarda proyección
+├── api/
+│   └── routes.js                   ← ✅ GET /api/onpe/projection
+└── startup.js                      ← ✅ Auto-migración al deploy en Railway
 ```
+
+**Endpoint:** `GET /api/onpe/projection`  
+- Retorna `{ status: "pre_election" }` antes de que haya datos  
+- Retorna proyección completa + historial de últimas 20 proyecciones cuando hay datos  
+- Zero llamadas a ONPE (lee snapshots ya guardados en DB)
 
 ---
 
