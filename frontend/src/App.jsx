@@ -7,6 +7,7 @@ import PrimeraVueltaTab from './components/tabs/PrimeraVueltaTab';
 import SegundaVueltaTab from './components/tabs/SegundaVueltaTab';
 import MetodologiaTab from './components/tabs/MetodologiaTab';
 import BacktestingTab from './components/tabs/BacktestingTab';
+import LiveResultsTab from './components/tabs/LiveResultsTab';
 import { Loader2 } from 'lucide-react';
 
 class ErrorBoundary extends Component {
@@ -100,6 +101,9 @@ function AppContent() {
             )}
             {activeTab === 'segunda' && (
               <SegundaVueltaTab predictions={predictions} polymarket={polymarket} r2polls={r2polls} antivoto={antivoto} />
+            )}
+            {activeTab === 'live' && (
+              <LiveResultsTab predictions={predictions} />
             )}
             {activeTab === 'metodologia' && (
               <MetodologiaTab r2polls={r2polls} />
