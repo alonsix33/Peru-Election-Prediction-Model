@@ -456,6 +456,56 @@ El sistema ONPE es consistente en todos los niveles:
 **Regla:** obtener ubigeos siempre desde `/ubigeos/departamentos` → `/ubigeos/provincias`
 → `/ubigeos/distritos` en cadena. Nunca asumir el código INEI.
 
+### ⚠️ Bug confirmado: `/ubigeos/provincias` falla para ubigeos 090000–250000
+
+El endpoint `/ubigeos/provincias` devuelve **200 + HTML** (SPA index.html) para
+todos los departamentos con ubigeo >= 090000, excepto Callao (240000).
+Los departamentos 010000–080000 y 240000 devuelven JSON correctamente.
+
+```
+010000–080000, 240000  →  200 + JSON ✅
+090000–250000 (exc 240000)  →  200 + HTML ❌ (SPA 404)
+```
+
+**No afecta la operación real:** `/ubigeos/distritos` funciona para TODOS
+los departamentos sin excepción. Durante la noche del 7 de junio, usar la
+lista de ubigeos ya cacheada en `r1_districts_baseline.json` en lugar de
+llamar al endpoint de provincias en tiempo real.
+
+### Distritos R1 2026 — baseline completo ✅
+
+1892 distritos descargados el 2026-05-30. Guardado en `backend/data/r1_districts_baseline.json`.
+
+| ubigeo | Departamento | Provs | Distritos |
+|---|---|---|---|
+| 010000 | Amazonas | 7 | 84 |
+| 020000 | Áncash | 20 | 166 |
+| 030000 | Apurímac | 7 | 85 |
+| 040000 | Arequipa | 8 | 109 |
+| 050000 | Ayacucho | 11 | 124 |
+| 060000 | Cajamarca | 13 | 127 |
+| 070000 | Cusco | 13 | 116 |
+| 080000 | Huancavelica | 7 | 102 |
+| 090000 | Huánuco | 11 | 84 |
+| 100000 | Ica | 5 | 43 |
+| 110000 | Junín | 9 | 124 |
+| 120000 | La Libertad | 12 | 84 |
+| 130000 | Lambayeque | 3 | 38 |
+| 140000 | Lima | 10 | 171 |
+| 150000 | Loreto | 8 | 54 |
+| 160000 | Madre de Dios | 3 | 11 |
+| 170000 | Moquegua | 3 | 21 |
+| 180000 | Pasco | 3 | 29 |
+| 190000 | Piura | 8 | 65 |
+| 200000 | Puno | 13 | 110 |
+| 210000 | San Martín | 10 | 78 |
+| 220000 | Tacna | 4 | 28 |
+| 230000 | Tumbes | 3 | 13 |
+| 240000 | Callao | 1 | 7 |
+| 250000 | Ucayali | 4 | 19 |
+
+**Total: 25 depts / 196 provs / 1892 distritos**
+
 ---
 
 ## 9. Candidatos R2 — nombres y códigos
@@ -588,6 +638,7 @@ async function downloadAll() {
       inicial era por usar el código INEI (140000=Lambayeque) en lugar del
       ONPE (140000=Lima). Resuelto.
 - [x] **196 provincias R1 descargadas** — `backend/data/r1_province_baseline.json`
+- [x] **1892 distritos R1 descargados** — `backend/data/r1_districts_baseline.json`
 - [ ] **Lima Metropolitana vs Lima Provincias** — verificar si para la
       elección presidencial Lima aparece como una sola circumscripción (140000)
       o si hay separación. Actualmente aparece como una sola con 10 provincias.
