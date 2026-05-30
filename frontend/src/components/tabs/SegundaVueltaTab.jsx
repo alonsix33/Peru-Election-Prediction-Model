@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Info, X } from 'lucide-react';
+import { Info, X, ChevronDown } from 'lucide-react';
 import { getPartyColor } from '../../config/partyColors';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import TermTooltip from '../TermTooltip';
@@ -564,6 +564,7 @@ function AllianceSection() {
 }
 
 function GeographicSection() {
+  const [expanded, setExpanded] = useState(false);
   const data = [
     { region: 'Lima / Callao', keiko: 48.8, sanchez: 25.6, note: 'Keiko +23pp' },
     { region: 'Norte', keiko: 41.1, sanchez: 36.4, note: 'Keiko +5pp' },
@@ -574,40 +575,53 @@ function GeographicSection() {
 
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
-      <h3 style={{ color: '#1C1917', fontSize: 16, fontWeight: 600, margin: '0 0 4px' }}>
-        Polarización geográfica
-      </h3>
-      <p style={{ color: '#A8A29E', fontSize: 12, margin: '0 0 14px' }}>
-        Intención de voto por región (Datum, 17-20 may 2026). Perfil similar al de Castillo 2021: Lima vs. el resto del país.
-      </p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {data.map(r => (
-          <div key={r.region}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ color: '#1C1917', fontWeight: 600, fontSize: 13 }}>{r.region}</span>
-              <span style={{ color: '#A8A29E', fontSize: 11 }}>{r.note}</span>
-            </div>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                  <span style={{ color: KEIKO_COLOR, fontSize: 11, fontWeight: 600 }}>Keiko {r.keiko}%</span>
-                </div>
-                <div style={{ height: 8, borderRadius: 4, background: '#F0EDE8' }}>
-                  <div style={{ width: `${r.keiko}%`, height: '100%', borderRadius: 4, background: KEIKO_COLOR, opacity: 0.7 }} />
-                </div>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 3 }}>
-                  <span style={{ color: SANCHEZ_COLOR, fontSize: 11, fontWeight: 600 }}>Sánchez {r.sanchez}%</span>
-                </div>
-                <div style={{ height: 8, borderRadius: 4, background: '#F0EDE8', display: 'flex', justifyContent: 'flex-end' }}>
-                  <div style={{ width: `${r.sanchez}%`, height: '100%', borderRadius: 4, background: SANCHEZ_COLOR, opacity: 0.7 }} />
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div
+        onClick={() => setExpanded(e => !e)}
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
+      >
+        <div>
+          <h3 style={{ color: '#1C1917', fontSize: 16, fontWeight: 600, margin: '0 0 2px' }}>
+            Polarización geográfica
+          </h3>
+          <p style={{ color: '#A8A29E', fontSize: 12, margin: 0 }}>
+            Datum, 17-20 may 2026 · Lima vs. el resto del país
+          </p>
+        </div>
+        <ChevronDown
+          size={18}
+          style={{ color: '#A8A29E', flexShrink: 0, marginLeft: 12, transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
+        />
       </div>
+      {expanded && (
+        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {data.map(r => (
+            <div key={r.region}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ color: '#1C1917', fontWeight: 600, fontSize: 13 }}>{r.region}</span>
+                <span style={{ color: '#A8A29E', fontSize: 11 }}>{r.note}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                    <span style={{ color: KEIKO_COLOR, fontSize: 11, fontWeight: 600 }}>Keiko {r.keiko}%</span>
+                  </div>
+                  <div style={{ height: 8, borderRadius: 4, background: '#F0EDE8' }}>
+                    <div style={{ width: `${r.keiko}%`, height: '100%', borderRadius: 4, background: KEIKO_COLOR, opacity: 0.7 }} />
+                  </div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 3 }}>
+                    <span style={{ color: SANCHEZ_COLOR, fontSize: 11, fontWeight: 600 }}>Sánchez {r.sanchez}%</span>
+                  </div>
+                  <div style={{ height: 8, borderRadius: 4, background: '#F0EDE8', display: 'flex', justifyContent: 'flex-end' }}>
+                    <div style={{ width: `${r.sanchez}%`, height: '100%', borderRadius: 4, background: SANCHEZ_COLOR, opacity: 0.7 }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -809,11 +823,180 @@ function AntiVotoSection({ antivoto }) {
           <AntiVotoTrendChart antivoto={antivoto} />
           <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: '12px 0 8px' }}>
             {rspLeads
-              ? `IEP mayo: el antivoto de Sánchez (${rspLatest}%) supera al de Keiko (${kfLatest}%) por ${gap}pp — primera vez en la campaña. Keiko alcanzó su mínimo histórico de rechazo (bajó 27pp desde 64% en febrero), pero Sánchez sube a medida que se expone más al electorado. El rechazo a ambos es mayor en Lima metropolitana y el NSE A/B, donde cada candidato pierde por razones distintas.`
+              ? `IEP mayo: el antivoto de Sánchez (${rspLatest}%) supera al de Keiko (${kfLatest}%) por ${gap}pp — primera vez en la campaña. Keiko alcanzó su mínimo histórico de rechazo (bajó 27pp desde 64% en febrero), pero Sánchez sube a medida que se expone más al electorado. Por primera vez, el diferencial de rechazo no favorece al bloque antifujimorista para articular un "voto útil" — ambos candidatos parten con niveles de rechazo comparables a los de 2016 y 2021.`
               : `El antivoto converge: Keiko bajó desde 64% (feb) a ${kfLatest ?? '–'}%, mientras Sánchez subió de 7% a ${rspLatest ?? '–'}% a medida que fue conocido. La brecha se redujo a ${gap != null ? gap + 'pp' : '–'}, lo que amplía el voto blanco/nulo el día de la elección.`
             }
           </p>
-          <AntiVotoSegments keiko={keiko} sanchez={sanchez} />
+        </>
+      )}
+    </div>
+  );
+}
+
+function KeikoHistorySection() {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div style={{
+      background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12,
+      borderLeft: '4px solid #DC2626', padding: 20
+    }}>
+      <div
+        onClick={() => setExpanded(e => !e)}
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
+      >
+        <div>
+          <h3 style={{ color: '#DC2626', fontSize: 15, fontWeight: 600, margin: '0 0 2px' }}>
+            Keiko en segunda vuelta: historial completo
+          </h3>
+          <p style={{ color: '#A8A29E', fontSize: 12, margin: 0 }}>
+            2011 · 2016 · 2021 — resultados, antivoto y precisión de encuestadoras
+          </p>
+        </div>
+        <ChevronDown
+          size={18}
+          style={{ color: '#A8A29E', flexShrink: 0, marginLeft: 12, transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
+        />
+      </div>
+
+      {expanded && (
+        <>
+          <p style={{ color: '#A8A29E', fontSize: 12, margin: '12px 0 14px' }}>
+            Resultados ONPE oficiales · Antivoto Ipsos · Últimas encuestas publicables (semana previa)
+          </p>
+
+          {/* Three election cards */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 18 }}>
+            {[
+              {
+                year: 2011, opponent: 'Ollanta Humala',
+                r1_keiko: 23.6,
+                keiko_r2: 48.55, opp_r2: 51.45,
+                keiko_votes: '7.49M', margin_votes: '447,057', margin_pp: 2.90,
+                antivoto_keiko: 35, antivoto_opp: null, antivoto_src: 'Ipsos Apoyo (est. campaña)',
+                polls_avg_keiko: 51.8, polls_note: 'Todas predijeron victoria Keiko',
+                best_pollster: 'Ipsos (−2.9 pp)',
+                context: 'Humala unió al electorado antifujimorista en la última semana, fuera de la ventana publicable.',
+              },
+              {
+                year: 2016, opponent: 'Pedro Pablo Kuczynski (PPK)',
+                r1_keiko: 39.9,
+                keiko_r2: 49.88, opp_r2: 50.12,
+                keiko_votes: '8.55M', margin_votes: '42,597', margin_pp: 0.25,
+                antivoto_keiko: 43, antivoto_opp: 38, antivoto_src: 'Ipsos (may 2016)',
+                polls_avg_keiko: 52.2, polls_note: 'Todas predijeron victoria Keiko (4–8 pp)',
+                best_pollster: 'Datum (≈0.1 pp)',
+                context: 'Escándalo Odebrecht estalló durante la semana de veda. Datum fue el único en mostrar empate técnico.',
+              },
+              {
+                year: 2021, opponent: 'Pedro Castillo',
+                r1_keiko: 13.4,
+                keiko_r2: 49.88, opp_r2: 50.13,
+                keiko_votes: '8.79M', margin_votes: '44,058', margin_pp: 0.25,
+                antivoto_keiko: 45, antivoto_opp: 41, antivoto_src: 'Ipsos (may 30, 2021)',
+                polls_avg_keiko: 49.7, polls_note: 'Empate técnico en encuestas (~49.7%)',
+                best_pollster: 'IEP (0.2 pp)',
+                context: 'Ipsos boca de urna llamó la victoria a Keiko; el voto rural contado al final dio vuelta el resultado.',
+              },
+            ].map(e => (
+              <div key={e.year} style={{ background: '#F7F4EF', borderRadius: 10, padding: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                  <div>
+                    <span style={{ color: '#1C1917', fontWeight: 700, fontSize: 14 }}>{e.year}</span>
+                    <span style={{ color: '#78716C', fontSize: 12, marginLeft: 8 }}>vs. {e.opponent}</span>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ color: '#DC2626', fontWeight: 600, fontSize: 12 }}>
+                      Perdió por {e.margin_votes} votos
+                    </div>
+                    <div style={{ color: '#A8A29E', fontSize: 11 }}>{e.margin_pp.toFixed(2)} pp</div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
+                  <div style={{ background: '#FFFFFF', borderRadius: 6, padding: '8px 10px' }}>
+                    <div style={{ color: '#A8A29E', fontSize: 10, marginBottom: 3 }}>Resultado R2</div>
+                    <div style={{ color: KEIKO_COLOR, fontWeight: 700, fontSize: 13 }}>{e.keiko_r2}%</div>
+                    <div style={{ color: '#78716C', fontSize: 11 }}>vs {e.opp_r2}% oponente</div>
+                    <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 2 }}>{e.keiko_votes} votos</div>
+                  </div>
+                  <div style={{ background: '#FFFFFF', borderRadius: 6, padding: '8px 10px' }}>
+                    <div style={{ color: '#A8A29E', fontSize: 10, marginBottom: 3 }}>Antivoto Keiko</div>
+                    <div style={{ color: '#DC2626', fontWeight: 700, fontSize: 13 }}>{e.antivoto_keiko}%</div>
+                    {e.antivoto_opp != null
+                      ? <div style={{ color: '#78716C', fontSize: 11 }}>vs {e.antivoto_opp}% oponente</div>
+                      : <div style={{ color: '#A8A29E', fontSize: 11 }}>oponente: s/d</div>
+                    }
+                    <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 2 }}>{e.antivoto_src}</div>
+                  </div>
+                  <div style={{ background: '#FFFFFF', borderRadius: 6, padding: '8px 10px' }}>
+                    <div style={{ color: '#A8A29E', fontSize: 10, marginBottom: 3 }}>Encuestas daban</div>
+                    <div style={{ color: KEIKO_COLOR, fontWeight: 700, fontSize: 13 }}>{e.polls_avg_keiko}% Keiko</div>
+                    <div style={{ color: '#78716C', fontSize: 11 }}>{e.polls_note}</div>
+                    <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 2 }}>más preciso: {e.best_pollster}</div>
+                  </div>
+                </div>
+
+                <div style={{ color: '#78716C', fontSize: 11, lineHeight: 1.5, fontStyle: 'italic' }}>
+                  {e.context}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pollster accuracy table */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ color: '#78716C', fontWeight: 600, fontSize: 13, marginBottom: 8 }}>
+              Precisión histórica de encuestadoras en R2 (error vs resultado oficial)
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                <thead>
+                  <tr style={{ background: '#F0EDE8' }}>
+                    <th style={{ textAlign: 'left', padding: '6px 10px', color: '#78716C', fontWeight: 600 }}>Encuestadora</th>
+                    <th style={{ textAlign: 'right', padding: '6px 10px', color: '#78716C', fontWeight: 600 }}>2011</th>
+                    <th style={{ textAlign: 'right', padding: '6px 10px', color: '#78716C', fontWeight: 600 }}>2016</th>
+                    <th style={{ textAlign: 'right', padding: '6px 10px', color: '#78716C', fontWeight: 600 }}>2021</th>
+                    <th style={{ textAlign: 'right', padding: '6px 10px', color: '#78716C', fontWeight: 600 }}>Prom. error abs.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { name: 'Datum',  e2011: +3.8, e2016: +0.1,  e2021: -0.4, avg: 1.4 },
+                    { name: 'IEP',    e2011: null, e2016: null,  e2021: +0.2, avg: 0.2, note: '*' },
+                    { name: 'CIT',    e2011: null, e2016: null,  e2021: +0.3, avg: 0.3, note: '*' },
+                    { name: 'Ipsos',  e2011: +2.9, e2016: +2.7,  e2021: -1.0, avg: 2.2 },
+                    { name: 'GfK',    e2011: null, e2016: +2.3,  e2021: null, avg: 2.3, note: '*' },
+                    { name: 'CPI',    e2011: +3.3, e2016: +4.3,  e2021: -0.4, avg: 2.7 },
+                  ].map((row, i) => {
+                    const fmt = (v) => v == null ? '—' : (v > 0 ? '+' : '') + v.toFixed(1) + ' pp';
+                    const errColor = (v) => v == null ? '#A8A29E' : Math.abs(v) <= 0.5 ? '#16A34A' : Math.abs(v) <= 2.0 ? '#D97706' : '#DC2626';
+                    return (
+                      <tr key={row.name} style={{ background: i % 2 === 0 ? '#FFFFFF' : '#F7F4EF' }}>
+                        <td style={{ padding: '6px 10px', color: '#1C1917', fontWeight: 500 }}>
+                          {row.name}{row.note && <span style={{ color: '#A8A29E', fontSize: 10 }}>{row.note}</span>}
+                        </td>
+                        <td style={{ padding: '6px 10px', textAlign: 'right', color: errColor(row.e2011) }}>{fmt(row.e2011)}</td>
+                        <td style={{ padding: '6px 10px', textAlign: 'right', color: errColor(row.e2016) }}>{fmt(row.e2016)}</td>
+                        <td style={{ padding: '6px 10px', textAlign: 'right', color: errColor(row.e2021) }}>{fmt(row.e2021)}</td>
+                        <td style={{ padding: '6px 10px', textAlign: 'right', color: errColor(row.avg), fontWeight: 600 }}>{row.avg.toFixed(1)} pp</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 6 }}>
+              Error = encuesta final − resultado oficial (en % votos válidos de Keiko). Positivo = sobreestimó a Keiko. * = solo un R2 disponible.
+            </div>
+          </div>
+
+          <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: 0 }}>
+            Keiko ha llegado a segunda vuelta <strong>tres veces</strong> y ha perdido las tres.
+            En 2016 y 2021 la diferencia fue de menos de 45,000 votos (~0.25 pp), las dos elecciones más reñidas de la historia peruana.
+            Datum registra el menor error histórico en R2 (1.4 pp promedio); CPI el mayor (2.7 pp, tendió a sobreestimar a Keiko).
+            Sánchez muestra un perfil geográfico similar al de Castillo (2021): dominante en sierra y selva, débil en Lima.
+          </p>
         </>
       )}
     </div>
@@ -870,157 +1053,8 @@ export default function SegundaVueltaTab({ predictions, polymarket, r2polls, ant
       {/* Antivoto — dynamic from API */}
       <AntiVotoSection antivoto={antivoto} />
 
-      {/* Historical pattern — expanded with anti-vote, polls vs result, margins */}
-      <div style={{
-        background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12,
-        borderLeft: '4px solid #DC2626', padding: 20
-      }}>
-        <h3 style={{ color: '#DC2626', fontSize: 15, fontWeight: 600, margin: '0 0 4px' }}>
-          Keiko en segunda vuelta: historial completo
-        </h3>
-        <p style={{ color: '#A8A29E', fontSize: 12, margin: '0 0 14px' }}>
-          Resultados ONPE oficiales · Antivoto Ipsos · Últimas encuestas publicables (semana previa)
-        </p>
-
-        {/* Three election cards */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 18 }}>
-          {[
-            {
-              year: 2011, opponent: 'Ollanta Humala',
-              r1_keiko: 23.6,
-              keiko_r2: 48.55, opp_r2: 51.45,
-              keiko_votes: '7.49M', margin_votes: '447,057', margin_pp: 2.90,
-              antivoto_keiko: 35, antivoto_opp: null, antivoto_src: 'Ipsos Apoyo (est. campaña)',
-              polls_avg_keiko: 51.8, polls_note: 'Todas predijeron victoria Keiko',
-              best_pollster: 'Ipsos (−2.9 pp)',
-              context: 'Humala unió al electorado antifujimorista en la última semana, fuera de la ventana publicable.',
-            },
-            {
-              year: 2016, opponent: 'Pedro Pablo Kuczynski (PPK)',
-              r1_keiko: 39.9,
-              keiko_r2: 49.88, opp_r2: 50.12,
-              keiko_votes: '8.55M', margin_votes: '42,597', margin_pp: 0.25,
-              antivoto_keiko: 43, antivoto_opp: 38, antivoto_src: 'Ipsos (may 2016)',
-              polls_avg_keiko: 52.2, polls_note: 'Todas predijeron victoria Keiko (4–8 pp)',
-              best_pollster: 'Datum (≈0.1 pp)',
-              context: 'Escándalo Odebrecht estalló durante la semana de veda. Datum fue el único en mostrar empate técnico.',
-            },
-            {
-              year: 2021, opponent: 'Pedro Castillo',
-              r1_keiko: 13.4,
-              keiko_r2: 49.88, opp_r2: 50.13,
-              keiko_votes: '8.79M', margin_votes: '44,058', margin_pp: 0.25,
-              antivoto_keiko: 45, antivoto_opp: 41, antivoto_src: 'Ipsos (may 30, 2021)',
-              polls_avg_keiko: 49.7, polls_note: 'Empate técnico en encuestas (~49.7%)',
-              best_pollster: 'IEP (0.2 pp)',
-              context: 'Ipsos boca de urna llamó la victoria a Keiko; el voto rural contado al final dio vuelta el resultado.',
-            },
-          ].map(e => (
-            <div key={e.year} style={{ background: '#F7F4EF', borderRadius: 10, padding: 14 }}>
-              {/* Header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-                <div>
-                  <span style={{ color: '#1C1917', fontWeight: 700, fontSize: 14 }}>{e.year}</span>
-                  <span style={{ color: '#78716C', fontSize: 12, marginLeft: 8 }}>vs. {e.opponent}</span>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ color: '#DC2626', fontWeight: 600, fontSize: 12 }}>
-                    Perdió por {e.margin_votes} votos
-                  </div>
-                  <div style={{ color: '#A8A29E', fontSize: 11 }}>{e.margin_pp.toFixed(2)} pp</div>
-                </div>
-              </div>
-
-              {/* Stats grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
-                {/* Result */}
-                <div style={{ background: '#FFFFFF', borderRadius: 6, padding: '8px 10px' }}>
-                  <div style={{ color: '#A8A29E', fontSize: 10, marginBottom: 3 }}>Resultado R2</div>
-                  <div style={{ color: KEIKO_COLOR, fontWeight: 700, fontSize: 13 }}>{e.keiko_r2}%</div>
-                  <div style={{ color: '#78716C', fontSize: 11 }}>vs {e.opp_r2}% oponente</div>
-                  <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 2 }}>{e.keiko_votes} votos</div>
-                </div>
-                {/* Anti-vote */}
-                <div style={{ background: '#FFFFFF', borderRadius: 6, padding: '8px 10px' }}>
-                  <div style={{ color: '#A8A29E', fontSize: 10, marginBottom: 3 }}>Antivoto Keiko</div>
-                  <div style={{ color: '#DC2626', fontWeight: 700, fontSize: 13 }}>{e.antivoto_keiko}%</div>
-                  {e.antivoto_opp != null
-                    ? <div style={{ color: '#78716C', fontSize: 11 }}>vs {e.antivoto_opp}% oponente</div>
-                    : <div style={{ color: '#A8A29E', fontSize: 11 }}>oponente: s/d</div>
-                  }
-                  <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 2 }}>{e.antivoto_src}</div>
-                </div>
-                {/* Polls */}
-                <div style={{ background: '#FFFFFF', borderRadius: 6, padding: '8px 10px' }}>
-                  <div style={{ color: '#A8A29E', fontSize: 10, marginBottom: 3 }}>Encuestas daban</div>
-                  <div style={{ color: KEIKO_COLOR, fontWeight: 700, fontSize: 13 }}>{e.polls_avg_keiko}% Keiko</div>
-                  <div style={{ color: '#78716C', fontSize: 11 }}>{e.polls_note}</div>
-                  <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 2 }}>más preciso: {e.best_pollster}</div>
-                </div>
-              </div>
-
-              {/* Context note */}
-              <div style={{ color: '#78716C', fontSize: 11, lineHeight: 1.5, fontStyle: 'italic' }}>
-                {e.context}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Pollster accuracy table */}
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ color: '#78716C', fontWeight: 600, fontSize: 13, marginBottom: 8 }}>
-            Precisión histórica de encuestadoras en R2 (error vs resultado oficial)
-          </div>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-              <thead>
-                <tr style={{ background: '#F0EDE8' }}>
-                  <th style={{ textAlign: 'left', padding: '6px 10px', color: '#78716C', fontWeight: 600 }}>Encuestadora</th>
-                  <th style={{ textAlign: 'right', padding: '6px 10px', color: '#78716C', fontWeight: 600 }}>2011</th>
-                  <th style={{ textAlign: 'right', padding: '6px 10px', color: '#78716C', fontWeight: 600 }}>2016</th>
-                  <th style={{ textAlign: 'right', padding: '6px 10px', color: '#78716C', fontWeight: 600 }}>2021</th>
-                  <th style={{ textAlign: 'right', padding: '6px 10px', color: '#78716C', fontWeight: 600 }}>Prom. error abs.</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { name: 'Datum',  e2011: +3.8, e2016: +0.1,  e2021: -0.4, avg: 1.4 },
-                  { name: 'IEP',    e2011: null, e2016: null,  e2021: +0.2, avg: 0.2, note: '*' },
-                  { name: 'CIT',    e2011: null, e2016: null,  e2021: +0.3, avg: 0.3, note: '*' },
-                  { name: 'Ipsos',  e2011: +2.9, e2016: +2.7,  e2021: -1.0, avg: 2.2 },
-                  { name: 'GfK',    e2011: null, e2016: +2.3,  e2021: null, avg: 2.3, note: '*' },
-                  { name: 'CPI',    e2011: +3.3, e2016: +4.3,  e2021: -0.4, avg: 2.7 },
-                ].map((row, i) => {
-                  const fmt = (v) => v == null ? '—' : (v > 0 ? '+' : '') + v.toFixed(1) + ' pp';
-                  const errColor = (v) => v == null ? '#A8A29E' : Math.abs(v) <= 0.5 ? '#16A34A' : Math.abs(v) <= 2.0 ? '#D97706' : '#DC2626';
-                  return (
-                    <tr key={row.name} style={{ background: i % 2 === 0 ? '#FFFFFF' : '#F7F4EF' }}>
-                      <td style={{ padding: '6px 10px', color: '#1C1917', fontWeight: 500 }}>
-                        {row.name}{row.note && <span style={{ color: '#A8A29E', fontSize: 10 }}>{row.note}</span>}
-                      </td>
-                      <td style={{ padding: '6px 10px', textAlign: 'right', color: errColor(row.e2011) }}>{fmt(row.e2011)}</td>
-                      <td style={{ padding: '6px 10px', textAlign: 'right', color: errColor(row.e2016) }}>{fmt(row.e2016)}</td>
-                      <td style={{ padding: '6px 10px', textAlign: 'right', color: errColor(row.e2021) }}>{fmt(row.e2021)}</td>
-                      <td style={{ padding: '6px 10px', textAlign: 'right', color: errColor(row.avg), fontWeight: 600 }}>{row.avg.toFixed(1)} pp</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 6 }}>
-            Error = encuesta final − resultado oficial (en % votos válidos de Keiko). Positivo = sobreestimó a Keiko. * = solo un R2 disponible.
-          </div>
-        </div>
-
-        <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: 0 }}>
-          Keiko ha llegado a segunda vuelta <strong>tres veces</strong> y ha perdido las tres.
-          En 2016 y 2021 la diferencia fue de menos de 45,000 votos (~0.25 pp), las dos elecciones más reñidas de la historia peruana.
-          Datum registra el menor error histórico en R2 (1.4 pp promedio); CPI el mayor (2.7 pp, tendió a sobreestimar a Keiko).
-          Sánchez muestra un perfil geográfico similar al de Castillo (2021): dominante en sierra y selva, débil en Lima.
-        </p>
-      </div>
+      {/* Historical pattern — collapsible */}
+      <KeikoHistorySection />
 
     </div>
   );
