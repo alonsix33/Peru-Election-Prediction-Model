@@ -21,7 +21,7 @@ const DEMO = {
   // Nacional doméstico (total − exterior)
   nacional: { kf_r2_share: 58.46, kf_votos: 2_825_224, rsp_votos: 2_007_120 },
   // Exterior R1 real (r1_exterior.json)
-  extranjero: { kf_r2_share: 86.78, kf_votos: 52_454, rsp_votos: 7_994 },
+  extranjero: { kf_r2_share: 86.78, kf_votos: 52_454, rsp_votos: 7_994, pct_actas: 100 },
   pct_actas: 100,
   is_demo: true,
 };
@@ -256,11 +256,131 @@ function VoteBars({ total, nacional, extranjero, isDemo }) {
   );
 }
 
+// ─── Department detail panel (right of map) ──────────────────
+function DeptDetailPanel({ dept, districts, loading }) {
+  if (!dept) {
+    return (
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', height: '100%', minHeight: 220, gap: 8,
+      }}>
+        <div style={{ color: '#D4CEC8', fontSize: 28 }}>↖</div>
+        <p style={{ color: '#A8A29E', fontSize: 13, textAlign: 'center', margin: 0 }}>
+          Haz clic en un departamento para ver el desglose distrital
+        </p>
+      </div>
+    );
+  }
+
+  const kf      = dept.kf_r2_share;
+  const rsp     = kf != null ? 100 - kf : null;
+  const margin  = kf != null ? Math.abs(kf - 50) : null;
+  const kfLeads = kf != null && kf >= 50;
+  const sorted  = [...districts].sort((a, b) => {
+    if (a.kf_r2_share == null && b.kf_r2_share == null) return 0;
+    if (a.kf_r2_share == null) return 1;
+    if (b.kf_r2_share == null) return -1;
+    return Math.abs(b.kf_r2_share - 50) - Math.abs(a.kf_r2_share - 50);
+  });
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Dept header */}
+      <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid #F0EDE8' }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#1C1917', marginBottom: 10 }}>
+          {dept.nombre}
+        </div>
+        <div style={{ display: 'flex', gap: 20, marginBottom: 8 }}>
+          <div>
+            <div style={{ color: '#8C877F', fontSize: 10, marginBottom: 2 }}>Keiko Fujimori</div>
+            <div style={{
+              color: kfLeads ? KEIKO_COLOR : '#A8A29E',
+              fontWeight: kfLeads ? 800 : 400,
+              fontSize: 24, lineHeight: 1,
+              fontVariantNumeric: 'tabular-nums',
+            }}>
+              {kf != null ? kf.toFixed(1) + '%' : '—'}
+            </div>
+          </div>
+          <div>
+            <div style={{ color: '#8C877F', fontSize: 10, marginBottom: 2 }}>Roberto Sánchez</div>
+            <div style={{
+              color: !kfLeads ? SANCHEZ_COLOR : '#A8A29E',
+              fontWeight: !kfLeads ? 800 : 400,
+              fontSize: 24, lineHeight: 1,
+              fontVariantNumeric: 'tabular-nums',
+            }}>
+              {rsp != null ? rsp.toFixed(1) + '%' : '—'}
+            </div>
+          </div>
+        </div>
+        {margin != null && (
+          <div style={{
+            display: 'inline-block',
+            background: (kfLeads ? KEIKO_COLOR : SANCHEZ_COLOR) + '18',
+            color: kfLeads ? KEIKO_COLOR : SANCHEZ_COLOR,
+            borderRadius: 6, padding: '3px 10px',
+            fontSize: 12, fontWeight: 700,
+          }}>
+            {kfLeads ? 'Keiko' : 'Sánchez'} +{margin.toFixed(1)}pp
+          </div>
+        )}
+      </div>
+
+      {/* District list */}
+      {loading ? (
+        <div style={{ color: '#A8A29E', fontSize: 12, padding: '8px 0' }}>Cargando distritos...</div>
+      ) : sorted.length > 0 ? (
+        <>
+          <div style={{ color: '#8C877F', fontSize: 11, fontWeight: 600, marginBottom: 6 }}>
+            Distritos ({sorted.length}) · ordenados por margen
+          </div>
+          <div style={{ overflowY: 'auto', flex: 1, maxHeight: 320 }}>
+            {sorted.map(d => {
+              const dLeads  = d.kf_r2_share >= 50;
+              const dMargin = Math.abs(d.kf_r2_share - 50);
+              return (
+                <div key={d.ubigeo} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '5px 0', borderBottom: '1px solid #F7F4EF', gap: 8,
+                }}>
+                  <span style={{ color: '#1C1917', fontSize: 12, flex: 1 }}>{d.nombre}</span>
+                  <span style={{
+                    color: dLeads ? KEIKO_COLOR : SANCHEZ_COLOR,
+                    fontSize: 12, fontWeight: 600,
+                    fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
+                  }}>
+                    {dLeads ? 'K' : 'S'}+{dMargin.toFixed(1)}pp
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        <div style={{ color: '#A8A29E', fontSize: 12 }}>Sin desglose distrital disponible</div>
+      )}
+    </div>
+  );
+}
+
 // ─── Department table ─────────────────────────────────────────
-function DeptTable({ deptData, isDemo }) {
+function DeptTable({ deptData, extranjero, isDemo }) {
   const [sortBy, setSortBy] = useState('pct_actas');
 
-  const rows = Object.values(deptData).sort((a, b) => {
+  const extRow = extranjero ? {
+    ubigeo: 'EXT',
+    nombre: 'Extranjero',
+    kf_r2_share: extranjero.kf_r2_share,
+    pct_actas:   extranjero.pct_actas ?? 100,
+    isExtranjero: true,
+    subLabel: '77 países',
+  } : null;
+
+  const rows = [
+    ...Object.values(deptData),
+    ...(extRow ? [extRow] : []),
+  ].sort((a, b) => {
     if (sortBy === 'pct_actas') return (a.pct_actas ?? 100) - (b.pct_actas ?? 100);
     if (sortBy === 'margin')    return Math.abs((b.kf_r2_share ?? 50) - 50) - Math.abs((a.kf_r2_share ?? 50) - 50);
     return a.nombre.localeCompare(b.nombre);
@@ -272,7 +392,7 @@ function DeptTable({ deptData, isDemo }) {
       color: sortBy === key ? '#1C1917' : '#A8A29E',
       fontWeight: sortBy === key ? 700 : 500, fontSize: 11,
     }}>
-      {label}{sortBy === key ? ' ↑' : ''}
+      {label}{sortBy === key ? (key === 'margin' ? ' ↓' : ' ↑') : ''}
     </button>
   );
 
@@ -303,10 +423,15 @@ function DeptTable({ deptData, isDemo }) {
               const kfLeads  = share != null && share >= 50;
               const pct      = dept.pct_actas ?? 100;
               return (
-                <tr key={dept.ubigeo} style={{ borderBottom: '1px solid #F0EDE8' }}>
-                  <td style={{ padding: '7px 8px', color: '#1C1917', fontWeight: 600 }}>
+                <tr key={dept.ubigeo} style={{ borderBottom: '1px solid #F0EDE8', background: dept.isExtranjero ? '#F7F4EF' : undefined }}>
+                  <td style={{ padding: '7px 8px', color: dept.isExtranjero ? '#78716C' : '#1C1917', fontWeight: 600, fontStyle: dept.isExtranjero ? 'italic' : 'normal' }}>
                     {dept.nombre}
-                    {pct < 100 && (
+                    {dept.subLabel && (
+                      <span style={{ color: '#A8A29E', fontSize: 10, marginLeft: 5, fontWeight: 400, fontStyle: 'normal' }}>
+                        {dept.subLabel}
+                      </span>
+                    )}
+                    {!dept.isExtranjero && pct < 100 && (
                       <span style={{ color: '#D97706', fontSize: 10, marginLeft: 5, fontWeight: 400 }}>
                         ⏳ {(100 - pct).toFixed(0)}% falta
                       </span>
@@ -346,9 +471,12 @@ function DeptTable({ deptData, isDemo }) {
 
 // ─── Main tab ─────────────────────────────────────────────────
 export default function LiveResultsTab({ predictions }) {
-  const [liveData, setLiveData]   = useState(null);
-  const [isLive,   setIsLive]     = useState(false);
-  const [hoveredDept, setHoveredDept] = useState(null);
+  const [liveData,        setLiveData]        = useState(null);
+  const [isLive,          setIsLive]          = useState(false);
+  const [hoveredDept,     setHoveredDept]     = useState(null);
+  const [selectedDept,    setSelectedDept]    = useState(null);
+  const [districtData,    setDistrictData]    = useState(null);
+  const [districtsLoading, setDistrictsLoading] = useState(false);
 
   const fetchLive = useCallback(async () => {
     try {
@@ -365,30 +493,56 @@ export default function LiveResultsTab({ predictions }) {
     return () => clearInterval(id);
   }, [fetchLive]);
 
+  // Lazy-load district data on first dept selection
+  useEffect(() => {
+    if (!selectedDept || districtData) return;
+    setDistrictsLoading(true);
+    fetch('/r1_districts_flat.json')
+      .then(r => r.json())
+      .then(json => { setDistrictData(json); setDistrictsLoading(false); })
+      .catch(() => setDistrictsLoading(false));
+  }, [selectedDept]); // districtData intentionally omitted: early-return guards re-fetch
+
   const isDemo = !isLive;
   const data   = isLive ? liveData : DEMO.national;
 
-  const kfShare       = data?.kf_r2_share;
-  const projKfShare   = data?.proj_kf_r2_share;
-  const deptData      = isLive && liveData?.departments
+  const kfShare     = data?.kf_r2_share;
+  const projKfShare = data?.proj_kf_r2_share;
+  const deptData    = isLive && liveData?.departments
     ? Object.fromEntries(liveData.departments.map(d => [d.ubigeo, d]))
     : DEMO_DEPTS;
 
   // Needle data — live: from projector; demo: from R2 model predictions
-  const modelCands = predictions?.candidates || [];
-  const keikoModel  = modelCands.find(c => c.candidate?.includes('Keiko'));
+  const modelCands   = predictions?.candidates || [];
+  const keikoModel   = modelCands.find(c => c.candidate?.includes('Keiko'));
   const sanchezModel = modelCands.find(c => c.candidate?.includes('Sánchez') || c.candidate?.includes('Roberto'));
-  const needleKeiko = isDemo ? keikoModel : (projKfShare != null ? {
-    mean: projKfShare, p10: data.ci_low ?? projKfShare - 3, p90: data.ci_high ?? projKfShare + 3,
-    p25: null, p75: null, p40: null, p60: null, prob_win: projKfShare > 50 ? 72 : 28,
+  const needleKeiko  = isDemo ? keikoModel : (projKfShare != null ? {
+    mean: projKfShare,
+    p10:  data.ci_low  ?? projKfShare - 3,
+    p90:  data.ci_high ?? projKfShare + 3,
+    p25: null, p40: null, p60: null, p75: null,
+    prob_win: liveData?.prob_win_kf ?? (projKfShare > 50 ? 72 : 28),
   } : null);
   const needleSanchez = isDemo ? sanchezModel : (needleKeiko ? {
-    mean: 100 - needleKeiko.mean, p10: 100 - needleKeiko.p90, p90: 100 - needleKeiko.p10,
-    prob_win: 100 - needleKeiko.prob_win,
+    mean:     100 - needleKeiko.mean,
+    p10:      100 - needleKeiko.p90,
+    p25:      needleKeiko.p75 != null ? 100 - needleKeiko.p75 : null,
+    p40:      needleKeiko.p60 != null ? 100 - needleKeiko.p60 : null,
+    p60:      needleKeiko.p40 != null ? 100 - needleKeiko.p40 : null,
+    p75:      needleKeiko.p25 != null ? 100 - needleKeiko.p25 : null,
+    p90:      100 - needleKeiko.p10,
+    prob_win: liveData?.prob_win_kf != null ? 100 - liveData.prob_win_kf : 100 - needleKeiko.prob_win,
   } : null);
 
   const nacional   = isLive ? liveData?.nacional   : DEMO.nacional;
   const extranjero = isLive ? liveData?.extranjero  : DEMO.extranjero;
+
+  // District list for selected dept (filtered from flat file)
+  const deptDistricts = selectedDept && districtData
+    ? Object.values(districtData).filter(
+        d => d.deptUbigeo === selectedDept.ubigeo && d.kf_r2_share != null
+      )
+    : [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -432,10 +586,10 @@ export default function LiveResultsTab({ predictions }) {
         isDemo={isDemo}
       />
 
-      {/* 5. Map + dept table */}
+      {/* 5. Map + dept detail panel (own row) */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <div style={{
-          flex: '0 0 auto', width: 'clamp(280px, 38%, 340px)',
+          flex: '0 0 auto', width: 'clamp(280px, 42%, 400px)',
           background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16,
         }}>
           <h3 style={{ color: '#1C1917', fontSize: 14, fontWeight: 600, margin: '0 0 12px' }}>
@@ -446,15 +600,31 @@ export default function LiveResultsTab({ predictions }) {
               </span>
             )}
           </h3>
-          <PeruDeptMap deptData={deptData} onDeptHover={setHoveredDept} />
+          <PeruDeptMap
+            deptData={deptData}
+            onDeptHover={setHoveredDept}
+            onDeptSelect={setSelectedDept}
+          />
         </div>
 
-        <div style={{ flex: 1, minWidth: 280, background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
+        <div style={{ flex: 1, minWidth: 260, background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
           <h3 style={{ color: '#1C1917', fontSize: 14, fontWeight: 600, margin: '0 0 12px' }}>
-            Resultados por departamento
+            Detalle departamental
           </h3>
-          <DeptTable deptData={deptData} isDemo={isDemo} />
+          <DeptDetailPanel
+            dept={selectedDept}
+            districts={deptDistricts}
+            loading={districtsLoading}
+          />
         </div>
+      </div>
+
+      {/* 6. Full-width results table */}
+      <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
+        <h3 style={{ color: '#1C1917', fontSize: 14, fontWeight: 600, margin: '0 0 12px' }}>
+          Resultados Detallados
+        </h3>
+        <DeptTable deptData={deptData} extranjero={extranjero} isDemo={isDemo} />
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ async function saveProjection(snapshotId, snapshot) {
       keiko_votos:    snapshot.keiko_votos   ?? 0,
       sanchez_votos:  snapshot.sanchez_votos ?? 0,
       dept_breakdown: Array.isArray(snapshot.dept_breakdown) ? snapshot.dept_breakdown : [],
+      ext_breakdown:  Array.isArray(snapshot.ext_breakdown)  ? snapshot.ext_breakdown  : [],
       captured_at:    snapshot.captured_at,
     });
 
@@ -41,7 +42,7 @@ async function saveProjection(snapshotId, snapshot) {
         result.projected.winner,
         result.projected.margin_pp,
         result.projected.sigma_pp,
-        result.zda.correction_applied,
+        result.zda.always_projected,
         result.zda.remaining_mesas,
         result.zda.proj_kf_r2_share,
         result.zda.effect_pp,

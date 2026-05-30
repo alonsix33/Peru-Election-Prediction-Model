@@ -888,6 +888,7 @@ router.get('/onpe/projection', async (req, res) => {
       keiko_votos:    latest.keiko_votos     != null ? parseInt(latest.keiko_votos)       : 0,
       sanchez_votos:  latest.sanchez_votos   != null ? parseInt(latest.sanchez_votos)     : 0,
       dept_breakdown: Array.isArray(latest.dept_breakdown) ? latest.dept_breakdown : [],
+      ext_breakdown:  Array.isArray(latest.ext_breakdown)  ? latest.ext_breakdown  : [],
       captured_at:    latest.captured_at,
     };
 
@@ -925,6 +926,193 @@ router.get('/onpe/projection', async (req, res) => {
     }
     await handleError('DB_CONNECTION_FAILED', { module: 'api/onpe/projection' }, err);
     res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// ─── GET /api/live-projection ────────────────────────────────
+// Frontend-facing adapter that transforms /api/onpe/projection output
+// into the flat shape the LiveResultsTab expects.
+// Returns { status: 'pre_election' } when no live data yet.
+function _normalCDF(z) {
+  const t = 1 / (1 + 0.3275911 * Math.abs(z));
+  const poly = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))));
+  const p = 1 - (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * z * z) * poly;
+  return z >= 0 ? p : 1 - p;
+}
+
+router.get('/live-projection', async (req, res) => {
+  try {
+    const { rows: [latest] } = await db.query(
+      `SELECT * FROM onpe_live_snapshots WHERE has_data = true ORDER BY captured_at DESC LIMIT 1`
+    );
+    if (!latest) return res.json({ status: 'pre_election', pct_actas: 0 });
+
+    const { project } = require('../model/electionNightProjector');
+    const snapshot = {
+      pct_actas:      latest.pct_actas     != null ? parseFloat(latest.pct_actas)  : 0,
+      keiko_votos:    latest.keiko_votos   != null ? parseInt(latest.keiko_votos)   : 0,
+      sanchez_votos:  latest.sanchez_votos != null ? parseInt(latest.sanchez_votos) : 0,
+      dept_breakdown: Array.isArray(latest.dept_breakdown) ? latest.dept_breakdown : [],
+      ext_breakdown:  Array.isArray(latest.ext_breakdown)  ? latest.ext_breakdown  : [],
+      captured_at:    latest.captured_at,
+    };
+
+    const r = project(snapshot);
+    if (r.status !== 'ok') return res.json({ status: r.status, pct_actas: 0 });
+
+    const extKf  = r.exterior?.obs_kf_votos  || 0;
+    const extRsp = r.exterior?.obs_rsp_votos || 0;
+    const domKf  = Math.max(0, (r.observed.keiko_votos  || 0) - extKf);
+    const domRsp = Math.max(0, (r.observed.sanchez_votos || 0) - extRsp);
+    const domTotal = domKf + domRsp;
+    const sigma    = r.projected.sigma_pp || 3.0;
+    const probWinKF = Math.round(_normalCDF((r.projected.kf_r2_share - 50) / sigma) * 100);
+
+    res.json({
+      status:           'ok',
+      pct_actas:        r.pct_actas,
+      snapshot_ts:      r.captured_at,
+      phase:            r.phase,
+      phaseLabel:       r.phaseLabel,
+
+      // Top-level national fields (for CandidateCards + StatusBar)
+      kf_r2_share:      r.observed.kf_r2_share,
+      proj_kf_r2_share: r.projected.kf_r2_share,
+      ci_low:           r.projected.ci_95.lo,
+      ci_high:          r.projected.ci_95.hi,
+      kf_votos:         r.observed.keiko_votos,
+      rsp_votos:        r.observed.sanchez_votos,
+      prob_win_kf:      probWinKF,
+
+      // Nested objects for VoteBars
+      national: {
+        kf_r2_share: r.observed.kf_r2_share,
+        kf_votos:    r.observed.keiko_votos,
+        rsp_votos:   r.observed.sanchez_votos,
+      },
+      nacional: {
+        kf_r2_share: domTotal > 0 ? Math.round(100 * domKf / domTotal * 100) / 100 : null,
+        kf_votos:    domKf,
+        rsp_votos:   domRsp,
+      },
+      extranjero: {
+        kf_r2_share: r.exterior?.obs_kf_r2_share ?? null,
+        kf_votos:    extKf,
+        rsp_votos:   extRsp,
+        pct_actas:   100,
+      },
+
+      // Department array for map + table
+      departments: (r.dept_shifts || []).map(d => ({
+        ubigeo:      d.ubigeo,
+        nombre:      d.nombre,
+        kf_r2_share: d.current_kf_r2_share,
+        pct_actas:   null,
+      })),
+    });
+  } catch (err) {
+    if (err.code === '42P01') return res.json({ status: 'pre_election', pct_actas: 0 });
+    await handleError('DB_CONNECTION_FAILED', { module: 'api/live-projection' }, err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// ─── POST /api/admin/inject-snapshot ────────────────────────
+// Election night: browser bookmarklet fetches ONPE data from within
+// the ONPE domain and POSTs it here. ONPE's API is only accessible
+// same-origin (Nginx internal proxy), so external Railway polling
+// always gets HTML. The bookmarklet is the relay.
+// Requires Authorization: Bearer <ADMIN_SECRET> header.
+router.post('/admin/inject-snapshot', async (req, res) => {
+  const adminSecret = process.env.ADMIN_SECRET;
+  if (!adminSecret) {
+    return res.status(503).json({ error: 'ADMIN_SECRET not configured on Railway' });
+  }
+  const authHeader = req.headers['authorization'] || '';
+  if (authHeader !== `Bearer ${adminSecret}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    const snap = req.body;
+    if (typeof snap !== 'object' || snap === null) {
+      return res.status(400).json({ error: 'Body must be a JSON object' });
+    }
+
+    const hasData = snap.has_data === true &&
+      ((snap.keiko_votos > 0) || (snap.sanchez_votos > 0));
+
+    const { rows: [{ id: snapshotId }] } = await db.query(
+      `INSERT INTO onpe_live_snapshots
+         (captured_at, has_data, actas_total, actas_processed, pct_actas,
+          keiko_votos, keiko_pct, sanchez_votos, sanchez_pct,
+          dept_breakdown, ext_breakdown, totales_raw)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       RETURNING id`,
+      [
+        snap.captured_at || new Date().toISOString(),
+        hasData,
+        snap.actas_total     ?? null,
+        snap.actas_processed ?? null,
+        snap.pct_actas       ?? null,
+        snap.keiko_votos     ?? null,
+        snap.keiko_pct       ?? null,
+        snap.sanchez_votos   ?? null,
+        snap.sanchez_pct     ?? null,
+        JSON.stringify(snap.dept_breakdown || []),
+        JSON.stringify(snap.ext_breakdown  || []),
+        snap.totales_raw ? JSON.stringify(snap.totales_raw) : null,
+      ]
+    );
+
+    if (hasData) {
+      console.log(
+        `📊 ONPE inject [bookmarklet]: K=${snap.keiko_pct}% S=${snap.sanchez_pct}%` +
+        ` actas=${snap.pct_actas ?? '?'}%`
+      );
+      const { project } = require('../model/electionNightProjector');
+      try {
+        const pr = project({
+          pct_actas:      snap.pct_actas     ?? 0,
+          keiko_votos:    snap.keiko_votos   ?? 0,
+          sanchez_votos:  snap.sanchez_votos ?? 0,
+          dept_breakdown: Array.isArray(snap.dept_breakdown) ? snap.dept_breakdown : [],
+          ext_breakdown:  Array.isArray(snap.ext_breakdown)  ? snap.ext_breakdown  : [],
+          captured_at:    snap.captured_at,
+        });
+        if (pr.status === 'ok') {
+          await db.query(
+            `INSERT INTO r2_election_projections
+               (snapshot_id, pct_actas, phase,
+                obs_kf_r2_share, obs_keiko_votos, obs_sanchez_votos,
+                proj_kf_r2_share, proj_ci95_lo, proj_ci95_hi, proj_ci80_lo, proj_ci80_hi,
+                proj_winner, proj_margin_pp, proj_sigma_pp,
+                zda_correction_applied, zda_remaining_mesas, zda_proj_kf_r2_share, zda_effect_pp,
+                national_shift_pp, dept_shifts, full_result)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)`,
+            [
+              snapshotId, pr.pct_actas, pr.phase,
+              pr.observed.kf_r2_share, pr.observed.keiko_votos, pr.observed.sanchez_votos,
+              pr.projected.kf_r2_share, pr.projected.ci_95.lo, pr.projected.ci_95.hi,
+              pr.projected.ci_80.lo, pr.projected.ci_80.hi,
+              pr.projected.winner, pr.projected.margin_pp, pr.projected.sigma_pp,
+              pr.zda.always_projected, pr.zda.remaining_mesas,
+              pr.zda.proj_kf_r2_share, pr.zda.effect_pp,
+              pr.national_shift_pp, JSON.stringify(pr.dept_shifts), JSON.stringify(pr),
+            ]
+          );
+        }
+      } catch (projErr) {
+        console.error('📊 Projection save failed:', projErr.message);
+      }
+    } else {
+      console.log('📊 ONPE inject [bookmarklet]: sin datos (has_data=false)');
+    }
+
+    res.json({ ok: true, snapshot_id: snapshotId, has_data: hasData });
+  } catch (err) {
+    console.error('📊 Error en inject-snapshot:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
