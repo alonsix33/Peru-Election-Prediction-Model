@@ -15,12 +15,12 @@ const DEMO = {
     ci_low:           57.5,
     ci_high:          60.1,
     pct_actas:        100,
-    kf_votos:         5_312_244,
-    rsp_votos:        3_714_080,
+    kf_votos:         2_877_678,  // ONPE R1 oficial
+    rsp_votos:        2_015_114,  // ONPE R1 oficial
   },
-  // Nacional doméstico (25 depts, sin exterior)
-  nacional: { kf_r2_share: 58.46, kf_votos: 5_259_790, rsp_votos: 3_706_086 },
-  // Exterior R1 real (r1_exterior.json aggregate)
+  // Nacional doméstico (total − exterior)
+  nacional: { kf_r2_share: 58.46, kf_votos: 2_825_224, rsp_votos: 2_007_120 },
+  // Exterior R1 real (r1_exterior.json)
   extranjero: { kf_r2_share: 86.78, kf_votos: 52_454, rsp_votos: 7_994 },
   pct_actas: 100,
   is_demo: true,
