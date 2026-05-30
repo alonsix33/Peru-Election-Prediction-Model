@@ -13,7 +13,11 @@ async function fetchJson(url) {
     const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(10_000) });
     if (res.status === 204) return null;
     if (!res.ok) return null;
-    const json = await res.json();
+    const text = await res.text();
+    // ONPE's web server returns its SPA index.html as a 200 catch-all
+    // when a route isn't handled by the API. Detect and discard.
+    if (text.startsWith('<') || text.trimStart().startsWith('<!')) return null;
+    const json = JSON.parse(text);
     // Unwrap ONPE's {success, message, data} envelope when present
     return json?.data !== undefined ? json.data : json;
   } catch {
