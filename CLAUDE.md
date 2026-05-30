@@ -166,6 +166,7 @@ Aliaga aparece ~+3pp en todas las encuestas pre-R1. Sin corrección (modelo corr
 - [x] seed_r2.sql: Ipsos ×1.30, Datum ×1.05 (mejor desempeño R1 en R2)
 - [x] Encuesta IEP mayo 22-26 ingresada (KF 36%, RSP 30%, n=1204) — nota metodológica: B/N no se leyó como opción → 6% espontáneo (no comparable con abr 24%)
 - [ ] Pesos IEP en seed_r2.sql: verificar que refleja desempeño R1 (cerca a ONPE)
+- [ ] Encuesta CIT mayo 2026 — buscar e ingresar si ya fue publicada
 
 ---
 
@@ -184,12 +185,16 @@ Aliaga aparece ~+3pp en todas las encuestas pre-R1. Sin corrección (modelo corr
 | `backend/data/r1_zda_dept_model.json` | Modelo ZDA por dept (25 depts, fuentes A/B/C/D) |
 | `backend/data/r1_province_baseline.json` | Baseline provincial R1 (196 provincias, 100% cobertura) |
 | `backend/data/r1_districts_flat.json` | Baseline distrital R1 (1518/1892 con datos) |
+| `frontend/public/r1_districts_flat.json` | Copia pública para panel distrital del mapa (lazy-load) |
 | `scripts/verify_r2_onpe.js` | Verificación pre-electoral (correr 7J ~19:45 PET) |
+| `scripts/onpe_bookmarklet.js` | Script de noche electoral — correr en browser ONPE para relay a Railway |
 | `POST_MORTEM_2026.md` | Análisis completo post R1, incluye §8 contrafactual |
 | `ELECTION_NIGHT_PLAN.md` | Especificación técnica projector (metodología, activación) |
 | `ONPE_API.md` | Documentación ingeniería inversa ONPE API |
 | `scripts/sandbox_r1_corrections.py` | Pruebas de correcciones (MAE 4.00→1.59pp) |
 | `frontend/src/components/tabs/BacktestingTab.jsx` | Visualización histórica |
+| `frontend/src/components/tabs/LiveResultsTab.jsx` | Tab 7J Resultados — mapa, panel distrital, tabla, needle |
+| `frontend/src/components/PeruDeptMap.jsx` | Mapa SVG departamental (react-simple-maps, matching por nombre) |
 
 ---
 
@@ -221,3 +226,51 @@ proyección desde el primer snapshot. No hay "activación" en ningún umbral.
 - Cuando reportan (~94%): sus valores reales reemplazan el prior
 - El campo `zda.always_projected = true` lo confirma en la API
 - La variación al llegar sus datos reales es acotada por el CI bootstrap
+
+---
+
+## Noche electoral — relay ONPE (7J 2026)
+
+### Problema confirmado (30 may 2026)
+La API ONPE `/presentacion-backend/*` **solo funciona same-origin** desde dentro del
+browser en `resultadoelectoral.onpe.gob.pe`. Desde Railway (Node.js externo) o
+cualquier servidor externo, el Nginx de ONPE devuelve el HTML del SPA Angular con
+HTTP 200 como catch-all — nunca el JSON real. Incluso con headers `Origin`/`Referer`
+correctos.
+
+Consecuencia: `ONPE_POLLING_ENABLED=true` en Railway **nunca producirá datos** —
+el cron siempre obtendrá HTML y `has_data` se mantendrá `false`.
+
+### Solución implementada
+**Relay browser → Railway:**
+
+1. `POST /api/admin/inject-snapshot` (nuevo endpoint en Railway)
+   - Protegido por `Authorization: Bearer <ADMIN_SECRET>`
+   - Recibe snapshot, guarda en `onpe_live_snapshots`, corre proyector
+   - Setup requerido: `ADMIN_SECRET=<random 32 chars>` en Railway env vars
+
+2. `scripts/onpe_bookmarklet.js` (correr en DevTools Console en el sitio ONPE)
+   - Desde dentro del dominio ONPE, los fetches son same-origin → funcionan
+   - Recoge: nacional + totales + 25 depts + exterior
+   - POST a Railway cada 2 minutos (auto-loop)
+   - Contiene versión minificada como bookmarklet de barra de favoritos
+
+### Checklist pre-7J
+- [ ] Set `ADMIN_SECRET=<openssl rand -hex 16>` en Railway Environment Variables
+- [ ] Editar `RAILWAY_URL` y `ADMIN_SECRET` al inicio de `scripts/onpe_bookmarklet.js`
+- [ ] Confirmar `idEleccion` R2 el 7J: interceptar XHR en sitio ONPE → buscar `idEleccion=XX` en las llamadas (esperado: 11)
+- [ ] A las 20:00 PET del 7J: abrir ONPE, pegar script en DevTools Console
+- [ ] Verificar primer POST exitoso (console.log `✅ Guardado. snapshot_id=X`)
+- [ ] NO activar `ONPE_POLLING_ENABLED` en Railway — inútil y consume compute
+
+### Cobertura distrital (panel mapa)
+`frontend/public/r1_districts_flat.json`: 1892 distritos, 1518 con kf_r2_share (80%).
+Los 374 sin datos pertenecen a 11 depts: Moquegua, Pasco, Piura, Puno, San Martín,
+Tacna, Tumbes, Ucayali (0/N) + Cajamarca 126/127, Loreto 51/54, Madre de Dios 4/11.
+Comportamiento UI: esos depts muestran "Sin desglose distrital disponible" — correcto.
+
+### API endpoints nuevos (7J)
+| Endpoint | Propósito |
+|---|---|
+| `GET /api/live-projection` | Adapter frontend: traduce salida del proyector al shape que LiveResultsTab espera |
+| `POST /api/admin/inject-snapshot` | Relay noche electoral: recibe snapshot del browser, guarda y proyecta |
