@@ -192,6 +192,17 @@ async function autoMigrate() {
     console.warn('⚠️  seed_r2.sql falló (no fatal):', e.message);
   }
 
+  // Tablas de noche electoral (idempotent — IF NOT EXISTS)
+  try {
+    const onpeSql = fs.readFileSync(path.join(__dirname, 'db', 'onpe_snapshots.sql'), 'utf8');
+    await db.query(onpeSql);
+    const projSql = fs.readFileSync(path.join(__dirname, 'db', 'r2_projections.sql'), 'utf8');
+    await db.query(projSql);
+    console.log('   ✅ Tablas ONPE noche electoral: verificadas');
+  } catch (e) {
+    console.warn('⚠️  ONPE tables migration falló (no fatal):', e.message);
+  }
+
   return false;
 }
 

@@ -101,9 +101,9 @@ function startOnpeCron() {
     console.log('📊 ONPE live polling deshabilitado (set ONPE_POLLING_ENABLED=true para activar)');
     return;
   }
-  console.log('📊 ONPE live polling activado — cada 2 minutos');
+  console.log('📊 ONPE live polling activado — cada 30 minutos');
   runPoll();
-  cronJob = cron.schedule('*/2 * * * *', runPoll);
+  cronJob = cron.schedule('*/30 * * * *', runPoll);
 }
 
 function stopOnpeCron() {
