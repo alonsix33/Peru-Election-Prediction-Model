@@ -167,6 +167,7 @@ Aliaga aparece ~+3pp en todas las encuestas pre-R1. Sin corrección (modelo corr
 - [x] Encuesta IEP mayo 22-26 ingresada (KF 36%, RSP 30%, n=1204) — nota metodológica: B/N no se leyó como opción → 6% espontáneo (no comparable con abr 24%)
 - [x] CIT mayo 14-17 simulacro ingresado (KF 40.5% RSP 36.0% B/N 23.5% n=1220) — en seed_r2.sql, auto-insertado en cada deploy
 - [x] CIT mayo 26-29 ingresado (KF 41.1% RSP ~33.4% B/V 14.2% NS/NR 12.3% n=1220) — en seed_r2.sql, última CIT antes de veda (31 may)
+- [x] Datum mayo 26-30 ingresado (simulacro KF 39.7%/RSP 35.4% + intención KF 39.8%/RSP 35.9%, n=1501, ±2.5pp) — última encuesta Datum antes de veda
 - [x] **Phase 1 — Projector estratificado** (commit en PR #131): `electionNightProjector.js` extiende shift a 3 granularidades (district → province → dept → naive). Backtest R1: shift=0.00pp ✅, district 1270 units / 3,766,559 VV R1. Nuevas columnas DB: `province_breakdown`, `district_breakdown` en `onpe_live_snapshots`; `province_shifts`, `district_shifts`, `shift_granularity` en `r2_election_projections`.
 - [x] **Phase 2 — API routes** (PR #131): `inject-snapshot` almacena province/district breakdown; `live-projection` devuelve `provinces[]`, `districts[]`, `shift_granularity`
 - [x] **Phase 3 — Bookmarklet extendido** (PR #131): recoge 196 provincias + 1518 distritos con throttle 20/25 concurrent. Catálogos hardcodeados para evitar bug ONPE `/ubigeos/provincias`.

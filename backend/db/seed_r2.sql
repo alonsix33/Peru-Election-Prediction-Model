@@ -561,6 +561,64 @@ BEGIN
   END IF;
 END $$;
 
+-- ── Datum segunda vuelta: mayo 26-30, 2026 ──────────────────────
+-- Datum / El Comercio. Simulacro + Intención de voto segunda vuelta (mismo survey, n=1501).
+-- SIMULACRO (votos emitidos): KF 39.7%, RSP 35.4%, Blanco 14.4%, Viciado 10.5%.
+-- INTENCIÓN DE VOTO: KF 39.8%, RSP 35.9%, B/V 13.8%, NS/NR 10.5%.
+-- Campo: 26-30 mayo 2026. Publicado: 31 mayo 2026. n=1501, ±2.5%, confianza 95%.
+-- Votos válidos (simulacro): KF 52.9%, RSP 47.1% (pool 75.1%).
+-- Votos válidos (intención): KF 52.6%, RSP 47.4% (pool 75.7%).
+-- Regional (válidos): Lima KF 62.9%, Norte KF 61%, Centro KF 43.4%, Sur RSP 65.9%, Oriente RSP 56.6%.
+DO $$
+DECLARE
+  p_id    INT;
+  poll_id INT;
+BEGIN
+  SELECT id INTO p_id FROM pollsters WHERE name = 'Datum';
+
+  -- Simulacro (votos emitidos, pct_blank_null = blanco 14.4% + viciado 10.5% = 24.9%)
+  IF NOT EXISTS (
+    SELECT 1 FROM polls
+    WHERE pollster_id = p_id AND field_end = '2026-05-30' AND election_round = 2
+      AND poll_type = 'simulacro'
+  ) THEN
+    INSERT INTO polls (pollster_id, field_start, field_end, published_date, sample_n, margin_error,
+                       confidence_lvl, scope, technique, poll_type,
+                       pct_undecided, pct_blank_null, notes, election_round)
+    VALUES (p_id, '2026-05-26', '2026-05-30', '2026-05-31', 1501, 2.50, 95.0,
+            'nacional', 'presencial', 'simulacro',
+            NULL, 24.9,
+            'Datum simulacro R2 may 26-30 2026. Votos emitidos: KF 39.7%, RSP 35.4%, Blanco 14.4%, Viciado 10.5%. Pool válido 75.1%. V.v.: KF 52.9%, RSP 47.1%. Regional (v.v.): Lima KF62.9/RSP37.1, Norte KF61/RSP39, Centro KF43.4/RSP56.5, Sur KF34.1/RSP65.9, Oriente KF43.4/RSP56.6.',
+            2)
+    RETURNING id INTO poll_id;
+
+    INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
+      (poll_id, 'Keiko Fujimori',           'Fuerza Popular',     39.7),
+      (poll_id, 'Roberto Sánchez Palomino', 'Juntos por el Perú', 35.4);
+  END IF;
+
+  -- Intención de voto (pregunta directa, mismo survey wave n=1501)
+  IF NOT EXISTS (
+    SELECT 1 FROM polls
+    WHERE pollster_id = p_id AND field_end = '2026-05-30' AND election_round = 2
+      AND poll_type = 'intencion_voto'
+  ) THEN
+    INSERT INTO polls (pollster_id, field_start, field_end, published_date, sample_n, margin_error,
+                       confidence_lvl, scope, technique, poll_type,
+                       pct_undecided, pct_blank_null, notes, election_round)
+    VALUES (p_id, '2026-05-26', '2026-05-30', '2026-05-31', 1501, 2.50, 95.0,
+            'nacional', 'presencial', 'intencion_voto',
+            10.5, 13.8,
+            'Datum intención R2 may 26-30 2026. KF 39.8%, RSP 35.9%, B/V 13.8%, NS/NR 10.5%. Pool válido 75.7%. V.v.: KF 52.6%, RSP 47.4%. Misma muestra que simulacro (n=1501) — ambas preguntas del mismo survey.',
+            2)
+    RETURNING id INTO poll_id;
+
+    INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
+      (poll_id, 'Keiko Fujimori',           'Fuerza Popular',     39.8),
+      (poll_id, 'Roberto Sánchez Palomino', 'Juntos por el Perú', 35.9);
+  END IF;
+END $$;
+
 -- ── Ipsos-Perú21 simulacro segunda vuelta: 29-30 mayo 2026 ────
 -- Simulacro nacional urbano-rural, n=1204. Última encuesta antes de veda (31 may).
 -- Votos emitidos: KF 40.4%, RSP 38.3%, B/V 21.3% (en blanco 10.5% + viciado 10.8%).
