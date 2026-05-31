@@ -646,6 +646,17 @@ router.get('/force-run', async (req, res) => {
     const { nowPeru, ELECTION_DAY } = require('../model/clock');
     const now = nowPeru();
     const isPostClose = now.toISODate() === ELECTION_DAY && now.hour >= 18;
+
+    // Guard: don't create duplicate final_election_day entries
+    if (isPostClose) {
+      const { rows: existingFinal } = await db.query(
+        `SELECT id FROM model_predictions WHERE trigger = 'final_election_day' AND election_round = 2 LIMIT 1`
+      );
+      if (existingFinal.length > 0) {
+        return res.json({ polls_inserted: inserted, message: 'final_election_day R2 ya existe — no se creó duplicado' });
+      }
+    }
+
     const trigger = isPostClose ? 'final_election_day' : 'auto_polymarket_update';
     const result = await runFullPipeline({ saveToDB: true, trigger, electionRound: 2 });
 
@@ -959,12 +970,15 @@ router.get('/live-projection', async (req, res) => {
         pct_actas:   100,
       },
 
-      // Department array for map + table
+      // Department array for map + table (includes vote counts for sorting)
       departments: (r.dept_shifts || []).map(d => ({
-        ubigeo:      d.ubigeo,
-        nombre:      d.nombre,
-        kf_r2_share: d.current_kf_r2_share,
-        pct_actas:   null,
+        ubigeo:        d.ubigeo,
+        nombre:        d.nombre,
+        kf_r2_share:   d.current_kf_r2_share,
+        shift_pp:      d.shift_pp,
+        keiko_votos:   d.keiko_votos   ?? null,
+        sanchez_votos: d.sanchez_votos ?? null,
+        pct_actas:     null,  // not available from ONPE national endpoint
       })),
     });
   } catch (err) {

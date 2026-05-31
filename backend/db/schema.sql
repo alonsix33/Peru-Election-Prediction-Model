@@ -85,6 +85,12 @@ CREATE TABLE model_predictions (
   frozen_at            TIMESTAMPTZ
 );
 
+-- Performance indexes (idempotent)
+CREATE INDEX IF NOT EXISTS idx_polymarket_snapshots_lima     ON polymarket_snapshots(captured_at_lima DESC);
+CREATE INDEX IF NOT EXISTS idx_model_predictions_lima        ON model_predictions(generated_at_lima DESC);
+CREATE INDEX IF NOT EXISTS idx_model_predictions_round       ON model_predictions(election_round, trigger, generated_at_lima DESC);
+CREATE INDEX IF NOT EXISTS idx_polymarket_snapshots_round    ON polymarket_snapshots(election_round, captured_at_lima DESC);
+
 -- Tabla de errores del sistema
 CREATE TABLE error_log (
   id               SERIAL PRIMARY KEY,

@@ -95,6 +95,18 @@ async function autoMigrate() {
     console.warn('⚠️  antivoto_snapshots migration falló:', e.message);
   }
 
+  // Performance indexes (idempotent — IF NOT EXISTS)
+  try {
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_polymarket_snapshots_lima  ON polymarket_snapshots(captured_at_lima DESC)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_model_predictions_lima     ON model_predictions(generated_at_lima DESC)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_model_predictions_round    ON model_predictions(election_round, trigger, generated_at_lima DESC)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_polymarket_snapshots_round ON polymarket_snapshots(election_round, captured_at_lima DESC)`);
+    await db.query(`CREATE INDEX IF NOT EXISTS idx_onpe_snapshots_at          ON onpe_live_snapshots(captured_at DESC)`).catch(() => {});
+    console.log('   ✅ Indexes: verificados');
+  } catch (e) {
+    console.warn('⚠️  Index migration falló:', e.message);
+  }
+
   // Seed antivoto data — insertar si no existe (queries individuales)
   try {
     const { rows: [ipsos] } = await db.query(`SELECT id FROM pollsters WHERE name = 'Ipsos'`);

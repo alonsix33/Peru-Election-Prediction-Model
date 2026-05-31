@@ -499,8 +499,8 @@ function RiskScenarios({ risk, candidates, phase }) {
 }
 
 // ─── ONPE Live Results ──────────────────────────────────────
-const KEIKO_COLOR  = '#B45309';
-const SANCHEZ_COLOR = '#1D4ED8';
+const KEIKO_COLOR   = '#F97316';  // orange — consistent with rest of app
+const SANCHEZ_COLOR = '#16A34A';  // green  — consistent with rest of app
 
 function OnpeLiveSection() {
   const [data, setData] = useState(null);
@@ -508,9 +508,31 @@ function OnpeLiveSection() {
 
   useEffect(() => {
     const load = () =>
-      fetch(`${API}/api/onpe/live`)
+      fetch(`${API}/api/live-projection`)
         .then(r => r.json())
-        .then(d => { setData(d); setSecsAgo(0); })
+        .then(d => {
+          if (d?.status !== 'ok') return;
+          setData({
+            has_data:      true,
+            pct_actas:     d.pct_actas,
+            keiko_pct:     d.kf_r2_share,
+            sanchez_pct:   d.kf_r2_share != null ? parseFloat((100 - d.kf_r2_share).toFixed(3)) : null,
+            keiko_votos:   d.kf_votos,
+            sanchez_votos: d.rsp_votos,
+            departamentos: (d.departments || [])
+              .sort((a, b) => ((b.keiko_votos || 0) + (b.sanchez_votos || 0)) - ((a.keiko_votos || 0) + (a.sanchez_votos || 0)))
+              .map(dept => ({
+                nombre:       dept.nombre,
+                ubigeo:       dept.ubigeo,
+                keiko_pct:    dept.kf_r2_share,
+                sanchez_pct:  dept.kf_r2_share != null ? parseFloat((100 - dept.kf_r2_share).toFixed(1)) : null,
+                keiko_votos:  dept.keiko_votos   || 0,
+                sanchez_votos: dept.sanchez_votos || 0,
+              })),
+            extranjero: [],
+          });
+          setSecsAgo(0);
+        })
         .catch(() => {});
     load();
     const pollId = setInterval(load, 2 * 60 * 1000);

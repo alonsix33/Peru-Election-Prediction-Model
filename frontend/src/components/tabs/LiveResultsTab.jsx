@@ -483,7 +483,7 @@ export default function LiveResultsTab({ predictions }) {
       const res = await fetch(`${API_BASE}/api/live-projection`);
       if (!res.ok) return;
       const json = await res.json();
-      if (json?.pct_actas > 0) { setLiveData(json); setIsLive(true); }
+      if (json?.status === 'ok') { setLiveData(json); setIsLive(true); }
     } catch { /* stay in demo */ }
   }, []);
 

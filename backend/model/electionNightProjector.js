@@ -144,6 +144,9 @@ function _round2(v) {
 }
 
 // ─── Bootstrap CI ─────────────────────────────────────────────────────────────
+// IMPORTANT: pass dom_kf / dom_rsp (exterior-subtracted), not national obs_kf / obs_rsp.
+// Using national values centers the CI on the national share (inflated by exterior KF
+// bias) instead of the domestic share, producing a ~0.84pp high CI at 40% actas.
 
 function _bootstrapCI(obs_kf, obs_rsp, regular_remaining, zda_remaining, national_shift, sigma) {
   const obs_kf_r2_share = 100 * obs_kf / (obs_kf + obs_rsp);
@@ -174,6 +177,37 @@ function _bootstrapCI(obs_kf, obs_rsp, regular_remaining, zda_remaining, nationa
   };
 }
 
+// ─── Stratified shift (reporting-order correction) ───────────────────────────
+// Computes the R2 swing using only reported departments' deviation from their R1 baseline.
+// This removes the early-count Lima bias: when Lima reports 1-2h before sierra,
+// a naive national shift overestimates KF by 2-4pp. Stratified shift anchors on
+// the R1 per-dept baseline so each dept contributes proportionally to its R1 vote weight.
+
+function _computeStratifiedShift(dept_breakdown) {
+  if (!_r1ByDept || !Array.isArray(dept_breakdown) || !dept_breakdown.length) return null;
+
+  let sum_vv = 0, sum_kf_actual = 0, sum_kf_r1_expected = 0;
+
+  for (const d of dept_breakdown) {
+    const pair = (d.keiko_votos || 0) + (d.sanchez_votos || 0);
+    if (pair < 200) continue;  // skip fragments (< 200 votes = noise)
+
+    const dept = _r1ByDept[d.ubigeo];
+    if (!dept) continue;
+
+    const r1_vv = dept.kfV + dept.rspV;
+    const kf_r2_actual = 100 * (d.keiko_votos || 0) / pair;
+
+    sum_vv            += r1_vv;
+    sum_kf_actual     += r1_vv * kf_r2_actual;
+    sum_kf_r1_expected += r1_vv * dept.kf_r2_share;
+  }
+
+  if (sum_vv < 5000) return null;  // need meaningful reported R1 VV mass
+
+  return (sum_kf_actual - sum_kf_r1_expected) / sum_vv;
+}
+
 // ─── Department-level shift tracking ─────────────────────────────────────────
 
 function _computeDeptShifts(dept_breakdown) {
@@ -197,6 +231,8 @@ function _computeDeptShifts(dept_breakdown) {
       return {
         nombre:              d.nombre,
         ubigeo:              d.ubigeo,
+        keiko_votos:         kf,
+        sanchez_votos:       rsp,
         current_kf_r2_share: _round2(current_kf_r2),
         r1_kf_r2_share:      _round2(r1_kf_r2),
         shift_pp:            _round2(shift),
@@ -276,8 +312,14 @@ function project(snapshot) {
   const zda_remaining       = Math.max(0, TOTAL_MESAS_ZDA - reported_zda_approx);
   const regular_remaining   = Math.max(0, TOTAL_MESAS - obs_mesas - zda_remaining);
 
-  // ── R2 vs R1 national shift (domestic-only to avoid exterior bias) ──────────
-  const national_shift = dom_kf_r2_share - R1_KF_R2_SHARE_DOMESTIC;
+  // ── R2 vs R1 shift — stratified (per-dept) preferred over naive national ────
+  // Stratified shift uses only reported depts' deviation from their R1 baseline,
+  // eliminating the reporting-order bias (Lima reports 1-2h before sierra).
+  // Falls back to naive dom_kf_r2_share - baseline when dept data is sparse.
+  const stratified_shift = _computeStratifiedShift(dept_breakdown);
+  const national_shift = stratified_shift !== null
+    ? stratified_shift
+    : dom_kf_r2_share - R1_KF_R2_SHARE_DOMESTIC;
 
   // ── Projected kf_r2_share for remaining strata ───────────────────────────
   const reg_proj_kf_r2 = _clamp(R1_KF_R2_SHARE_DOMESTIC + national_shift, 0, 100);
@@ -291,12 +333,16 @@ function project(snapshot) {
     ? _clamp(r1_ext_kf_r2 + national_shift, 0, 100)
     : obs_kf_r2_share;  // fallback: assume same as observed national
 
-  // Estimate remaining exterior votes (R1: ~550k ext valid votes total)
-  const R1_EXT_PAIR_VV = _r1Exterior
-    ? (_r1Exterior.kfV + _r1Exterior.rspV)
-    : 500000;  // fallback estimate
+  // Estimate remaining exterior votes.
+  // r1_exterior.json stores only KF+RSP bilateral pair from R1 (60,448).
+  // In R2 (bilateral), total exterior valid votes ≈ total R1 exterior valid votes
+  // × R2/R1 turnout factor ≈ 265,000. Derivation: KF got ~20% of exterior valid votes
+  // in R1 (kfV=52,454) → total R1 exterior valid ≈ 262k → R2 ≈ same order.
+  const R2_EXT_BILATERAL_EST = _r1Exterior
+    ? Math.round(_r1Exterior.kfV / 0.199)   // 52,454 / 0.199 ≈ 263,588 ≈ 265k
+    : 265000;
   const ext_reported_pair = ext_kf + ext_rsp;
-  const ext_remaining_vv  = Math.max(0, R1_EXT_PAIR_VV - ext_reported_pair);
+  const ext_remaining_vv  = Math.max(0, R2_EXT_BILATERAL_EST - ext_reported_pair);
 
   // ── Point estimate ────────────────────────────────────────────────────────
   const rem_reg_vv = regular_remaining * VV_PER_MESA;
@@ -318,9 +364,10 @@ function project(snapshot) {
     : 0;
 
   // ── Bootstrap CI ──────────────────────────────────────────────────────────
+  // Pass dom_kf/dom_rsp (exterior-subtracted) so the CI centers on domestic share.
   const pct_remaining = 1 - pct / 100;
   const sigma = Math.max(0.3, SIGMA_BASE * Math.sqrt(pct_remaining));
-  const ci = _bootstrapCI(obs_kf, obs_rsp, regular_remaining, zda_remaining, national_shift, sigma);
+  const ci = _bootstrapCI(dom_kf, dom_rsp, regular_remaining, zda_remaining, national_shift, sigma);
 
   // ── Phase determination ───────────────────────────────────────────────────
   // ZDA correction is ALWAYS embedded in the projection from the first data point.
@@ -393,15 +440,18 @@ function project(snapshot) {
     dept_shifts,
 
     debug: {
-      r1_domestic_baseline:  R1_KF_R2_SHARE_DOMESTIC,
-      r1_national_baseline:  R1_KF_R2_SHARE_NATIONAL,
-      dom_kf_r2_share:       _round2(dom_kf_r2_share),
-      obs_mesas:             Math.round(obs_mesas),
-      regular_remaining:     Math.round(regular_remaining),
-      zda_remaining:         Math.round(zda_remaining),
-      ext_remaining_vv:      Math.round(ext_remaining_vv),
-      rem_reg_vv:            Math.round(rem_reg_vv),
-      rem_zda_vv:            Math.round(rem_zda_vv),
+      r1_domestic_baseline:    R1_KF_R2_SHARE_DOMESTIC,
+      r1_national_baseline:    R1_KF_R2_SHARE_NATIONAL,
+      dom_kf_r2_share:         _round2(dom_kf_r2_share),
+      stratified_shift_used:   stratified_shift !== null,
+      naive_shift_pp:          _round2(dom_kf_r2_share - R1_KF_R2_SHARE_DOMESTIC),
+      obs_mesas:               Math.round(obs_mesas),
+      regular_remaining:       Math.round(regular_remaining),
+      zda_remaining:           Math.round(zda_remaining),
+      ext_remaining_vv:        Math.round(ext_remaining_vv),
+      r2_ext_bilateral_est:    _r1Exterior ? Math.round(_r1Exterior.kfV / 0.199) : 265000,
+      rem_reg_vv:              Math.round(rem_reg_vv),
+      rem_zda_vv:              Math.round(rem_zda_vv),
     },
   };
 }
