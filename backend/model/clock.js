@@ -2,7 +2,7 @@ const { DateTime } = require('luxon');
 
 const PERU_TIMEZONE = 'America/Lima'; // UTC-5, sin horario de verano
 const ELECTION_DAY  = '2026-06-07'; // Segunda vuelta: Keiko Fujimori vs Roberto Sánchez
-const VEDA_START    = '2026-05-31T08:00:00'; // Veda desde 8am del sábado anterior
+const VEDA_START    = '2026-06-01T00:00:00'; // Veda desde medianoche del lunes 1 junio
 
 /**
  * Retorna el DateTime actual en hora de Perú.
