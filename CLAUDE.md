@@ -256,8 +256,9 @@ el cron siempre obtendrá HTML y `has_data` se mantendrá `false`.
    - Contiene versión minificada como bookmarklet de barra de favoritos
 
 ### Checklist pre-7J
-- [ ] Set `ADMIN_SECRET=<openssl rand -hex 16>` en Railway Environment Variables
-- [ ] Editar `RAILWAY_URL` y `ADMIN_SECRET` al inicio de `scripts/onpe_bookmarklet.js`
+- [x] Set `ADMIN_SECRET` en Railway Environment Variables — **ya configurado** (rotar si se compromete)
+- [ ] El 7J: editar `RAILWAY_URL` y `ADMIN_SECRET` reales al inicio de `scripts/onpe_bookmarklet.js` SOLO en tu copia local — NUNCA commitear los valores reales
+- [x] `VITE_API_URL` en Cloudflare Pages → Settings → Environment Variables (ver `frontend/.env.example`)
 - [ ] Confirmar `idEleccion` R2 el 7J: interceptar XHR en sitio ONPE → buscar `idEleccion=XX` en las llamadas (esperado: 11)
 - [ ] A las 20:00 PET del 7J: abrir ONPE, pegar script en DevTools Console
 - [ ] Verificar primer POST exitoso (console.log `✅ Guardado. snapshot_id=X`)

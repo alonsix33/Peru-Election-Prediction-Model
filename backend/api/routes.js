@@ -339,49 +339,6 @@ router.get('/force-run', async (req, res) => {
   try {
     const inserted = [];
 
-    // Limpiar registros IEP R2 con fechas incorrectas (mayo 2026)
-    // y asegurar que el correcto (abr 21-25, intención de voto 31/32) exista.
-    try {
-      const { rows: iepRows } = await db.query(
-        `SELECT id FROM polls p
-         JOIN pollsters ps ON p.pollster_id = ps.id
-         WHERE ps.name = 'IEP' AND p.election_round = 2
-           AND p.field_end BETWEEN '2026-05-01' AND '2026-05-31'`
-      );
-      for (const row of iepRows) {
-        await db.query('DELETE FROM poll_results WHERE poll_id = $1', [row.id]);
-        await db.query('DELETE FROM polls WHERE id = $1', [row.id]);
-        inserted.push(`IEP R2 registro incorrecto eliminado (id=${row.id})`);
-      }
-
-      // Insertar correcto si no existe
-      const { rows: iepOk } = await db.query(
-        `SELECT id FROM polls p
-         JOIN pollsters ps ON p.pollster_id = ps.id
-         WHERE ps.name = 'IEP' AND p.election_round = 2 AND p.field_end = '2026-04-25'`
-      );
-      if (iepOk.length === 0) {
-        const { rows: [iepPollster] } = await db.query(`SELECT id FROM pollsters WHERE name = 'IEP'`);
-        if (iepPollster) {
-          const { rows: [newPoll] } = await db.query(`
-            INSERT INTO polls (pollster_id, field_start, field_end, published_date, sample_n, margin_error,
-                               confidence_lvl, scope, technique, poll_type,
-                               pct_undecided, pct_blank_null, notes, election_round)
-            VALUES ($1, '2026-04-21', '2026-04-25', '2026-05-02', 1600, 2.80, 95.0,
-                    'nacional', 'presencial', 'intencion_voto', 37.0, 24.0,
-                    'IEP abr 21-25 2026. Intención de voto segunda vuelta: Sánchez 32%, Keiko 31%, B/N 24%, NS/NP 13%. IEP confirmó que no hubo encuesta de mayo.',
-                    2)
-            RETURNING id`, [iepPollster.id]);
-          await db.query(`INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
-            ($1, 'Keiko Fujimori', 'Fuerza Popular', 31.0),
-            ($1, 'Roberto Sánchez Palomino', 'Juntos por el Perú', 32.0)`, [newPoll.id]);
-          inserted.push('IEP abr 21-25 2026 (intención de voto 31/32) insertado');
-        }
-      }
-    } catch (iepErr) {
-      console.warn('IEP cleanup falló:', iepErr.message);
-    }
-
     // Crear tabla antivoto_snapshots si no existe
     try {
       await db.query(`

@@ -95,65 +95,7 @@ async function autoMigrate() {
     console.warn('⚠️  antivoto_snapshots migration falló:', e.message);
   }
 
-  // Fix R2 data — queries individuales (no multi-statement SQL, pg lib limitation)
-  // 1. Limpiar registros IEP R2 con fechas de mayo 2026 (datos incorrectos)
-  try {
-    const { rows: badIep } = await db.query(`
-      SELECT p.id FROM polls p
-      JOIN pollsters ps ON p.pollster_id = ps.id
-      WHERE ps.name = 'IEP' AND p.election_round = 2
-        AND p.field_end BETWEEN '2026-05-01' AND '2026-05-31'
-    `);
-    for (const row of badIep) {
-      await db.query('DELETE FROM poll_results WHERE poll_id = $1', [row.id]);
-      await db.query('DELETE FROM polls WHERE id = $1', [row.id]);
-      console.log(`   🧹 IEP R2 registro incorrecto eliminado (id=${row.id})`);
-    }
-  } catch (e) {
-    console.warn('⚠️  IEP cleanup falló:', e.message);
-  }
-
-  // 2. Insertar encuesta IEP correcta si no existe (abr 21-25, intencion_voto, 31/32%)
-  try {
-    const { rows: [iepPollster] } = await db.query(`SELECT id FROM pollsters WHERE name = 'IEP'`);
-    if (iepPollster) {
-      const { rows: exists } = await db.query(
-        `SELECT id FROM polls WHERE pollster_id = $1 AND field_end = '2026-04-25' AND election_round = 2`,
-        [iepPollster.id]
-      );
-      if (exists.length === 0) {
-        const { rows: [newPoll] } = await db.query(`
-          INSERT INTO polls (pollster_id, field_start, field_end, published_date, sample_n,
-                             margin_error, confidence_lvl, scope, technique, poll_type,
-                             pct_undecided, pct_blank_null, notes, election_round)
-          VALUES ($1, '2026-04-21', '2026-04-25', '2026-05-02', 1600, 2.80, 95.0,
-                  'nacional', 'presencial', 'intencion_voto', 37.0, 24.0,
-                  'IEP abr 21-25 2026. Intención de voto R2: Sánchez 32%, Keiko 31%, B/N 24%, NS/NP 13%. IEP confirmó que no hubo encuesta de mayo.',
-                  2)
-          RETURNING id`, [iepPollster.id]);
-        await db.query(
-          `INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
-           ($1, 'Keiko Fujimori', 'Fuerza Popular', 31.0),
-           ($1, 'Roberto Sánchez Palomino', 'Juntos por el Perú', 32.0)`,
-          [newPoll.id]
-        );
-        console.log('   ✅ IEP abr 21-25 2026 insertado (31%/32% intencion_voto)');
-      }
-    }
-  } catch (e) {
-    console.warn('⚠️  IEP insert falló:', e.message);
-  }
-
-  // 3. Actualizar pesos de encuestadoras R2
-  // Ipsos 1.30: mejor rendimiento R1 2026. Datum 1.15: mejor track record R2 histórico (1.4pp prom).
-  try {
-    await db.query(`UPDATE pollsters SET weight_multiplier = 1.30 WHERE name = 'Ipsos'`);
-    await db.query(`UPDATE pollsters SET weight_multiplier = 1.15 WHERE name = 'Datum'`);
-  } catch (e) {
-    console.warn('⚠️  Pollster weights update falló:', e.message);
-  }
-
-  // 4. Seed antivoto data — insertar si no existe (queries individuales)
+  // Seed antivoto data — insertar si no existe (queries individuales)
   try {
     const { rows: [ipsos] } = await db.query(`SELECT id FROM pollsters WHERE name = 'Ipsos'`);
     const { rows: [cit] }   = await db.query(`SELECT id FROM pollsters WHERE name = 'CIT'`);
