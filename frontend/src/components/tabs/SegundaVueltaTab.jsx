@@ -566,11 +566,11 @@ function AllianceSection() {
 function GeographicSection() {
   const [expanded, setExpanded] = useState(false);
   const data = [
-    { region: 'Lima / Callao', keiko: 48.8, sanchez: 25.6, note: 'Keiko +23pp' },
-    { region: 'Norte', keiko: 41.1, sanchez: 36.4, note: 'Keiko +5pp' },
-    { region: 'Centro', keiko: 30.1, sanchez: 47.3, note: 'Sánchez +17pp' },
-    { region: 'Sur', keiko: 27.9, sanchez: 44.7, note: 'Sánchez +17pp' },
-    { region: 'Oriente', keiko: 33.0, sanchez: 45.2, note: 'Sánchez +12pp' },
+    { region: 'Lima / Callao', keiko: 52.2, sanchez: 27.4, note: 'Keiko +25pp' },
+    { region: 'Norte',         keiko: 44.0, sanchez: 37.0, note: 'Keiko +7pp' },
+    { region: 'Centro',        keiko: 39.4, sanchez: 42.8, note: 'Sánchez +3pp' },
+    { region: 'Sur',           keiko: 17.8, sanchez: 56.8, note: 'Sánchez +39pp' },
+    { region: 'Oriente',       keiko: 34.3, sanchez: 39.5, note: 'Sánchez +5pp' },
   ];
 
   return (
@@ -584,7 +584,7 @@ function GeographicSection() {
             Polarización geográfica
           </h3>
           <p style={{ color: '#A8A29E', fontSize: 12, margin: 0 }}>
-            Datum, 17-20 may 2026 · Lima vs. el resto del país
+            Ipsos-Perú21, 29-30 may 2026 · simulacro urbano-rural · votos emitidos
           </p>
         </div>
         <ChevronDown
