@@ -7,7 +7,6 @@ const KEIKO_COLOR   = getPartyColor('Keiko Fujimori').primary;           // #F97
 const SANCHEZ_COLOR = getPartyColor('Roberto Sánchez Palomino').primary; // #16A34A
 const API_BASE      = import.meta.env.VITE_API_URL || '';
 
-// Module-level cache so re-mounts don't flash demo data when live data was already fetched
 let _liveDataCache = null;
 
 // ─── Demo data (R1 2026) ──────────────────────────────────────
@@ -18,15 +17,13 @@ const DEMO = {
     ci_low:           57.5,
     ci_high:          60.1,
     pct_actas:        100,
-    kf_votos:         2_877_678,  // ONPE R1 oficial
-    rsp_votos:        2_015_114,  // ONPE R1 oficial
+    kf_votos:         2_877_678,
+    rsp_votos:        2_015_114,
   },
-  // Nacional doméstico (total − exterior)
-  nacional: { kf_r2_share: 58.46, kf_votos: 2_825_224, rsp_votos: 2_007_120 },
-  // Exterior R1 real (r1_exterior.json)
-  extranjero: { kf_r2_share: 86.78, kf_votos: 52_454, rsp_votos: 7_994, pct_actas: 100 },
-  pct_actas: 100,
-  is_demo: true,
+  nacional:    { kf_r2_share: 58.46, kf_votos: 2_825_224, rsp_votos: 2_007_120 },
+  extranjero:  { kf_r2_share: 86.78, kf_votos: 52_454,    rsp_votos: 7_994, pct_actas: 100 },
+  pct_actas:   100,
+  is_demo:     true,
 };
 
 const DEMO_DEPTS = {
@@ -58,10 +55,15 @@ const DEMO_DEPTS = {
 };
 
 // ─── StatusBar ────────────────────────────────────────────────
-function StatusBar({ pct_actas, snapshot_ts, isDemo }) {
+function StatusBar({ pct_actas, snapshot_ts, isDemo, shiftGranularity }) {
   const ts = snapshot_ts
     ? new Date(snapshot_ts).toLocaleTimeString('es-PE', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit' })
     : null;
+
+  const granLabel = shiftGranularity === 'district'  ? 'distrito'
+                  : shiftGranularity === 'province'  ? 'provincia'
+                  : shiftGranularity === 'dept'      ? 'departamento'
+                  : null;
 
   return (
     <div style={{
@@ -85,6 +87,17 @@ function StatusBar({ pct_actas, snapshot_ts, isDemo }) {
         <>
           <span style={{ color: '#D4CEC8' }}>·</span>
           <span style={{ color: '#78716C' }}>Último snapshot: {ts} PET</span>
+        </>
+      )}
+      {granLabel && (
+        <>
+          <span style={{ color: '#D4CEC8' }}>·</span>
+          <span style={{
+            background: '#DCFCE7', color: '#15803D',
+            borderRadius: 4, padding: '1px 7px', fontSize: 11, fontWeight: 600,
+          }}>
+            proyección por {granLabel}
+          </span>
         </>
       )}
       {isDemo && (
@@ -160,7 +173,7 @@ function CandidateCards({ kf_r2_share, proj_kf_r2_share, ci_low, ci_high, kf_vot
   );
 }
 
-// ─── Horizontal vote bars (Nacional / Extranjero) ─────────────
+// ─── Horizontal vote bars ─────────────────────────────────────
 function VoteBars({ total, nacional, extranjero, isDemo }) {
   const [view, setView] = useState('total');
   const src = view === 'total' ? total : view === 'nacional' ? nacional : extranjero;
@@ -169,7 +182,6 @@ function VoteBars({ total, nacional, extranjero, isDemo }) {
   const rspShare = kfShare != null ? 100 - kfShare : null;
   const kfLeads  = kfShare != null && kfShare >= 50;
 
-  // Always put leader first
   const bars = kfShare != null ? (
     kfLeads
       ? [{ name: 'Keiko Fujimori',  color: KEIKO_COLOR,   share: kfShare,  votos: src?.kf_votos  },
@@ -182,7 +194,6 @@ function VoteBars({ total, nacional, extranjero, isDemo }) {
 
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 20 }}>
-      {/* Header + filter */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
         <h3 style={{ color: '#1C1917', fontSize: 15, fontWeight: 600, margin: 0 }}>
           Votos emitidos{isDemo ? <span style={{ color: '#A8A29E', fontWeight: 400, fontSize: 12 }}> · Demo R1</span> : ''}
@@ -202,8 +213,6 @@ function VoteBars({ total, nacional, extranjero, isDemo }) {
           ))}
         </div>
       </div>
-
-      {/* Bars */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {bars.map(b => (
           <div key={b.name}>
@@ -223,28 +232,17 @@ function VoteBars({ total, nacional, extranjero, isDemo }) {
             <div style={{ height: 28, borderRadius: 6, background: '#F0EDE8', overflow: 'hidden', position: 'relative' }}>
               <div style={{
                 width: `${b.share}%`, height: '100%',
-                background: b.color,
-                borderRadius: 6,
+                background: b.color, borderRadius: 6,
                 transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
               }} />
-              {/* 50% line */}
-              <div style={{
-                position: 'absolute', left: '50%', top: 0, bottom: 0,
-                width: 1, background: 'rgba(0,0,0,0.12)',
-              }} />
+              <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, background: 'rgba(0,0,0,0.12)' }} />
             </div>
           </div>
         ))}
       </div>
-
-      {/* 50% marker label */}
       <div style={{ position: 'relative', marginTop: 4, height: 14 }}>
-        <span style={{
-          position: 'absolute', left: '50%', transform: 'translateX(-50%)',
-          color: '#A8A29E', fontSize: 10,
-        }}>50%</span>
+        <span style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', color: '#A8A29E', fontSize: 10 }}>50%</span>
       </div>
-
       {view === 'total' && isDemo && (
         <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 8 }}>
           Total R1: KF 2,877,678 votos · RSP 2,015,114 votos (ONPE oficial).
@@ -259,17 +257,75 @@ function VoteBars({ total, nacional, extranjero, isDemo }) {
   );
 }
 
-// ─── Department detail panel (right of map) ──────────────────
-function DeptDetailPanel({ dept, districts, loading }) {
+// ─── Shared shift badge ───────────────────────────────────────
+function ShiftBadge({ shift_pp }) {
+  if (shift_pp == null) return null;
+  const abs  = Math.abs(shift_pp);
+  if (abs < 0.05) return <span style={{ color: '#A8A29E', fontSize: 10 }}>±0pp</span>;
+  const pos  = shift_pp > 0;
+  return (
+    <span style={{
+      fontSize: 10, fontWeight: 600,
+      color: pos ? KEIKO_COLOR : SANCHEZ_COLOR,
+      background: (pos ? KEIKO_COLOR : SANCHEZ_COLOR) + '12',
+      borderRadius: 4, padding: '1px 5px',
+    }}>
+      {pos ? '+' : ''}{shift_pp.toFixed(1)}pp
+    </span>
+  );
+}
+
+// ─── Shared result row (province or district) ─────────────────
+function ResultRow({ nombre, kf_r2_share, shift_pp, onClick, isClickable }) {
+  const kfLeads  = kf_r2_share != null && kf_r2_share >= 50;
+  const rspShare = kf_r2_share != null ? 100 - kf_r2_share : null;
+  const margin   = kf_r2_share != null ? Math.abs(kf_r2_share - 50) : null;
+  const winner   = kfLeads ? 'K' : 'S';
+  const color    = kfLeads ? KEIKO_COLOR : SANCHEZ_COLOR;
+
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '6px 0', borderBottom: '1px solid #F7F4EF', gap: 6,
+        cursor: isClickable ? 'pointer' : 'default',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
+        {isClickable && (
+          <span style={{ color: '#D4CEC8', fontSize: 11, flexShrink: 0 }}>›</span>
+        )}
+        <span style={{ color: '#1C1917', fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {nombre}
+        </span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        {shift_pp != null && <ShiftBadge shift_pp={shift_pp} />}
+        {kf_r2_share != null ? (
+          <span style={{ color, fontWeight: 700, fontSize: 12, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+            {winner}+{margin.toFixed(1)}pp
+          </span>
+        ) : (
+          <span style={{ color: '#A8A29E', fontSize: 12 }}>Sin datos</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Department detail panel ──────────────────────────────────
+function DeptDetailPanel({ dept, r1Districts, r1Loading, liveProvinces, liveDistricts, isLive }) {
+  const [selectedProv, setSelectedProv] = useState(null);
+
+  useEffect(() => { setSelectedProv(null); }, [dept?.ubigeo]);
+
   if (!dept) {
     return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', height: '100%', minHeight: 220, gap: 8,
-      }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: 220, gap: 8 }}>
         <div style={{ color: '#D4CEC8', fontSize: 28 }}>↖</div>
         <p style={{ color: '#A8A29E', fontSize: 13, textAlign: 'center', margin: 0 }}>
-          Haz clic en un departamento para ver el desglose distrital
+          Haz clic en un departamento para ver el desglose
         </p>
       </div>
     );
@@ -279,7 +335,94 @@ function DeptDetailPanel({ dept, districts, loading }) {
   const rsp     = kf != null ? 100 - kf : null;
   const margin  = kf != null ? Math.abs(kf - 50) : null;
   const kfLeads = kf != null && kf >= 50;
-  const sorted  = [...districts].sort((a, b) => {
+
+  const deptHeader = (
+    <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid #F0EDE8' }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: '#1C1917', marginBottom: 10 }}>
+        {dept.nombre}
+      </div>
+      <div style={{ display: 'flex', gap: 20, marginBottom: 8 }}>
+        <div>
+          <div style={{ color: '#8C877F', fontSize: 10, marginBottom: 2 }}>Keiko Fujimori</div>
+          <div style={{ color: kfLeads ? KEIKO_COLOR : '#A8A29E', fontWeight: kfLeads ? 800 : 400, fontSize: 24, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+            {kf != null ? kf.toFixed(1) + '%' : '—'}
+          </div>
+        </div>
+        <div>
+          <div style={{ color: '#8C877F', fontSize: 10, marginBottom: 2 }}>Roberto Sánchez</div>
+          <div style={{ color: !kfLeads ? SANCHEZ_COLOR : '#A8A29E', fontWeight: !kfLeads ? 800 : 400, fontSize: 24, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+            {rsp != null ? rsp.toFixed(1) + '%' : '—'}
+          </div>
+        </div>
+      </div>
+      {margin != null && (
+        <div style={{ display: 'inline-block', background: (kfLeads ? KEIKO_COLOR : SANCHEZ_COLOR) + '18', color: kfLeads ? KEIKO_COLOR : SANCHEZ_COLOR, borderRadius: 6, padding: '3px 10px', fontSize: 12, fontWeight: 700 }}>
+          {kfLeads ? 'Keiko' : 'Sánchez'} +{margin.toFixed(1)}pp
+        </div>
+      )}
+    </div>
+  );
+
+  // ── Live mode: province drill-down ─────────────────────────
+  const deptProvs = isLive
+    ? liveProvinces
+        .filter(p => p.deptUbigeo === dept.ubigeo)
+        .sort((a, b) => Math.abs(b.kf_r2_share - 50) - Math.abs(a.kf_r2_share - 50))
+    : [];
+
+  if (isLive && selectedProv) {
+    const provDists = liveDistricts
+      .filter(d => d.provUbigeo === selectedProv.ubigeo)
+      .sort((a, b) => Math.abs(b.kf_r2_share - 50) - Math.abs(a.kf_r2_share - 50));
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        {deptHeader}
+        <button
+          onClick={() => setSelectedProv(null)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', color: '#78716C', fontSize: 11, padding: '0 0 8px', display: 'flex', alignItems: 'center', gap: 4 }}
+        >
+          ← Provincias · {selectedProv.nombre}
+        </button>
+        <div style={{ color: '#8C877F', fontSize: 11, fontWeight: 600, marginBottom: 6 }}>
+          Distritos ({provDists.length}){provDists.length === 0 ? ' — sin datos aún' : ' · por margen'}
+        </div>
+        <div style={{ overflowY: 'auto', flex: 1, maxHeight: 300 }}>
+          {provDists.length > 0 ? provDists.map(d => (
+            <ResultRow key={d.ubigeo} nombre={d.nombre} kf_r2_share={d.kf_r2_share} shift_pp={d.shift_pp} isClickable={false} />
+          )) : (
+            <div style={{ color: '#A8A29E', fontSize: 12 }}>Los distritos de esta provincia aún no reportan.</div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (isLive && deptProvs.length > 0) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        {deptHeader}
+        <div style={{ color: '#8C877F', fontSize: 11, fontWeight: 600, marginBottom: 6 }}>
+          Provincias ({deptProvs.length}) · haz clic para ver distritos
+        </div>
+        <div style={{ overflowY: 'auto', flex: 1, maxHeight: 320 }}>
+          {deptProvs.map(p => (
+            <ResultRow
+              key={p.ubigeo}
+              nombre={p.nombre}
+              kf_r2_share={p.kf_r2_share}
+              shift_pp={p.shift_pp}
+              isClickable={true}
+              onClick={() => setSelectedProv(p)}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Demo mode or live but no province data yet ──────────────
+  const demoSorted = [...r1Districts].sort((a, b) => {
     if (a.kf_r2_share == null && b.kf_r2_share == null) return 0;
     if (a.kf_r2_share == null) return 1;
     if (b.kf_r2_share == null) return -1;
@@ -288,76 +431,18 @@ function DeptDetailPanel({ dept, districts, loading }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Dept header */}
-      <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid #F0EDE8' }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: '#1C1917', marginBottom: 10 }}>
-          {dept.nombre}
-        </div>
-        <div style={{ display: 'flex', gap: 20, marginBottom: 8 }}>
-          <div>
-            <div style={{ color: '#8C877F', fontSize: 10, marginBottom: 2 }}>Keiko Fujimori</div>
-            <div style={{
-              color: kfLeads ? KEIKO_COLOR : '#A8A29E',
-              fontWeight: kfLeads ? 800 : 400,
-              fontSize: 24, lineHeight: 1,
-              fontVariantNumeric: 'tabular-nums',
-            }}>
-              {kf != null ? kf.toFixed(1) + '%' : '—'}
-            </div>
-          </div>
-          <div>
-            <div style={{ color: '#8C877F', fontSize: 10, marginBottom: 2 }}>Roberto Sánchez</div>
-            <div style={{
-              color: !kfLeads ? SANCHEZ_COLOR : '#A8A29E',
-              fontWeight: !kfLeads ? 800 : 400,
-              fontSize: 24, lineHeight: 1,
-              fontVariantNumeric: 'tabular-nums',
-            }}>
-              {rsp != null ? rsp.toFixed(1) + '%' : '—'}
-            </div>
-          </div>
-        </div>
-        {margin != null && (
-          <div style={{
-            display: 'inline-block',
-            background: (kfLeads ? KEIKO_COLOR : SANCHEZ_COLOR) + '18',
-            color: kfLeads ? KEIKO_COLOR : SANCHEZ_COLOR,
-            borderRadius: 6, padding: '3px 10px',
-            fontSize: 12, fontWeight: 700,
-          }}>
-            {kfLeads ? 'Keiko' : 'Sánchez'} +{margin.toFixed(1)}pp
-          </div>
-        )}
-      </div>
-
-      {/* District list */}
-      {loading ? (
+      {deptHeader}
+      {r1Loading ? (
         <div style={{ color: '#A8A29E', fontSize: 12, padding: '8px 0' }}>Cargando distritos...</div>
-      ) : sorted.length > 0 ? (
+      ) : demoSorted.length > 0 ? (
         <>
           <div style={{ color: '#8C877F', fontSize: 11, fontWeight: 600, marginBottom: 6 }}>
-            Distritos ({sorted.length}) · ordenados por margen
+            Distritos ({demoSorted.length}) · {isLive ? 'baseline R1' : 'resultados R1'} · por margen
           </div>
           <div style={{ overflowY: 'auto', flex: 1, maxHeight: 320 }}>
-            {sorted.map(d => {
-              const dLeads  = d.kf_r2_share >= 50;
-              const dMargin = Math.abs(d.kf_r2_share - 50);
-              return (
-                <div key={d.ubigeo} style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '5px 0', borderBottom: '1px solid #F7F4EF', gap: 8,
-                }}>
-                  <span style={{ color: '#1C1917', fontSize: 12, flex: 1 }}>{d.nombre}</span>
-                  <span style={{
-                    color: dLeads ? KEIKO_COLOR : SANCHEZ_COLOR,
-                    fontSize: 12, fontWeight: 600,
-                    fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap',
-                  }}>
-                    {dLeads ? 'K' : 'S'}+{dMargin.toFixed(1)}pp
-                  </span>
-                </div>
-              );
-            })}
+            {demoSorted.map(d => (
+              <ResultRow key={d.ubigeo} nombre={d.nombre} kf_r2_share={d.kf_r2_share} shift_pp={null} isClickable={false} />
+            ))}
           </div>
         </>
       ) : (
@@ -372,12 +457,10 @@ function DeptTable({ deptData, extranjero, isDemo }) {
   const [sortBy, setSortBy] = useState('pct_actas');
 
   const extRow = extranjero ? {
-    ubigeo: 'EXT',
-    nombre: 'Extranjero',
+    ubigeo: 'EXT', nombre: 'Extranjero',
     kf_r2_share: extranjero.kf_r2_share,
     pct_actas:   extranjero.pct_actas ?? 100,
-    isExtranjero: true,
-    subLabel: '77 países',
+    isExtranjero: true, subLabel: '77 países',
   } : null;
 
   const rows = [
@@ -429,16 +512,8 @@ function DeptTable({ deptData, extranjero, isDemo }) {
                 <tr key={dept.ubigeo} style={{ borderBottom: '1px solid #F0EDE8', background: dept.isExtranjero ? '#F7F4EF' : undefined }}>
                   <td style={{ padding: '7px 8px', color: dept.isExtranjero ? '#78716C' : '#1C1917', fontWeight: 600, fontStyle: dept.isExtranjero ? 'italic' : 'normal' }}>
                     {dept.nombre}
-                    {dept.subLabel && (
-                      <span style={{ color: '#A8A29E', fontSize: 10, marginLeft: 5, fontWeight: 400, fontStyle: 'normal' }}>
-                        {dept.subLabel}
-                      </span>
-                    )}
-                    {!dept.isExtranjero && pct < 100 && (
-                      <span style={{ color: '#D97706', fontSize: 10, marginLeft: 5, fontWeight: 400 }}>
-                        ⏳ {(100 - pct).toFixed(0)}% falta
-                      </span>
-                    )}
+                    {dept.subLabel && <span style={{ color: '#A8A29E', fontSize: 10, marginLeft: 5, fontWeight: 400, fontStyle: 'normal' }}>{dept.subLabel}</span>}
+                    {!dept.isExtranjero && pct < 100 && <span style={{ color: '#D97706', fontSize: 10, marginLeft: 5, fontWeight: 400 }}>⏳ {(100 - pct).toFixed(0)}% falta</span>}
                   </td>
                   <td style={{ padding: '7px 8px', textAlign: 'right' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>
@@ -474,12 +549,12 @@ function DeptTable({ deptData, extranjero, isDemo }) {
 
 // ─── Main tab ─────────────────────────────────────────────────
 export default function LiveResultsTab({ predictions }) {
-  const [liveData,        setLiveData]        = useState(_liveDataCache);
-  const [isLive,          setIsLive]          = useState(_liveDataCache !== null);
-  const [hoveredDept,     setHoveredDept]     = useState(null);
-  const [selectedDept,    setSelectedDept]    = useState(null);
-  const [districtData,    setDistrictData]    = useState(null);
-  const [districtsLoading, setDistrictsLoading] = useState(false);
+  const [liveData,         setLiveData]         = useState(_liveDataCache);
+  const [isLive,           setIsLive]           = useState(_liveDataCache !== null);
+  const [hoveredDept,      setHoveredDept]      = useState(null);
+  const [selectedDept,     setSelectedDept]     = useState(null);
+  const [r1DistrictData,   setR1DistrictData]   = useState(null);
+  const [r1DistLoading,    setR1DistLoading]    = useState(false);
 
   const fetchLive = useCallback(async () => {
     try {
@@ -496,15 +571,15 @@ export default function LiveResultsTab({ predictions }) {
     return () => clearInterval(id);
   }, [fetchLive]);
 
-  // Lazy-load district data on first dept selection
+  // Lazy-load R1 district baseline for demo mode (and live fallback)
   useEffect(() => {
-    if (!selectedDept || districtData) return;
-    setDistrictsLoading(true);
+    if (!selectedDept || r1DistrictData) return;
+    setR1DistLoading(true);
     fetch('/r1_districts_flat.json')
       .then(r => r.json())
-      .then(json => { setDistrictData(json); setDistrictsLoading(false); })
-      .catch(() => setDistrictsLoading(false));
-  }, [selectedDept]); // districtData intentionally omitted: early-return guards re-fetch
+      .then(json => { setR1DistrictData(json); setR1DistLoading(false); })
+      .catch(() => setR1DistLoading(false));
+  }, [selectedDept]); // r1DistrictData intentionally omitted
 
   const isDemo = !isLive;
   const data   = isLive ? liveData : DEMO.national;
@@ -515,7 +590,11 @@ export default function LiveResultsTab({ predictions }) {
     ? Object.fromEntries(liveData.departments.map(d => [d.ubigeo, d]))
     : DEMO_DEPTS;
 
-  // Needle data — live: from projector; demo: from R2 model predictions
+  const liveProvinces  = liveData?.provinces  || [];
+  const liveDistricts  = liveData?.districts  || [];
+  const shiftGranularity = liveData?.shift_granularity ?? null;
+
+  // Needle
   const modelCands   = predictions?.candidates || [];
   const keikoModel   = modelCands.find(c => c.candidate?.includes('Keiko'));
   const sanchezModel = modelCands.find(c => c.candidate?.includes('Sánchez') || c.candidate?.includes('Roberto'));
@@ -540,16 +619,15 @@ export default function LiveResultsTab({ predictions }) {
   const nacional   = isLive ? liveData?.nacional   : DEMO.nacional;
   const extranjero = isLive ? liveData?.extranjero  : DEMO.extranjero;
 
-  // District list for selected dept (filtered from flat file)
-  const deptDistricts = selectedDept && districtData
-    ? Object.values(districtData).filter(
+  // R1 districts for selected dept (demo fallback)
+  const r1DeptDistricts = selectedDept && r1DistrictData
+    ? Object.values(r1DistrictData).filter(
         d => d.deptUbigeo === selectedDept.ubigeo && d.kf_r2_share != null
       )
     : [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* Header */}
       <div>
         <h2 style={{ color: '#1C1917', fontSize: 20, fontWeight: 700, margin: '0 0 6px' }}>
           Resultados en Vivo · 7 de junio de 2026
@@ -559,10 +637,13 @@ export default function LiveResultsTab({ predictions }) {
         </p>
       </div>
 
-      {/* 1. Status bar */}
-      <StatusBar pct_actas={data?.pct_actas} snapshot_ts={liveData?.snapshot_ts} isDemo={isDemo} />
+      <StatusBar
+        pct_actas={data?.pct_actas}
+        snapshot_ts={liveData?.snapshot_ts}
+        isDemo={isDemo}
+        shiftGranularity={isLive ? shiftGranularity : null}
+      />
 
-      {/* 2. Candidate cards */}
       <CandidateCards
         kf_r2_share={kfShare}
         proj_kf_r2_share={projKfShare}
@@ -573,7 +654,6 @@ export default function LiveResultsTab({ predictions }) {
         isDemo={isDemo}
       />
 
-      {/* 3. Needle — hero */}
       <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 14, padding: '24px 16px 20px' }}>
         <div style={{ color: '#8C877F', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'center', marginBottom: 4 }}>
           {isDemo ? 'Proyección pre-electoral · Modelo R2' : 'Proyección a 100% · Conteo en vivo'}
@@ -581,7 +661,6 @@ export default function LiveResultsTab({ predictions }) {
         <WinProbabilityNeedle keiko={needleKeiko} sanchez={needleSanchez} />
       </div>
 
-      {/* 4. Vote share bars */}
       <VoteBars
         total={isLive ? liveData?.national : DEMO.national}
         nacional={nacional}
@@ -589,7 +668,6 @@ export default function LiveResultsTab({ predictions }) {
         isDemo={isDemo}
       />
 
-      {/* 5. Map + dept detail panel (own row) */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <div style={{
           flex: '0 0 auto', width: 'clamp(280px, 42%, 400px)',
@@ -616,13 +694,15 @@ export default function LiveResultsTab({ predictions }) {
           </h3>
           <DeptDetailPanel
             dept={selectedDept}
-            districts={deptDistricts}
-            loading={districtsLoading}
+            r1Districts={r1DeptDistricts}
+            r1Loading={r1DistLoading}
+            liveProvinces={liveProvinces}
+            liveDistricts={liveDistricts}
+            isLive={isLive}
           />
         </div>
       </div>
 
-      {/* 6. Full-width results table */}
       <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
         <h3 style={{ color: '#1C1917', fontSize: 14, fontWeight: 600, margin: '0 0 12px' }}>
           Resultados Detallados
