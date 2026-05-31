@@ -1112,17 +1112,18 @@ router.post('/admin/inject-snapshot', async (req, res) => {
 // Insertar resultados oficiales ONPE para post-mortem — requiere ADMIN_SECRET
 router.post('/results/onpe', async (req, res) => {
   const adminSecret = process.env.ADMIN_SECRET;
-  if (adminSecret) {
-    const authHeader = req.headers['authorization'] || '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-    let authorized = false;
-    try {
-      authorized = token.length > 0 &&
-        token.length === adminSecret.length &&
-        crypto.timingSafeEqual(Buffer.from(token), Buffer.from(adminSecret));
-    } catch { authorized = false; }
-    if (!authorized) return res.status(401).json({ error: 'Unauthorized' });
+  if (!adminSecret) {
+    return res.status(503).json({ error: 'ADMIN_SECRET not configured on Railway' });
   }
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  let authorized = false;
+  try {
+    authorized = token.length > 0 &&
+      token.length === adminSecret.length &&
+      crypto.timingSafeEqual(Buffer.from(token), Buffer.from(adminSecret));
+  } catch { authorized = false; }
+  if (!authorized) return res.status(401).json({ error: 'Unauthorized' });
   try {
     const { election_year, round, results } = req.body;
     if (!election_year || !round || !results || !Array.isArray(results)) {
