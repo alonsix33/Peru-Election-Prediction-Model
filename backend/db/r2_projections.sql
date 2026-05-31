@@ -37,9 +37,12 @@ CREATE TABLE IF NOT EXISTS r2_election_projections (
 
   -- Shift nacional R2 vs R1
   national_shift_pp     NUMERIC(5,2),
+  shift_granularity     VARCHAR(20),      -- 'district' | 'province' | 'dept' | 'naive'
 
-  -- Shifts por departamento (array de {nombre, ubigeo, shift_pp, ...})
+  -- Shifts por granularidad (arrays con shift_pp por unidad)
   dept_shifts           JSONB,
+  province_shifts       JSONB,
+  district_shifts       JSONB,
 
   -- JSON completo de la proyección (para frontend y debug)
   full_result           JSONB
