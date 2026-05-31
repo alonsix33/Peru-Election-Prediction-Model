@@ -165,8 +165,16 @@ Aliaga aparece ~+3pp en todas las encuestas pre-R1. Sin corrección (modelo corr
 - [x] Cholesky para errores correlacionados entre encuestadoras
 - [x] seed_r2.sql: Ipsos ×1.30, Datum ×1.05 (mejor desempeño R1 en R2)
 - [x] Encuesta IEP mayo 22-26 ingresada (KF 36%, RSP 30%, n=1204) — nota metodológica: B/N no se leyó como opción → 6% espontáneo (no comparable con abr 24%)
+- [x] CIT mayo 14-17 simulacro ingresado (KF 40.5% RSP 36.0% B/N 23.5% n=1220) — en seed_r2.sql, auto-insertado en cada deploy
+- [x] CIT mayo 26-29 ingresado (KF 41.1% RSP ~33.4% B/V 14.2% NS/NR 12.3% n=1220) — en seed_r2.sql, última CIT antes de veda (31 may)
 - [ ] Pesos IEP en seed_r2.sql: verificar que refleja desempeño R1 (cerca a ONPE)
 - [ ] Encuesta CIT mayo 2026 — buscar e ingresar si ya fue publicada
+
+### Mecanismo de auto-inserción de encuestas
+`startup.js → autoMigrate()` ejecuta `seed_r2.sql` en **cada deploy** de Railway (no solo
+la primera vez). Todas las encuestas R2 deben vivir en `seed_r2.sql` para insertarse
+automáticamente. El endpoint `/api/force-run` también las inserta, pero solo al llamarlo
+manualmente. La deduplicación es idempotente (IF NOT EXISTS por pollster + field_end).
 
 ---
 
