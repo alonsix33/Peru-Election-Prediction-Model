@@ -541,3 +541,35 @@ BEGIN
       (poll_id, 'Roberto Sánchez Palomino', 'Juntos por el Perú', 33.4);
   END IF;
 END $$;
+
+-- ── Ipsos-Perú21 simulacro segunda vuelta: 29-30 mayo 2026 ────
+-- Simulacro nacional urbano-rural, n=1204. Última encuesta antes de veda (31 may).
+-- Votos emitidos: KF 40.4%, RSP 38.3%, B/V 21.3% (en blanco 10.5% + viciado 10.8%).
+-- Votos válidos: KF 51.4%, RSP 48.6%.
+-- Regional (votos emitidos): Lima 52.2/27.4 · Norte 44.0/37.0 · Centro 39.4/42.8
+--                            Sur 17.8/56.8 · Oriente 34.3/39.5.
+DO $$
+DECLARE
+  p_id    INT;
+  poll_id INT;
+BEGIN
+  SELECT id INTO p_id FROM pollsters WHERE name = 'Ipsos';
+
+  IF NOT EXISTS (
+    SELECT 1 FROM polls WHERE pollster_id = p_id AND field_end = '2026-05-30' AND election_round = 2
+  ) THEN
+    INSERT INTO polls (pollster_id, field_start, field_end, published_date, sample_n, margin_error,
+                       confidence_lvl, scope, technique, poll_type,
+                       pct_undecided, pct_blank_null, notes, election_round)
+    VALUES (p_id, '2026-05-29', '2026-05-30', '2026-05-31', 1204, 2.80, 95.0,
+            'nacional', 'presencial', 'simulacro',
+            0, 21.3,
+            'Ipsos-Perú21 simulacro segunda vuelta 29-30 may 2026. Votos emitidos: KF 40.4%, RSP 38.3%, B/V 21.3% (en blanco 10.5%, viciado 10.8%). Votos válidos: KF 51.4%, RSP 48.6%. Nacional urbano-rural. Regional (v.e.): Lima KF52.2/RSP27.4, Norte KF44.0/RSP37.0, Centro KF39.4/RSP42.8, Sur KF17.8/RSP56.8, Oriente KF34.3/RSP39.5.',
+            2)
+    RETURNING id INTO poll_id;
+
+    INSERT INTO poll_results (poll_id, candidate, party, pct_raw) VALUES
+      (poll_id, 'Keiko Fujimori',           'Fuerza Popular',     40.4),
+      (poll_id, 'Roberto Sánchez Palomino', 'Juntos por el Perú', 38.3);
+  END IF;
+END $$;
