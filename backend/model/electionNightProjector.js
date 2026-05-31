@@ -11,6 +11,12 @@
  *   4. ZDA correction: mesas 900001-904703 score 28.2% KF (RSP strongholds)
  *   5. Bootstrap CI with t-Student df=4
  *
+ * Granularity hierarchy for stratified shift (most precise wins):
+ *   district  (≥50 units with R1 data) → 1518/1892 distritos
+ *   province  (≥15 units with R1 data) → 196/196 provincias
+ *   dept      (≥3  units with R1 data) → 25/25 departamentos
+ *   naive     (fallback, no spatial structure)
+ *
  * See ELECTION_NIGHT_PLAN.md §3 for full methodology.
  */
 
@@ -20,23 +26,7 @@ const path = require('path');
 const fs   = require('fs');
 
 // ─── Verified constants (ONPE R1 2026 official + RPP) ────────────────────────
-//
-// IMPORTANT — national vs domestic:
-//   ONPE's nacional endpoint (tipoFiltro=nacional) includes exterior votes.
-//   Verified empirically: province_baseline sum (domestic) = 58.46%
-//                         province_baseline + r1_exterior  = 58.81% ← ONPE published
-//   The national total (58.81%) is domestic + exterior.
-//
-//   In this projector we subtract ext_breakdown to isolate domestic votes before
-//   computing the shift. Therefore the shift baseline must also be domestic-only
-//   (58.46%), not the national total (58.81%).
-//
-//   Mathematical note: the baseline cancels for regular mesas (reg_proj = dom_kf_r2_share).
-//   It only affects the ZDA stratum projection; the residual impact is ~0.02pp on the
-//   final number. Still corrected here for consistency.
-//
 const R1_KF_R2_SHARE_DOMESTIC = 58.46; // domestic-only (regular + ZDA, excludes exterior)
-                                        // = province_baseline sum across 25 depts
 const R1_KF_R2_SHARE_NATIONAL = 58.81; // national total (domestic + exterior); ONPE published
 const ZDA_KF_R2_SHARE_R1      = 28.2;  // ZDAs kf_r2_share, ONPE via RPP (99088/351378)
 const TOTAL_MESAS_REGULAR     = 92718;
@@ -52,29 +42,36 @@ const PHASE_B_THRESHOLD = 30;
 const PHASE_C_THRESHOLD = 80;
 const PHASE_D_THRESHOLD = 95;
 
+// Minimum R1 vote-mass (bilateral KF+RSP) needed at each granularity level
+// to trust the stratified shift. Higher granularity = lower mass needed per unit.
+const MIN_VV_DIST = 2000;   // ~10+ small districts reporting
+const MIN_VV_PROV = 5000;   // ~2+ medium provinces reporting
+const MIN_VV_DEPT = 5000;   // existing threshold
+
+// Minimum unit count at each level to switch granularity
+const MIN_UNITS_DIST = 50;
+const MIN_UNITS_PROV = 15;
+const MIN_UNITS_DEPT = 3;
+
 // ─── Static baselines (loaded once from disk) ─────────────────────────────────
-let _r1ByDept    = null;
+let _r1ByDept    = null;  // keyed by dept ubigeo  e.g. '140000'
+let _r1ByProv    = null;  // keyed by prov ubigeo  e.g. '140100'
+let _r1ByDist    = null;  // keyed by dist ubigeo  e.g. '140102'  (only ~1518 with R1 data)
 let _zdaByDept   = null;
-let _r1Exterior  = null;  // null until r1_exterior.json is scraped and placed in data/
+let _r1Exterior  = null;
 
 function _loadBaselines() {
   if (_r1ByDept) return;
 
   const DATA = path.join(__dirname, '..', 'data');
 
-  const flat = JSON.parse(
-    fs.readFileSync(path.join(DATA, 'r1_districts_flat.json'), 'utf8')
-  );
-  const zdaModel = JSON.parse(
-    fs.readFileSync(path.join(DATA, 'r1_zda_dept_model.json'), 'utf8')
-  );
-  const provBaseline = JSON.parse(
-    fs.readFileSync(path.join(DATA, 'r1_province_baseline.json'), 'utf8')
-  );
+  const flatDist   = JSON.parse(fs.readFileSync(path.join(DATA, 'r1_districts_flat.json'),    'utf8'));
+  const zdaModel   = JSON.parse(fs.readFileSync(path.join(DATA, 'r1_zda_dept_model.json'),    'utf8'));
+  const provBaseline = JSON.parse(fs.readFileSync(path.join(DATA, 'r1_province_baseline.json'), 'utf8'));
 
-  // Aggregate R1 district data by department (from flat file)
+  // ── Department baseline — aggregate district flat file per dept ───────────
   _r1ByDept = {};
-  for (const dist of Object.values(flat)) {
+  for (const dist of Object.values(flatDist)) {
     const du = dist.deptUbigeo;
     if (!_r1ByDept[du]) {
       _r1ByDept[du] = { nombre: dist.deptNombre, kfV: 0, rspV: 0, source: 'district' };
@@ -82,8 +79,7 @@ function _loadBaselines() {
     _r1ByDept[du].kfV  += dist.kfV  || 0;
     _r1ByDept[du].rspV += dist.rspV || 0;
   }
-
-  // Fill missing depts from province baseline (all 25 depts covered there)
+  // Fill missing depts from province baseline (full 25-dept coverage)
   for (const [ubigeo, dept] of Object.entries(provBaseline)) {
     const provs = dept.provincias || [];
     const kfV  = provs.reduce((s, p) => s + (p.kfV  || 0), 0);
@@ -93,30 +89,62 @@ function _loadBaselines() {
       _r1ByDept[ubigeo] = { nombre: dept.nombre, kfV, rspV, source: 'province' };
     }
   }
-
   for (const d of Object.values(_r1ByDept)) {
     d.kf_r2_share = (d.kfV + d.rspV) > 0
       ? 100 * d.kfV / (d.kfV + d.rspV)
       : R1_KF_R2_SHARE_DOMESTIC;
   }
 
-  // ZDA model keyed by dept nombre (normalize to uppercase)
+  // ── Province baseline — 196 provincias, 100% coverage ────────────────────
+  _r1ByProv = {};
+  for (const [deptUbigeo, dept] of Object.entries(provBaseline)) {
+    for (const prov of (dept.provincias || [])) {
+      if ((prov.kfV || 0) + (prov.rspV || 0) === 0) continue;
+      _r1ByProv[prov.ubigeo] = {
+        nombre:      prov.nombre,
+        deptUbigeo,
+        kfV:         prov.kfV  || 0,
+        rspV:        prov.rspV || 0,
+        kf_r2_share: prov.kf_r2_share,
+      };
+    }
+  }
+
+  // ── District baseline — 1518/1892 with actual R1 vote data ───────────────
+  // Excludes the 374 districts (remote Loreto/MDD/etc) that had 0 R1 bilateral votes.
+  // Those will fall back to province baseline when encountered live on election night.
+  _r1ByDist = {};
+  for (const [ubigeo, dist] of Object.entries(flatDist)) {
+    if ((dist.kfV || 0) + (dist.rspV || 0) === 0) continue;
+    _r1ByDist[ubigeo] = {
+      nombre:      dist.nombre,
+      provUbigeo:  dist.provUbigeo,
+      deptUbigeo:  dist.deptUbigeo,
+      kfV:         dist.kfV  || 0,
+      rspV:        dist.rspV || 0,
+      kf_r2_share: dist.kf_r2_share,
+    };
+  }
+
+  // ── ZDA model keyed by dept nombre (normalize to uppercase) ──────────────
   _zdaByDept = {};
   for (const [nombre, info] of Object.entries(zdaModel.byDept)) {
     _zdaByDept[nombre.toUpperCase()] = info;
   }
 
-  // Exterior R1 baseline — optional, loaded only if file exists
+  // ── Exterior R1 baseline — optional ──────────────────────────────────────
   const extPath = path.join(DATA, 'r1_exterior.json');
   if (fs.existsSync(extPath)) {
     const ext = JSON.parse(fs.readFileSync(extPath, 'utf8'));
     _r1Exterior = {
-      kf_r2_share: ext.meta?.total_kf_r2_share ?? null,
-      kfV:         ext.meta?.total_kfV         ?? 0,
-      rspV:        ext.meta?.total_rspV        ?? 0,
-      byContinente: ext.continentes ?? {},
+      kf_r2_share:  ext.meta?.total_kf_r2_share ?? null,
+      kfV:          ext.meta?.total_kfV          ?? 0,
+      rspV:         ext.meta?.total_rspV         ?? 0,
+      byContinente: ext.continentes              ?? {},
     };
-    console.log(`[projector] R1 exterior baseline loaded: ${_r1Exterior.kf_r2_share}% kf_r2_share`);
+    console.log(`[projector] Baselines loaded — ${Object.keys(_r1ByProv).length} provs, ${Object.keys(_r1ByDist).length} dists`);
+  } else {
+    console.log(`[projector] Baselines loaded — ${Object.keys(_r1ByProv).length} provs, ${Object.keys(_r1ByDist).length} dists (no exterior file)`);
   }
 }
 
@@ -144,9 +172,6 @@ function _round2(v) {
 }
 
 // ─── Bootstrap CI ─────────────────────────────────────────────────────────────
-// IMPORTANT: pass dom_kf / dom_rsp (exterior-subtracted), not national obs_kf / obs_rsp.
-// Using national values centers the CI on the national share (inflated by exterior KF
-// bias) instead of the domestic share, producing a ~0.84pp high CI at 40% actas.
 
 function _bootstrapCI(obs_kf, obs_rsp, regular_remaining, zda_remaining, national_shift, sigma) {
   const obs_kf_r2_share = 100 * obs_kf / (obs_kf + obs_rsp);
@@ -177,35 +202,61 @@ function _bootstrapCI(obs_kf, obs_rsp, regular_remaining, zda_remaining, nationa
   };
 }
 
-// ─── Stratified shift (reporting-order correction) ───────────────────────────
-// Computes the R2 swing using only reported departments' deviation from their R1 baseline.
-// This removes the early-count Lima bias: when Lima reports 1-2h before sierra,
-// a naive national shift overestimates KF by 2-4pp. Stratified shift anchors on
-// the R1 per-dept baseline so each dept contributes proportionally to its R1 vote weight.
+// ─── Generic shift from any breakdown level ──────────────────────────────────
+// Shared by dept, province, and district shift calculations.
+// baseline: the appropriate _r1ByDept / _r1ByProv / _r1ByDist map.
+// minVV: minimum total R1 bilateral vote mass to trust the result.
 
-function _computeStratifiedShift(dept_breakdown) {
-  if (!_r1ByDept || !Array.isArray(dept_breakdown) || !dept_breakdown.length) return null;
+function _shiftFromBreakdown(breakdown, baseline, minVV) {
+  if (!baseline || !Array.isArray(breakdown) || !breakdown.length) return null;
 
-  let sum_vv = 0, sum_kf_actual = 0, sum_kf_r1_expected = 0;
+  let sum_vv = 0, sum_kf_actual = 0, sum_kf_r1_expected = 0, unit_count = 0;
 
-  for (const d of dept_breakdown) {
+  for (const d of breakdown) {
     const pair = (d.keiko_votos || 0) + (d.sanchez_votos || 0);
-    if (pair < 200) continue;  // skip fragments (< 200 votes = noise)
+    if (pair < 200) continue;
 
-    const dept = _r1ByDept[d.ubigeo];
-    if (!dept) continue;
+    const r1 = baseline[d.ubigeo];
+    if (!r1) continue;
 
-    const r1_vv = dept.kfV + dept.rspV;
+    const r1_vv = (r1.kfV || 0) + (r1.rspV || 0);
+    if (r1_vv === 0) continue;
+
     const kf_r2_actual = 100 * (d.keiko_votos || 0) / pair;
 
-    sum_vv            += r1_vv;
-    sum_kf_actual     += r1_vv * kf_r2_actual;
-    sum_kf_r1_expected += r1_vv * dept.kf_r2_share;
+    sum_vv             += r1_vv;
+    sum_kf_actual      += r1_vv * kf_r2_actual;
+    sum_kf_r1_expected += r1_vv * r1.kf_r2_share;
+    unit_count++;
   }
 
-  if (sum_vv < 5000) return null;  // need meaningful reported R1 VV mass
+  if (sum_vv < minVV) return null;
+  return { shift: (sum_kf_actual - sum_kf_r1_expected) / sum_vv, unit_count, sum_vv };
+}
 
-  return (sum_kf_actual - sum_kf_r1_expected) / sum_vv;
+// ─── Stratified shift — picks most granular level available ──────────────────
+// Returns { shift, level, unit_count, sum_vv }
+
+function _computeStratifiedShift(dept_breakdown, province_breakdown, district_breakdown) {
+  // District level (highest precision — 1518 baselines)
+  if (Array.isArray(district_breakdown) && district_breakdown.length >= MIN_UNITS_DIST) {
+    const res = _shiftFromBreakdown(district_breakdown, _r1ByDist, MIN_VV_DIST);
+    if (res) return { ...res, level: 'district' };
+  }
+
+  // Province level (high precision — 196 baselines, 100% coverage)
+  if (Array.isArray(province_breakdown) && province_breakdown.length >= MIN_UNITS_PROV) {
+    const res = _shiftFromBreakdown(province_breakdown, _r1ByProv, MIN_VV_PROV);
+    if (res) return { ...res, level: 'province' };
+  }
+
+  // Department level (current — 25 baselines)
+  if (Array.isArray(dept_breakdown) && dept_breakdown.length >= MIN_UNITS_DEPT) {
+    const res = _shiftFromBreakdown(dept_breakdown, _r1ByDept, MIN_VV_DEPT);
+    if (res) return { ...res, level: 'dept' };
+  }
+
+  return null;
 }
 
 // ─── Department-level shift tracking ─────────────────────────────────────────
@@ -224,19 +275,87 @@ function _computeDeptShifts(dept_breakdown) {
       const r1_kf_r2 = r1 ? r1.kf_r2_share : R1_KF_R2_SHARE_DOMESTIC;
       const shift = current_kf_r2 - r1_kf_r2;
 
-      // ZDA expected swing for this dept
       const zdaInfo = _zdaByDept[(d.nombre || '').toUpperCase()];
       const zda_expected_swing = zdaInfo?.expectedSwingPP ?? null;
 
       return {
-        nombre:              d.nombre,
-        ubigeo:              d.ubigeo,
+        nombre:                d.nombre,
+        ubigeo:                d.ubigeo,
+        keiko_votos:           kf,
+        sanchez_votos:         rsp,
+        current_kf_r2_share:   _round2(current_kf_r2),
+        r1_kf_r2_share:        _round2(r1_kf_r2),
+        shift_pp:              _round2(shift),
+        zda_expected_swing_pp: zda_expected_swing,
+      };
+    })
+    .sort((a, b) => Math.abs(b.shift_pp) - Math.abs(a.shift_pp));
+}
+
+// ─── Province-level shift tracking ───────────────────────────────────────────
+
+function _computeProvShifts(province_breakdown) {
+  if (!Array.isArray(province_breakdown) || !province_breakdown.length) return [];
+
+  return province_breakdown
+    .filter(p => p && (p.keiko_votos || 0) + (p.sanchez_votos || 0) > 0)
+    .map(p => {
+      const kf  = p.keiko_votos  || 0;
+      const rsp = p.sanchez_votos || 0;
+      const current_kf_r2 = 100 * kf / (kf + rsp);
+
+      const r1 = _r1ByProv[p.ubigeo];
+      // Fallback: if province has no R1 data, use its dept baseline
+      const r1_kf_r2 = r1
+        ? r1.kf_r2_share
+        : (_r1ByDept[p.deptUbigeo]?.kf_r2_share ?? R1_KF_R2_SHARE_DOMESTIC);
+
+      return {
+        ubigeo:              p.ubigeo,
+        nombre:              p.nombre || r1?.nombre || p.ubigeo,
+        deptUbigeo:          p.deptUbigeo || r1?.deptUbigeo || null,
         keiko_votos:         kf,
         sanchez_votos:       rsp,
         current_kf_r2_share: _round2(current_kf_r2),
         r1_kf_r2_share:      _round2(r1_kf_r2),
-        shift_pp:            _round2(shift),
-        zda_expected_swing_pp: zda_expected_swing,
+        shift_pp:            _round2(current_kf_r2 - r1_kf_r2),
+        has_r1_baseline:     !!r1,
+      };
+    })
+    .sort((a, b) => Math.abs(b.shift_pp) - Math.abs(a.shift_pp));
+}
+
+// ─── District-level shift tracking ───────────────────────────────────────────
+
+function _computeDistShifts(district_breakdown) {
+  if (!Array.isArray(district_breakdown) || !district_breakdown.length) return [];
+
+  return district_breakdown
+    .filter(d => d && (d.keiko_votos || 0) + (d.sanchez_votos || 0) > 0)
+    .map(d => {
+      const kf  = d.keiko_votos  || 0;
+      const rsp = d.sanchez_votos || 0;
+      const current_kf_r2 = 100 * kf / (kf + rsp);
+
+      const r1 = _r1ByDist[d.ubigeo];
+      // Fallback chain: province → dept → national
+      const r1_kf_r2 = r1
+        ? r1.kf_r2_share
+        : (_r1ByProv[d.provUbigeo]?.kf_r2_share
+            ?? _r1ByDept[d.deptUbigeo]?.kf_r2_share
+            ?? R1_KF_R2_SHARE_DOMESTIC);
+
+      return {
+        ubigeo:              d.ubigeo,
+        nombre:              d.nombre || r1?.nombre || d.ubigeo,
+        provUbigeo:          d.provUbigeo || r1?.provUbigeo || null,
+        deptUbigeo:          d.deptUbigeo || r1?.deptUbigeo || null,
+        keiko_votos:         kf,
+        sanchez_votos:       rsp,
+        current_kf_r2_share: _round2(current_kf_r2),
+        r1_kf_r2_share:      _round2(r1_kf_r2),
+        shift_pp:            _round2(current_kf_r2 - r1_kf_r2),
+        has_r1_baseline:     !!r1,
       };
     })
     .sort((a, b) => Math.abs(b.shift_pp) - Math.abs(a.shift_pp));
@@ -248,13 +367,14 @@ function _computeDeptShifts(dept_breakdown) {
  * project(snapshot) → ProjectionResult
  *
  * @param {Object} snapshot
- *   @param {number}   snapshot.pct_actas       — % actas procesadas (0-100)
- *   @param {number}   snapshot.keiko_votos      — KF votos nacionales acumulados
- *   @param {number}   snapshot.sanchez_votos    — RSP votos nacionales acumulados
- *   @param {Array}    [snapshot.dept_breakdown] — por dept [{nombre,ubigeo,keiko_votos,sanchez_votos}]
- *   @param {string}   [snapshot.captured_at]   — ISO timestamp del snapshot
- *
- * @returns {ProjectionResult}
+ *   @param {number}   snapshot.pct_actas           — % actas procesadas (0-100)
+ *   @param {number}   snapshot.keiko_votos          — KF votos nacionales acumulados
+ *   @param {number}   snapshot.sanchez_votos        — RSP votos nacionales acumulados
+ *   @param {Array}    [snapshot.dept_breakdown]     — [{ubigeo,nombre,keiko_votos,sanchez_votos}]
+ *   @param {Array}    [snapshot.province_breakdown] — [{ubigeo,nombre,deptUbigeo,keiko_votos,sanchez_votos}]
+ *   @param {Array}    [snapshot.district_breakdown] — [{ubigeo,nombre,provUbigeo,deptUbigeo,keiko_votos,sanchez_votos}]
+ *   @param {Array}    [snapshot.ext_breakdown]      — [{ubigeo,nombre,keiko_votos,sanchez_votos}]
+ *   @param {string}   [snapshot.captured_at]        — ISO timestamp del snapshot
  */
 function project(snapshot) {
   _loadBaselines();
@@ -263,12 +383,13 @@ function project(snapshot) {
     pct_actas,
     keiko_votos,
     sanchez_votos,
-    dept_breakdown  = [],
-    ext_breakdown   = [],
+    dept_breakdown     = [],
+    province_breakdown = [],
+    district_breakdown = [],
+    ext_breakdown      = [],
     captured_at,
   } = snapshot;
 
-  // Guard: need meaningful data to project
   const obs_kf  = keiko_votos  || 0;
   const obs_rsp = sanchez_votos || 0;
   const pct     = pct_actas    || 0;
@@ -282,9 +403,6 @@ function project(snapshot) {
   }
 
   // ── Exterior adjustment ───────────────────────────────────────────────────
-  // pct_actas counts only domestic actas. Exterior votes arrive early and are
-  // already embedded in obs_kf/obs_rsp, biasing early kf_r2_share upward if
-  // KF is strong abroad. Subtract exterior from observed to get domestic-only.
   let dom_kf = obs_kf, dom_rsp = obs_rsp;
   let ext_kf = 0, ext_rsp = 0;
 
@@ -295,42 +413,32 @@ function project(snapshot) {
     dom_rsp = Math.max(0, obs_rsp - ext_rsp);
   }
 
-  // Use domestic-only for shift calculation (avoids exterior contaminating domestic baseline)
-  const dom_pair         = dom_kf + dom_rsp;
-  const obs_kf_r2_share  = 100 * obs_kf / (obs_kf + obs_rsp);  // national (for display)
-  const dom_kf_r2_share  = dom_pair > 0 ? 100 * dom_kf / dom_pair : obs_kf_r2_share;
-  const obs_pair         = obs_kf + obs_rsp;
+  const dom_pair        = dom_kf + dom_rsp;
+  const obs_kf_r2_share = 100 * obs_kf / (obs_kf + obs_rsp);
+  const dom_kf_r2_share = dom_pair > 0 ? 100 * dom_kf / dom_pair : obs_kf_r2_share;
+  const obs_pair        = obs_kf + obs_rsp;
 
-  // ── Estimate mesas contadas ───────────────────────────────────────────────
+  // ── Mesa estimates ────────────────────────────────────────────────────────
   const obs_mesas = (pct / 100) * TOTAL_MESAS;
 
-  // Proportional ZDA model: blend a proportional estimate (ZDAs report at the same
-  // overall rate as the count) with the cliff estimate (ZDAs only after regular
-  // exhausted). Taking the max of both gives fewer ZDAs remaining, which is the
-  // more conservative and more accurate approach (-0.29pp bias in cliff-only model).
   const zda_reported_proportional = Math.round((pct / 100) * TOTAL_MESAS_ZDA);
   const zda_reported_cliff        = Math.max(0, obs_mesas - TOTAL_MESAS_REGULAR);
   const reported_zda_approx       = Math.max(zda_reported_proportional, zda_reported_cliff);
   const zda_remaining             = Math.max(0, TOTAL_MESAS_ZDA - reported_zda_approx);
   const regular_remaining         = Math.max(0, TOTAL_MESAS - obs_mesas - zda_remaining);
 
-  // ── R2 vs R1 shift — stratified (per-dept) preferred over naive national ────
-  // Stratified shift uses only reported depts' deviation from their R1 baseline,
-  // eliminating the reporting-order bias (Lima reports 1-2h before sierra).
-  // Falls back to naive dom_kf_r2_share - baseline when dept data is sparse.
-  const stratified_shift = _computeStratifiedShift(dept_breakdown);
-  const national_shift = stratified_shift !== null
-    ? stratified_shift
+  // ── Stratified shift — uses most granular level available ─────────────────
+  const shiftResult = _computeStratifiedShift(dept_breakdown, province_breakdown, district_breakdown);
+  const national_shift = shiftResult !== null
+    ? shiftResult.shift
     : dom_kf_r2_share - R1_KF_R2_SHARE_DOMESTIC;
+  const shift_level = shiftResult?.level ?? 'naive';
 
   // ── Projected kf_r2_share for remaining strata ───────────────────────────
   const reg_proj_kf_r2 = _clamp(R1_KF_R2_SHARE_DOMESTIC + national_shift, 0, 100);
   const zda_proj_kf_r2 = _clamp(ZDA_KF_R2_SHARE_R1 + national_shift, 0, 100);
 
-  // ── Exterior: project remaining exterior votes — per-continent ───────────
-  // Use per-continent R1 baselines weighted by unreported continents' R1 bilateral share.
-  // This is more accurate than applying the global 86.78% baseline uniformly, since
-  // e.g. Europe leans more KF than Latin America.
+  // ── Exterior projection ───────────────────────────────────────────────────
   const r1_ext_kf_r2_global = _r1Exterior?.kf_r2_share ?? null;
   let ext_proj_kf_r2 = r1_ext_kf_r2_global != null
     ? _clamp(r1_ext_kf_r2_global + national_shift, 0, 100)
@@ -348,22 +456,17 @@ function project(snapshot) {
       const r1_bilateral = (cont.kfV || 0) + (cont.rspV || 0);
       if (r1_bilateral === 0) continue;
       const cont_kf_r2 = cont.kf_r2_share ?? r1_ext_kf_r2_global;
-      sum_vv     += r1_bilateral;
+      sum_vv      += r1_bilateral;
       sum_kf_proj += r1_bilateral * _clamp(cont_kf_r2 + national_shift, 0, 100);
     }
     if (sum_vv > 0) ext_proj_kf_r2 = sum_kf_proj / sum_vv;
   }
 
-  // Estimate remaining exterior votes.
-  // r1_exterior.json stores only KF+RSP bilateral pair from R1 (60,448).
-  // In R2 (bilateral), total exterior valid votes ≈ total R1 exterior valid votes
-  // × R2/R1 turnout factor ≈ 265,000. Derivation: KF got ~20% of exterior valid votes
-  // in R1 (kfV=52,454) → total R1 exterior valid ≈ 262k → R2 ≈ same order.
   const R2_EXT_BILATERAL_EST = _r1Exterior
-    ? Math.round(_r1Exterior.kfV / 0.199)   // 52,454 / 0.199 ≈ 263,588 ≈ 265k
+    ? Math.round(_r1Exterior.kfV / 0.199)
     : 265000;
-  const ext_reported_pair = ext_kf + ext_rsp;
-  const ext_remaining_vv  = Math.max(0, R2_EXT_BILATERAL_EST - ext_reported_pair);
+  const ext_reported_pair  = ext_kf + ext_rsp;
+  const ext_remaining_vv   = Math.max(0, R2_EXT_BILATERAL_EST - ext_reported_pair);
 
   // ── Point estimate ────────────────────────────────────────────────────────
   const rem_reg_vv = regular_remaining * VV_PER_MESA;
@@ -379,21 +482,16 @@ function project(snapshot) {
     + ext_remaining_vv * (1 - ext_proj_kf_r2 / 100);
   const projected_kf_r2_share = 100 * final_kf / (final_kf + final_rsp);
 
-  // ZDA effect on final estimate (in pp) — denominator includes ext_remaining_vv
   const zda_effect_pp = zda_remaining > 0
     ? rem_zda_vv * (zda_proj_kf_r2 - reg_proj_kf_r2) / 100 / (obs_pair + rem_reg_vv + rem_zda_vv + ext_remaining_vv) * 100
     : 0;
 
-  // ── Bootstrap CI ──────────────────────────────────────────────────────────
-  // Pass dom_kf/dom_rsp (exterior-subtracted) so the CI centers on domestic share.
+  // ── Bootstrap CI ─────────────────────────────────────────────────────────
   const pct_remaining = 1 - pct / 100;
   const sigma = Math.max(0.3, SIGMA_BASE * Math.sqrt(pct_remaining));
   const ci = _bootstrapCI(dom_kf, dom_rsp, regular_remaining, zda_remaining, national_shift, sigma);
 
-  // ── Phase determination ───────────────────────────────────────────────────
-  // ZDA correction is ALWAYS embedded in the projection from the first data point.
-  // Phase labels describe data quantity, not whether ZDAs are "active" —
-  // they never "activate"; they are pre-baked into every projection from 0%.
+  // ── Phase ─────────────────────────────────────────────────────────────────
   let phase, phaseLabel;
   if (pct < PHASE_B_THRESHOLD) {
     phase = 'A'; phaseLabel = 'Conteo inicial — alta incertidumbre';
@@ -405,12 +503,14 @@ function project(snapshot) {
     phase = 'D'; phaseLabel = 'Resultados casi definitivos';
   }
 
-  // ── Department shifts ─────────────────────────────────────────────────────
-  const dept_shifts = _computeDeptShifts(dept_breakdown);
+  // ── Granular shift outputs ────────────────────────────────────────────────
+  const dept_shifts     = _computeDeptShifts(dept_breakdown);
+  const province_shifts = _computeProvShifts(province_breakdown);
+  const district_shifts = _computeDistShifts(district_breakdown);
 
   return {
-    status:    'ok',
-    captured_at: captured_at || null,
+    status:       'ok',
+    captured_at:  captured_at || null,
     projected_at: new Date().toISOString(),
 
     pct_actas: _round2(pct),
@@ -433,16 +533,12 @@ function project(snapshot) {
     },
 
     zda: {
-      // ZDAs (mesas 900001-904703) are ALWAYS included in the projection.
-      // From the first snapshot their 28.2% KF baseline is pre-baked into
-      // projected.kf_r2_share. There is no sudden "activation" — what
-      // changes at ~94% is that actual ZDA results replace the prior.
-      always_projected:      true,
-      remaining_mesas:       Math.round(zda_remaining),
-      reported_mesas:        Math.round(TOTAL_MESAS_ZDA - zda_remaining),
-      r1_kf_r2_share:        ZDA_KF_R2_SHARE_R1,
-      proj_kf_r2_share:      _round2(zda_proj_kf_r2),
-      effect_pp:             _round2(zda_effect_pp),
+      always_projected:  true,
+      remaining_mesas:   Math.round(zda_remaining),
+      reported_mesas:    Math.round(TOTAL_MESAS_ZDA - zda_remaining),
+      r1_kf_r2_share:    ZDA_KF_R2_SHARE_R1,
+      proj_kf_r2_share:  _round2(zda_proj_kf_r2),
+      effect_pp:         _round2(zda_effect_pp),
     },
 
     exterior: {
@@ -455,16 +551,20 @@ function project(snapshot) {
       proj_kf_r2_share:      _round2(ext_proj_kf_r2),
     },
 
-    // shift = R2 domestic kf_r2_share minus R1 domestic baseline (58.46%)
-    // A negative shift means KF is underperforming R1; positive means overperforming.
     national_shift_pp: _round2(national_shift),
+    shift_granularity: shift_level,
+
     dept_shifts,
+    province_shifts,
+    district_shifts,
 
     debug: {
       r1_domestic_baseline:    R1_KF_R2_SHARE_DOMESTIC,
       r1_national_baseline:    R1_KF_R2_SHARE_NATIONAL,
       dom_kf_r2_share:         _round2(dom_kf_r2_share),
-      stratified_shift_used:   stratified_shift !== null,
+      shift_granularity:       shift_level,
+      shift_unit_count:        shiftResult?.unit_count ?? 0,
+      shift_r1_vv_mass:        Math.round(shiftResult?.sum_vv ?? 0),
       naive_shift_pp:          _round2(dom_kf_r2_share - R1_KF_R2_SHARE_DOMESTIC),
       obs_mesas:               Math.round(obs_mesas),
       regular_remaining:       Math.round(regular_remaining),
@@ -473,6 +573,9 @@ function project(snapshot) {
       r2_ext_bilateral_est:    _r1Exterior ? Math.round(_r1Exterior.kfV / 0.199) : 265000,
       rem_reg_vv:              Math.round(rem_reg_vv),
       rem_zda_vv:              Math.round(rem_zda_vv),
+      dept_count:              dept_breakdown.filter(d => (d.keiko_votos||0)+(d.sanchez_votos||0) > 0).length,
+      prov_count:              province_breakdown.filter(p => (p.keiko_votos||0)+(p.sanchez_votos||0) > 0).length,
+      dist_count:              district_breakdown.filter(d => (d.keiko_votos||0)+(d.sanchez_votos||0) > 0).length,
     },
   };
 }

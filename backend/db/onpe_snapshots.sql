@@ -12,9 +12,11 @@ CREATE TABLE IF NOT EXISTS onpe_live_snapshots (
   keiko_pct        NUMERIC(5,2),
   sanchez_votos    BIGINT,
   sanchez_pct      NUMERIC(5,2),
-  dept_breakdown   JSONB,
-  ext_breakdown    JSONB,
-  totales_raw      JSONB
+  dept_breakdown      JSONB,
+  province_breakdown  JSONB,
+  district_breakdown  JSONB,
+  ext_breakdown       JSONB,
+  totales_raw         JSONB
 );
 
 CREATE INDEX IF NOT EXISTS idx_onpe_snapshots_captured_at

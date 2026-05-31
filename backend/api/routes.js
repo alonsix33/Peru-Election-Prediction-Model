@@ -966,12 +966,14 @@ router.get('/live-projection', async (req, res) => {
 
     const { project } = require('../model/electionNightProjector');
     const snapshot = {
-      pct_actas:      latest.pct_actas     != null ? parseFloat(latest.pct_actas)  : 0,
-      keiko_votos:    latest.keiko_votos   != null ? parseInt(latest.keiko_votos)   : 0,
-      sanchez_votos:  latest.sanchez_votos != null ? parseInt(latest.sanchez_votos) : 0,
-      dept_breakdown: Array.isArray(latest.dept_breakdown) ? latest.dept_breakdown : [],
-      ext_breakdown:  Array.isArray(latest.ext_breakdown)  ? latest.ext_breakdown  : [],
-      captured_at:    latest.captured_at,
+      pct_actas:          latest.pct_actas         != null ? parseFloat(latest.pct_actas)  : 0,
+      keiko_votos:        latest.keiko_votos        != null ? parseInt(latest.keiko_votos)   : 0,
+      sanchez_votos:      latest.sanchez_votos      != null ? parseInt(latest.sanchez_votos) : 0,
+      dept_breakdown:     Array.isArray(latest.dept_breakdown)     ? latest.dept_breakdown     : [],
+      province_breakdown: Array.isArray(latest.province_breakdown) ? latest.province_breakdown : [],
+      district_breakdown: Array.isArray(latest.district_breakdown) ? latest.district_breakdown : [],
+      ext_breakdown:      Array.isArray(latest.ext_breakdown)      ? latest.ext_breakdown      : [],
+      captured_at:        latest.captured_at,
     };
 
     const r = project(snapshot);
@@ -1027,8 +1029,36 @@ router.get('/live-projection', async (req, res) => {
         shift_pp:      d.shift_pp,
         keiko_votos:   d.keiko_votos   ?? null,
         sanchez_votos: d.sanchez_votos ?? null,
-        pct_actas:     null,  // not available from ONPE national endpoint
+        pct_actas:     null,
       })),
+
+      // Province and district arrays — populated when bookmarklet sends them
+      provinces: (r.province_shifts || []).map(p => ({
+        ubigeo:        p.ubigeo,
+        nombre:        p.nombre,
+        deptUbigeo:    p.deptUbigeo,
+        kf_r2_share:   p.current_kf_r2_share,
+        r1_kf_r2_share: p.r1_kf_r2_share,
+        shift_pp:      p.shift_pp,
+        keiko_votos:   p.keiko_votos,
+        sanchez_votos: p.sanchez_votos,
+        has_r1_baseline: p.has_r1_baseline,
+      })),
+
+      districts: (r.district_shifts || []).map(d => ({
+        ubigeo:        d.ubigeo,
+        nombre:        d.nombre,
+        provUbigeo:    d.provUbigeo,
+        deptUbigeo:    d.deptUbigeo,
+        kf_r2_share:   d.current_kf_r2_share,
+        r1_kf_r2_share: d.r1_kf_r2_share,
+        shift_pp:      d.shift_pp,
+        keiko_votos:   d.keiko_votos,
+        sanchez_votos: d.sanchez_votos,
+        has_r1_baseline: d.has_r1_baseline,
+      })),
+
+      shift_granularity: r.shift_granularity,
     });
   } catch (err) {
     if (err.code === '42P01') return res.json({ status: 'pre_election', pct_actas: 0 });
@@ -1076,8 +1106,8 @@ router.post('/admin/inject-snapshot', async (req, res) => {
       `INSERT INTO onpe_live_snapshots
          (captured_at, has_data, actas_total, actas_processed, pct_actas,
           keiko_votos, keiko_pct, sanchez_votos, sanchez_pct,
-          dept_breakdown, ext_breakdown, totales_raw)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+          dept_breakdown, province_breakdown, district_breakdown, ext_breakdown, totales_raw)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
        RETURNING id`,
       [
         snap.captured_at || new Date().toISOString(),
@@ -1089,26 +1119,33 @@ router.post('/admin/inject-snapshot', async (req, res) => {
         snap.keiko_pct       ?? null,
         snap.sanchez_votos   ?? null,
         snap.sanchez_pct     ?? null,
-        JSON.stringify(snap.dept_breakdown || []),
-        JSON.stringify(snap.ext_breakdown  || []),
+        JSON.stringify(snap.dept_breakdown     || []),
+        JSON.stringify(snap.province_breakdown || []),
+        JSON.stringify(snap.district_breakdown || []),
+        JSON.stringify(snap.ext_breakdown      || []),
         snap.totales_raw ? JSON.stringify(snap.totales_raw) : null,
       ]
     );
 
     if (hasData) {
+      const pCnt = Array.isArray(snap.province_breakdown) ? snap.province_breakdown.length : 0;
+      const dCnt = Array.isArray(snap.district_breakdown) ? snap.district_breakdown.length : 0;
       console.log(
         `📊 ONPE inject [bookmarklet]: K=${snap.keiko_pct}% S=${snap.sanchez_pct}%` +
-        ` actas=${snap.pct_actas ?? '?'}%`
+        ` actas=${snap.pct_actas ?? '?'}% depts=${snap.dept_breakdown?.length ?? 0}` +
+        ` provs=${pCnt} dists=${dCnt}`
       );
       const { project } = require('../model/electionNightProjector');
       try {
         const pr = project({
-          pct_actas:      snap.pct_actas     ?? 0,
-          keiko_votos:    snap.keiko_votos   ?? 0,
-          sanchez_votos:  snap.sanchez_votos ?? 0,
-          dept_breakdown: Array.isArray(snap.dept_breakdown) ? snap.dept_breakdown : [],
-          ext_breakdown:  Array.isArray(snap.ext_breakdown)  ? snap.ext_breakdown  : [],
-          captured_at:    snap.captured_at,
+          pct_actas:          snap.pct_actas          ?? 0,
+          keiko_votos:        snap.keiko_votos         ?? 0,
+          sanchez_votos:      snap.sanchez_votos       ?? 0,
+          dept_breakdown:     Array.isArray(snap.dept_breakdown)     ? snap.dept_breakdown     : [],
+          province_breakdown: Array.isArray(snap.province_breakdown) ? snap.province_breakdown : [],
+          district_breakdown: Array.isArray(snap.district_breakdown) ? snap.district_breakdown : [],
+          ext_breakdown:      Array.isArray(snap.ext_breakdown)      ? snap.ext_breakdown      : [],
+          captured_at:        snap.captured_at,
         });
         if (pr.status === 'ok') {
           await db.query(
@@ -1118,8 +1155,8 @@ router.post('/admin/inject-snapshot', async (req, res) => {
                 proj_kf_r2_share, proj_ci95_lo, proj_ci95_hi, proj_ci80_lo, proj_ci80_hi,
                 proj_winner, proj_margin_pp, proj_sigma_pp,
                 zda_correction_applied, zda_remaining_mesas, zda_proj_kf_r2_share, zda_effect_pp,
-                national_shift_pp, dept_shifts, full_result)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)`,
+                national_shift_pp, shift_granularity, dept_shifts, province_shifts, district_shifts, full_result)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)`,
             [
               snapshotId, pr.pct_actas, pr.phase,
               pr.observed.kf_r2_share, pr.observed.keiko_votos, pr.observed.sanchez_votos,
@@ -1128,7 +1165,11 @@ router.post('/admin/inject-snapshot', async (req, res) => {
               pr.projected.winner, pr.projected.margin_pp, pr.projected.sigma_pp,
               pr.zda.always_projected, pr.zda.remaining_mesas,
               pr.zda.proj_kf_r2_share, pr.zda.effect_pp,
-              pr.national_shift_pp, JSON.stringify(pr.dept_shifts), JSON.stringify(pr),
+              pr.national_shift_pp, pr.shift_granularity,
+              JSON.stringify(pr.dept_shifts),
+              JSON.stringify(pr.province_shifts),
+              JSON.stringify(pr.district_shifts),
+              JSON.stringify(pr),
             ]
           );
         }
