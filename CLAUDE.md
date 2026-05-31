@@ -167,6 +167,11 @@ Aliaga aparece ~+3pp en todas las encuestas pre-R1. Sin corrección (modelo corr
 - [x] Encuesta IEP mayo 22-26 ingresada (KF 36%, RSP 30%, n=1204) — nota metodológica: B/N no se leyó como opción → 6% espontáneo (no comparable con abr 24%)
 - [x] CIT mayo 14-17 simulacro ingresado (KF 40.5% RSP 36.0% B/N 23.5% n=1220) — en seed_r2.sql, auto-insertado en cada deploy
 - [x] CIT mayo 26-29 ingresado (KF 41.1% RSP ~33.4% B/V 14.2% NS/NR 12.3% n=1220) — en seed_r2.sql, última CIT antes de veda (31 may)
+- [x] **Phase 1 — Projector estratificado** (commit en PR #131): `electionNightProjector.js` extiende shift a 3 granularidades (district → province → dept → naive). Backtest R1: shift=0.00pp ✅, district 1270 units / 3,766,559 VV R1. Nuevas columnas DB: `province_breakdown`, `district_breakdown` en `onpe_live_snapshots`; `province_shifts`, `district_shifts`, `shift_granularity` en `r2_election_projections`.
+- [x] **Phase 2 — API routes** (PR #131): `inject-snapshot` almacena province/district breakdown; `live-projection` devuelve `provinces[]`, `districts[]`, `shift_granularity`
+- [x] **Phase 3 — Bookmarklet extendido** (PR #131): recoge 196 provincias + 1518 distritos con throttle 20/25 concurrent. Catálogos hardcodeados para evitar bug ONPE `/ubigeos/provincias`.
+- [x] **Phase 4 — LiveResultsTab drill-down** (PR #131): panel de dept → lista de provincias → lista de distritos en modo live; `ShiftBadge` ±pp; `StatusBar` muestra granularidad activa.
+- [x] `startup.js` migraciones idempotentes (`ALTER TABLE ... ADD COLUMN IF NOT EXISTS`) para columnas province/district en Railway live DB
 - [ ] Pesos IEP en seed_r2.sql: verificar que refleja desempeño R1 (cerca a ONPE)
 - [ ] Encuesta CIT mayo 2026 — buscar e ingresar si ya fue publicada
 
@@ -186,7 +191,7 @@ manualmente. La deduplicación es idempotente (IF NOT EXISTS por pollster + fiel
 | `backend/model/bayesian.js` | Blend polls+PM, Φ⁻¹ conversion |
 | `backend/model/montecarlo.js` | 10k sims, shocks, voto oculto |
 | `backend/model/weights.js` | α schedule, λ decay |
-| `backend/model/electionNightProjector.js` | Motor de proyección noche electoral (3 estratos) |
+| `backend/model/electionNightProjector.js` | Motor de proyección noche electoral — shift estratificado district→province→dept→naive; `_computeStratifiedShift()`, `_computeProvShifts()`, `_computeDistShifts()` |
 | `backend/db/seed_r2.sql` | Pesos encuestadoras R2 |
 | `backend/db/r2_projections.sql` | Tabla proyecciones noche electoral |
 | `backend/data/r1_exterior.json` | Baseline exterior R1 (86.78% KF, 77 países) |
@@ -195,13 +200,13 @@ manualmente. La deduplicación es idempotente (IF NOT EXISTS por pollster + fiel
 | `backend/data/r1_districts_flat.json` | Baseline distrital R1 (1518/1892 con datos) |
 | `frontend/public/r1_districts_flat.json` | Copia pública para panel distrital del mapa (lazy-load) |
 | `scripts/verify_r2_onpe.js` | Verificación pre-electoral (correr 7J ~19:45 PET) |
-| `scripts/onpe_bookmarklet.js` | Script de noche electoral — correr en browser ONPE para relay a Railway |
+| `scripts/onpe_bookmarklet.js` | Script de noche electoral — correr en browser ONPE para relay a Railway. Recoge nacional + 25 depts + 196 provincias + 1518 distritos + exterior. PROV_CATALOG y DIST_CATALOG hardcodeados (evita bug `/ubigeos/provincias`). |
 | `POST_MORTEM_2026.md` | Análisis completo post R1, incluye §8 contrafactual |
 | `ELECTION_NIGHT_PLAN.md` | Especificación técnica projector (metodología, activación) |
 | `ONPE_API.md` | Documentación ingeniería inversa ONPE API |
 | `scripts/sandbox_r1_corrections.py` | Pruebas de correcciones (MAE 4.00→1.59pp) |
 | `frontend/src/components/tabs/BacktestingTab.jsx` | Visualización histórica |
-| `frontend/src/components/tabs/LiveResultsTab.jsx` | Tab 7J Resultados — mapa, panel distrital, tabla, needle |
+| `frontend/src/components/tabs/LiveResultsTab.jsx` | Tab 7J Resultados — mapa, panel drill-down (dept→provincia→distrito en live), tabla, needle. `ShiftBadge` ±pp, `StatusBar` con granularidad activa. |
 | `frontend/src/components/PeruDeptMap.jsx` | Mapa SVG departamental (react-simple-maps, matching por nombre) |
 
 ---
@@ -226,6 +231,26 @@ A 40% de actas con el exterior ya completamente contado (caso típico: mesas
 exteriores cierran primero por husos horarios), no separar el exterior produce
 un sesgo de **+0.85pp** en el kf_r2_share proyectado (sobreestima KF). La
 separación correcta elimina esa contaminación.
+
+### Shift estratificado — umbrales de granularidad
+
+El projector auto-selecciona la granularidad más fina con suficiente masa de votos R1:
+
+| Nivel | Activación | Requisitos mínimos |
+|---|---|---|
+| district | 1270 units, 3.77M VV | ≥50 units reportando AND ≥2,000 VV R1 acumulados |
+| province | 196 units, — VV | ≥15 units AND ≥5,000 VV R1 |
+| dept | 25 units, — VV | ≥3 units AND ≥5,000 VV R1 |
+| naive | fallback | cualquier snapshot sin masa suficiente |
+
+Backtest con datos finales R1 reales (KF 2,877,678 / RSP 2,015,114):
+- `shift_granularity: district` (1270 units, 3,766,559 R1 VV) ✅
+- `observed_kf_r2_share: 58.81%` (nacional ONPE) ✅
+- `dom_kf_r2_share: 58.46%` (sin exterior) ✅
+- `national_shift: 0.00pp` ✅
+- Proyección final dentro de ±1.5pp ✅
+
+Funciones: `_shiftFromBreakdown(breakdown, baseline, minVV)` genérica; `_computeStratifiedShift()` orquesta jerarquía.
 
 ### ZDAs siempre proyectadas desde snapshot 1
 Las 4,703 mesas ZDAs (900001–904703) están **siempre pre-bakeadas** en la
@@ -259,9 +284,13 @@ el cron siempre obtendrá HTML y `has_data` se mantendrá `false`.
 
 2. `scripts/onpe_bookmarklet.js` (correr en DevTools Console en el sitio ONPE)
    - Desde dentro del dominio ONPE, los fetches son same-origin → funcionan
-   - Recoge: nacional + totales + 25 depts + exterior
-   - POST a Railway cada 2 minutos (auto-loop)
+   - Recoge: nacional + totales + 25 depts + **196 provincias** + **1518 distritos** + exterior
+   - POST a Railway cada 2 minutos (auto-loop). Tiempo por poll: ~15-20s (throttle 20/25 concurrent)
    - Contiene versión minificada como bookmarklet de barra de favoritos
+   - Catálogos `PROV_CATALOG` y `DIST_CATALOG` hardcodeados — evita bug de ONPE:
+     `/ubigeos/provincias` devuelve HTML (SPA 404) para depts `090000–250000`;
+     `/ubigeos/distritos` sí funciona para todos pero los catálogos embebidos
+     eliminan 196 requests extra y garantizan cobertura idéntica al baseline R1
 
 ### Checklist pre-7J
 - [x] Set `ADMIN_SECRET` en Railway Environment Variables — **ya configurado** (rotar si se compromete)
@@ -283,3 +312,16 @@ Comportamiento UI: esos depts muestran "Sin desglose distrital disponible" — c
 |---|---|
 | `GET /api/live-projection` | Adapter frontend: traduce salida del proyector al shape que LiveResultsTab espera |
 | `POST /api/admin/inject-snapshot` | Relay noche electoral: recibe snapshot del browser, guarda y proyecta |
+
+### Esquema DB — columnas añadidas (PR #131)
+
+**`onpe_live_snapshots`:**
+- `province_breakdown JSONB` — array de `{ubigeo, deptUbigeo, keiko_votos, sanchez_votos}` (196 provincias)
+- `district_breakdown JSONB` — array de `{ubigeo, keiko_votos, sanchez_votos}` (1518 distritos)
+
+**`r2_election_projections`:**
+- `shift_granularity VARCHAR(20)` — `'district'` | `'province'` | `'dept'` | `'naive'`
+- `province_shifts JSONB` — shift per-province con fallback chain
+- `district_shifts JSONB` — shift per-district con fallback chain
+
+Migraciones idempotentes en `startup.js → autoMigrate()` para Railway live DB (no requieren rollback manual).
