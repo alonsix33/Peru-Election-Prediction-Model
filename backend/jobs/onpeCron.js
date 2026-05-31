@@ -98,7 +98,7 @@ async function runPoll() {
 }
 
 function startOnpeCron() {
-  if (!process.env.ONPE_POLLING_ENABLED) {
+  if (process.env.ONPE_POLLING_ENABLED !== 'true') {
     console.log('📊 ONPE live polling deshabilitado (set ONPE_POLLING_ENABLED=true para activar)');
     return;
   }

@@ -302,15 +302,17 @@ function project(snapshot) {
   const obs_pair         = obs_kf + obs_rsp;
 
   // ── Estimate mesas contadas ───────────────────────────────────────────────
-  // ONPE's pct_actas denominator may or may not include ZDAs.
-  // We assume it is out of TOTAL_MESAS (97421) — conservative, since ZDAs
-  // are unlikely to change pct reporting until >92%.
   const obs_mesas = (pct / 100) * TOTAL_MESAS;
 
-  // ZDA cliff: ZDAs start arriving after regular mesas are ~exhausted
-  const reported_zda_approx = Math.max(0, obs_mesas - TOTAL_MESAS_REGULAR);
-  const zda_remaining       = Math.max(0, TOTAL_MESAS_ZDA - reported_zda_approx);
-  const regular_remaining   = Math.max(0, TOTAL_MESAS - obs_mesas - zda_remaining);
+  // Proportional ZDA model: blend a proportional estimate (ZDAs report at the same
+  // overall rate as the count) with the cliff estimate (ZDAs only after regular
+  // exhausted). Taking the max of both gives fewer ZDAs remaining, which is the
+  // more conservative and more accurate approach (-0.29pp bias in cliff-only model).
+  const zda_reported_proportional = Math.round((pct / 100) * TOTAL_MESAS_ZDA);
+  const zda_reported_cliff        = Math.max(0, obs_mesas - TOTAL_MESAS_REGULAR);
+  const reported_zda_approx       = Math.max(zda_reported_proportional, zda_reported_cliff);
+  const zda_remaining             = Math.max(0, TOTAL_MESAS_ZDA - reported_zda_approx);
+  const regular_remaining         = Math.max(0, TOTAL_MESAS - obs_mesas - zda_remaining);
 
   // ── R2 vs R1 shift — stratified (per-dept) preferred over naive national ────
   // Stratified shift uses only reported depts' deviation from their R1 baseline,
@@ -325,13 +327,32 @@ function project(snapshot) {
   const reg_proj_kf_r2 = _clamp(R1_KF_R2_SHARE_DOMESTIC + national_shift, 0, 100);
   const zda_proj_kf_r2 = _clamp(ZDA_KF_R2_SHARE_R1 + national_shift, 0, 100);
 
-  // ── Exterior: project remaining exterior votes ────────────────────────────
-  // If R1 exterior baseline available, project remaining exterior with same national_shift.
-  // Exterior reports early — by 30% domestic, exterior is often 80%+ complete.
-  const r1_ext_kf_r2  = _r1Exterior?.kf_r2_share ?? null;
-  const ext_proj_kf_r2 = r1_ext_kf_r2 != null
-    ? _clamp(r1_ext_kf_r2 + national_shift, 0, 100)
-    : obs_kf_r2_share;  // fallback: assume same as observed national
+  // ── Exterior: project remaining exterior votes — per-continent ───────────
+  // Use per-continent R1 baselines weighted by unreported continents' R1 bilateral share.
+  // This is more accurate than applying the global 86.78% baseline uniformly, since
+  // e.g. Europe leans more KF than Latin America.
+  const r1_ext_kf_r2_global = _r1Exterior?.kf_r2_share ?? null;
+  let ext_proj_kf_r2 = r1_ext_kf_r2_global != null
+    ? _clamp(r1_ext_kf_r2_global + national_shift, 0, 100)
+    : obs_kf_r2_share;
+
+  if (_r1Exterior?.byContinente && Array.isArray(ext_breakdown) && ext_breakdown.length > 0) {
+    const reportedCont = new Set(
+      ext_breakdown
+        .filter(c => (c.keiko_votos || 0) + (c.sanchez_votos || 0) > 0)
+        .map(c => String(c.ubigeo))
+    );
+    let sum_vv = 0, sum_kf_proj = 0;
+    for (const [ubigeo, cont] of Object.entries(_r1Exterior.byContinente)) {
+      if (reportedCont.has(ubigeo)) continue;
+      const r1_bilateral = (cont.kfV || 0) + (cont.rspV || 0);
+      if (r1_bilateral === 0) continue;
+      const cont_kf_r2 = cont.kf_r2_share ?? r1_ext_kf_r2_global;
+      sum_vv     += r1_bilateral;
+      sum_kf_proj += r1_bilateral * _clamp(cont_kf_r2 + national_shift, 0, 100);
+    }
+    if (sum_vv > 0) ext_proj_kf_r2 = sum_kf_proj / sum_vv;
+  }
 
   // Estimate remaining exterior votes.
   // r1_exterior.json stores only KF+RSP bilateral pair from R1 (60,448).
@@ -358,9 +379,9 @@ function project(snapshot) {
     + ext_remaining_vv * (1 - ext_proj_kf_r2 / 100);
   const projected_kf_r2_share = 100 * final_kf / (final_kf + final_rsp);
 
-  // ZDA effect on final estimate (in pp)
+  // ZDA effect on final estimate (in pp) — denominator includes ext_remaining_vv
   const zda_effect_pp = zda_remaining > 0
-    ? rem_zda_vv * (zda_proj_kf_r2 - reg_proj_kf_r2) / 100 / (obs_pair + rem_reg_vv + rem_zda_vv) * 100
+    ? rem_zda_vv * (zda_proj_kf_r2 - reg_proj_kf_r2) / 100 / (obs_pair + rem_reg_vv + rem_zda_vv + ext_remaining_vv) * 100
     : 0;
 
   // ── Bootstrap CI ──────────────────────────────────────────────────────────

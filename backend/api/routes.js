@@ -1,5 +1,6 @@
 const express = require('express');
-const router = express.Router();
+const crypto  = require('crypto');
+const router  = express.Router();
 
 const { nowPeru, electoralPhase, timeToElection } = require('../model/clock');
 const { getPolymarketWeight, getPollWeight } = require('../model/weights');
@@ -672,38 +673,48 @@ router.get('/force-run', async (req, res) => {
 router.get('/model-history', async (req, res) => {
   try {
     const round = parseInt(req.query.round) || 2;
+
+    // Single query with window function — replaces N+1 pattern (was 1 + up to 20 queries)
     const { rows } = await db.query(`
-      SELECT DISTINCT generated_at_lima
-      FROM model_predictions
-      WHERE trigger IN ('auto_polymarket_update', 'final_election_day')
-        AND election_round = $1
-        AND polymarket_weight > 0
-      ORDER BY generated_at_lima DESC
-      LIMIT 20
+      WITH recent_runs AS (
+        SELECT DISTINCT generated_at_lima
+        FROM model_predictions
+        WHERE trigger IN ('auto_polymarket_update', 'final_election_day')
+          AND election_round = $1
+          AND polymarket_weight > 0
+        ORDER BY generated_at_lima DESC
+        LIMIT 20
+      ),
+      ranked AS (
+        SELECT
+          mp.candidate, mp.predicted_pct_mean, mp.prob_first_round,
+          mp.prob_win_overall, mp.generated_at_lima,
+          ROW_NUMBER() OVER (PARTITION BY mp.generated_at_lima ORDER BY mp.predicted_pct_mean DESC) AS rn
+        FROM model_predictions mp
+        JOIN recent_runs r ON r.generated_at_lima = mp.generated_at_lima
+        WHERE mp.election_round = $1
+          AND mp.trigger IN ('auto_polymarket_update', 'final_election_day')
+      )
+      SELECT candidate, predicted_pct_mean, prob_first_round, prob_win_overall, generated_at_lima
+      FROM ranked
+      WHERE rn <= 3
+      ORDER BY generated_at_lima DESC, predicted_pct_mean DESC
     `, [round]);
 
-    const history = [];
+    // Group by run
+    const runMap = new Map();
     for (const row of rows) {
-      const { rows: candidates } = await db.query(`
-        SELECT candidate, predicted_pct_mean, prob_first_round, prob_win_overall
-        FROM model_predictions
-        WHERE generated_at_lima = $1
-          AND election_round = $2
-          AND trigger IN ('auto_polymarket_update', 'final_election_day')
-        ORDER BY predicted_pct_mean DESC
-        LIMIT 3
-      `, [row.generated_at_lima, round]);
-
-      history.push({
-        generated_at_lima: row.generated_at_lima,
-        top3: candidates.map(c => ({
-          candidate: c.candidate,
-          pct_mean: parseFloat(c.predicted_pct_mean),
-          prob_first_round: parseFloat(c.prob_first_round),
-          prob_win: parseFloat(c.prob_win_overall)
-        }))
+      const ts = row.generated_at_lima;
+      if (!runMap.has(ts)) runMap.set(ts, []);
+      runMap.get(ts).push({
+        candidate:        row.candidate,
+        pct_mean:         parseFloat(row.predicted_pct_mean),
+        prob_first_round: parseFloat(row.prob_first_round),
+        prob_win:         parseFloat(row.prob_win_overall),
       });
     }
+    const history = [...runMap.entries()]
+      .map(([ts, top3]) => ({ generated_at_lima: ts, top3 }));
 
     res.json({ count: history.length, history });
   } catch (err) {
@@ -1000,7 +1011,14 @@ router.post('/admin/inject-snapshot', async (req, res) => {
     return res.status(503).json({ error: 'ADMIN_SECRET not configured on Railway' });
   }
   const authHeader = req.headers['authorization'] || '';
-  if (authHeader !== `Bearer ${adminSecret}`) {
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  let authorized = false;
+  try {
+    authorized = token.length > 0 &&
+      token.length === adminSecret.length &&
+      crypto.timingSafeEqual(Buffer.from(token), Buffer.from(adminSecret));
+  } catch { authorized = false; }
+  if (!authorized) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -1088,8 +1106,20 @@ router.post('/admin/inject-snapshot', async (req, res) => {
 });
 
 // ─── POST /api/results/onpe ─────────────────────────────────
-// Insertar resultados oficiales ONPE para post-mortem
+// Insertar resultados oficiales ONPE para post-mortem — requiere ADMIN_SECRET
 router.post('/results/onpe', async (req, res) => {
+  const adminSecret = process.env.ADMIN_SECRET;
+  if (adminSecret) {
+    const authHeader = req.headers['authorization'] || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    let authorized = false;
+    try {
+      authorized = token.length > 0 &&
+        token.length === adminSecret.length &&
+        crypto.timingSafeEqual(Buffer.from(token), Buffer.from(adminSecret));
+    } catch { authorized = false; }
+    if (!authorized) return res.status(401).json({ error: 'Unauthorized' });
+  }
   try {
     const { election_year, round, results } = req.body;
     if (!election_year || !round || !results || !Array.isArray(results)) {
