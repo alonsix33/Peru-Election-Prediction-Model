@@ -307,6 +307,25 @@ BEGIN
     VALUES (2, 'Roberto Sánchez Palomino', 40.0, ipsos_id, '2026-05-17', '2026-05-20',
             'Ipsos 17 may 2026. Segunda medición R2. Def.no=40%, Prob.no=7% → B2B=47%. T2B=39% (Def.23%+Pod.16%). Bajó 3pp desde abr.');
   END IF;
+
+  -- 30 mayo (simulacro): ambos bajan. Keiko mínimo histórico, Sánchez primer registro ≤ Keiko.
+  IF NOT EXISTS (
+    SELECT 1 FROM antivoto_snapshots
+    WHERE candidate = 'Keiko Fujimori' AND field_end = '2026-05-30' AND election_round = 2
+  ) THEN
+    INSERT INTO antivoto_snapshots (election_round, candidate, pct_no, pollster_id, field_end, published_date, notes)
+    VALUES (2, 'Keiko Fujimori', 40.0, ipsos_id, '2026-05-30', '2026-05-31',
+            'Ipsos-Perú21 simulacro 29-30 may 2026. Def.no=40%, Prob.no=9% → B2B=49%. T2B=43% (Def.28%+Pod.15%). Mínimo histórico absoluto — bajó 24pp desde feb 2026.');
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM antivoto_snapshots
+    WHERE candidate = 'Roberto Sánchez Palomino' AND field_end = '2026-05-30' AND election_round = 2
+  ) THEN
+    INSERT INTO antivoto_snapshots (election_round, candidate, pct_no, pollster_id, field_end, published_date, notes)
+    VALUES (2, 'Roberto Sánchez Palomino', 38.0, ipsos_id, '2026-05-30', '2026-05-31',
+            'Ipsos-Perú21 simulacro 29-30 may 2026. Def.no=38%, Prob.no=10% → B2B=48%. T2B=41% (Def.25%+Pod.16%). Bajó 2pp desde may 17. Por primera vez ambos candidatos con antivoto similar.');
+  END IF;
 END $$;
 
 -- ── Datum segunda vuelta: mayo 2026 ────────────────────────
