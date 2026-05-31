@@ -26,9 +26,9 @@ export default function Header({ status, predictions }) {
   const ps = PHASE_STYLES[phase] || PHASE_STYLES.pre_veda;
   const alpha = status?.polymarket_weight;
 
-  // Countdown hasta cierre de mesas segunda vuelta: 7 junio 2026 5pm Lima
-  // 5pm Lima (UTC-5) = 10pm UTC = 2026-06-07T22:00:00Z
-  const electionClose = new Date('2026-06-07T22:00:00Z');
+  // Countdown hasta cierre de mesas segunda vuelta: 7 junio 2026 4pm Lima
+  // 4pm Lima (UTC-5) = 9pm UTC = 2026-06-07T21:00:00Z
+  const electionClose = new Date('2026-06-07T21:00:00Z');
   const diffMs = electionClose - now;
   const isPast = diffMs <= 0;
   const totalSecsLeft = Math.max(0, Math.floor(diffMs / 1000));

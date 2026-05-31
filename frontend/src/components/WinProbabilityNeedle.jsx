@@ -153,15 +153,19 @@ function AnimatedNeedle({ targetAngle, wobbleAmplitude }) {
   const [entered, setEntered]           = useState(false);  // mount sweep done?
   const wobbleRef = useRef(null);
   const prevTargetRef = useRef(targetAngle);
+  const enterTimerRef = useRef(null);
 
   // Mount: sweep from 0 → target with springy easing
   useEffect(() => {
     const t = setTimeout(() => {
       setDisplayAngle(targetAngle);
-      // Mark entry complete after transition duration (1.4s)
-      setTimeout(() => setEntered(true), 1500);
+      if (enterTimerRef.current) clearTimeout(enterTimerRef.current);
+      enterTimerRef.current = setTimeout(() => setEntered(true), 1500);
     }, 120);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      if (enterTimerRef.current) clearTimeout(enterTimerRef.current);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -172,7 +176,8 @@ function AnimatedNeedle({ targetAngle, wobbleAmplitude }) {
     prevTargetRef.current = targetAngle;
     setEntered(false);
     setDisplayAngle(targetAngle);
-    setTimeout(() => setEntered(true), 1500);
+    if (enterTimerRef.current) clearTimeout(enterTimerRef.current);
+    enterTimerRef.current = setTimeout(() => setEntered(true), 1500);
   }, [targetAngle, entered]);
 
   // Wobble: sinusoidal oscillation proportional to IC width once settled

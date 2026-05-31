@@ -1027,6 +1027,9 @@ router.post('/admin/inject-snapshot', async (req, res) => {
     if (typeof snap !== 'object' || snap === null) {
       return res.status(400).json({ error: 'Body must be a JSON object' });
     }
+    if (snap.pct_actas != null && snap.pct_actas > 100) {
+      return res.status(400).json({ error: 'pct_actas must be a percentage (0-100), not an absolute count' });
+    }
 
     const hasData = snap.has_data === true &&
       ((snap.keiko_votos > 0) || (snap.sanchez_votos > 0));

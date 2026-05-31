@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS antivoto_snapshots (
   pollster_id    INT          REFERENCES pollsters(id),
   field_end      DATE         NOT NULL,
   published_date DATE,
+  segments       JSONB        DEFAULT NULL,
   notes          TEXT,
   created_at     TIMESTAMPTZ  DEFAULT NOW()
 );
