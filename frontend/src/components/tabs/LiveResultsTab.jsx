@@ -7,6 +7,9 @@ const KEIKO_COLOR   = getPartyColor('Keiko Fujimori').primary;           // #F97
 const SANCHEZ_COLOR = getPartyColor('Roberto Sánchez Palomino').primary; // #16A34A
 const API_BASE      = import.meta.env.VITE_API_URL || '';
 
+// Module-level cache so re-mounts don't flash demo data when live data was already fetched
+let _liveDataCache = null;
+
 // ─── Demo data (R1 2026) ──────────────────────────────────────
 const DEMO = {
   national: {
@@ -471,8 +474,8 @@ function DeptTable({ deptData, extranjero, isDemo }) {
 
 // ─── Main tab ─────────────────────────────────────────────────
 export default function LiveResultsTab({ predictions }) {
-  const [liveData,        setLiveData]        = useState(null);
-  const [isLive,          setIsLive]          = useState(false);
+  const [liveData,        setLiveData]        = useState(_liveDataCache);
+  const [isLive,          setIsLive]          = useState(_liveDataCache !== null);
   const [hoveredDept,     setHoveredDept]     = useState(null);
   const [selectedDept,    setSelectedDept]    = useState(null);
   const [districtData,    setDistrictData]    = useState(null);
@@ -483,7 +486,7 @@ export default function LiveResultsTab({ predictions }) {
       const res = await fetch(`${API_BASE}/api/live-projection`);
       if (!res.ok) return;
       const json = await res.json();
-      if (json?.pct_actas > 0) { setLiveData(json); setIsLive(true); }
+      if (json?.status === 'ok') { _liveDataCache = json; setLiveData(json); setIsLive(true); }
     } catch { /* stay in demo */ }
   }, []);
 

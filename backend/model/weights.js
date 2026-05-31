@@ -24,8 +24,8 @@ function getPolymarketWeight(volumeUSD = 5_100_000) {
       return Math.min(0.25, 0.20 + (liquidityFactor * 0.05));
 
     case 'veda': {
-      const vedaHours = 7 * 24; // 168 horas de veda
-      const hoursElapsed = vedaHours - Math.max(0, totalHours);
+      const vedaHours = 160; // 168h total − 8h gap (00:00–08:00 election day): α maxes at 08:00
+      const hoursElapsed = Math.max(0, vedaHours - Math.max(0, totalHours));
       const vedaProgress = Math.min(1, hoursElapsed / vedaHours);
       // Parte desde 0.25 (igual al techo de pre_veda) y crece a 0.60.
       // Exponente 0.6: crecimiento cóncavo — sube rápido los primeros días.

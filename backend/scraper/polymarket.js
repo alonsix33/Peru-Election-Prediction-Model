@@ -247,7 +247,7 @@ async function scrapePolymarket() {
     try {
       const { runFullPipeline } = require('../model/pipeline');
       console.log('\n🧮 Auto-run modelo post-scrape...');
-      await runFullPipeline({ saveToDB: true, trigger: 'auto_polymarket_update' });
+      await runFullPipeline({ saveToDB: true, trigger: 'auto_polymarket_update', electionRound: 2 });
       console.log('✅ Modelo actualizado automáticamente');
     } catch (pipelineErr) {
       console.error('⚠️  Auto-run pipeline falló:', pipelineErr.message);

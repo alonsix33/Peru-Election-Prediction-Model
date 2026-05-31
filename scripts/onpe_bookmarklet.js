@@ -38,8 +38,8 @@
  */
 
 // ── CONFIG — edit these ──────────────────────────────────────────────
-const RAILWAY_URL   = 'https://peru-election-prediction-model-production.up.railway.app';
-const ADMIN_SECRET  = 'ccbae813cc173f66b00ae96e14ca191d';
+const RAILWAY_URL   = 'https://YOUR_RAILWAY_URL.up.railway.app';  // set before 7J — never commit the real value
+const ADMIN_SECRET  = 'YOUR_ADMIN_SECRET';                         // set before 7J — same as Railway ADMIN_SECRET env var
 const ID_ELECCION   = 11;          // R2 idEleccion — confirm on election night
 const POLL_INTERVAL = 2 * 60 * 1000; // milliseconds between polls (2 min)
 // ────────────────────────────────────────────────────────────────────

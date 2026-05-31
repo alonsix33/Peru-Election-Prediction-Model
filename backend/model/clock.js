@@ -36,13 +36,13 @@ function timeToElection() {
  */
 function electoralPhase() {
   const now = nowPeru();
-  const veda = DateTime.fromISO(VEDA_START, { zone: PERU_TIMEZONE });
-  const election = DateTime.fromISO(ELECTION_DAY, { zone: PERU_TIMEZONE }).startOf('day');
-  const electionEnd = election.plus({ hours: 17 }); // Cierre de mesas: 5pm (ONPE)
+  const veda        = DateTime.fromISO(VEDA_START, { zone: PERU_TIMEZONE });
+  const electionOpen  = DateTime.fromISO(ELECTION_DAY, { zone: PERU_TIMEZONE }).startOf('day').plus({ hours: 8  }); // 08:00 apertura
+  const electionClose = DateTime.fromISO(ELECTION_DAY, { zone: PERU_TIMEZONE }).startOf('day').plus({ hours: 16 }); // 16:00 cierre
 
   if (now < veda)           return 'pre_veda';
-  if (now < election)       return 'veda';
-  if (now < electionEnd)    return 'election_day';
+  if (now < electionOpen)   return 'veda';
+  if (now < electionClose)  return 'election_day';
   return 'post_election';
 }
 

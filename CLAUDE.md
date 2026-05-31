@@ -168,6 +168,7 @@ Aliaga aparece ~+3pp en todas las encuestas pre-R1. Sin corrección (modelo corr
 - [x] CIT mayo 14-17 simulacro ingresado (KF 40.5% RSP 36.0% B/N 23.5% n=1220) — en seed_r2.sql, auto-insertado en cada deploy
 - [x] CIT mayo 26-29 ingresado (KF 41.1% RSP ~33.4% B/V 14.2% NS/NR 12.3% n=1220) — en seed_r2.sql, última CIT antes de veda (31 may)
 - [ ] Pesos IEP en seed_r2.sql: verificar que refleja desempeño R1 (cerca a ONPE)
+- [ ] Encuesta CIT mayo 2026 — buscar e ingresar si ya fue publicada
 
 ### Mecanismo de auto-inserción de encuestas
 `startup.js → autoMigrate()` ejecuta `seed_r2.sql` en **cada deploy** de Railway (no solo
@@ -263,8 +264,9 @@ el cron siempre obtendrá HTML y `has_data` se mantendrá `false`.
    - Contiene versión minificada como bookmarklet de barra de favoritos
 
 ### Checklist pre-7J
-- [ ] Set `ADMIN_SECRET=<openssl rand -hex 16>` en Railway Environment Variables
-- [ ] Editar `RAILWAY_URL` y `ADMIN_SECRET` al inicio de `scripts/onpe_bookmarklet.js`
+- [x] Set `ADMIN_SECRET` en Railway Environment Variables — **ya configurado** (rotar si se compromete)
+- [ ] El 7J: editar `RAILWAY_URL` y `ADMIN_SECRET` reales al inicio de `scripts/onpe_bookmarklet.js` SOLO en tu copia local — NUNCA commitear los valores reales
+- [x] `VITE_API_URL` en Cloudflare Pages → Settings → Environment Variables (ver `frontend/.env.example`)
 - [ ] Confirmar `idEleccion` R2 el 7J: interceptar XHR en sitio ONPE → buscar `idEleccion=XX` en las llamadas (esperado: 11)
 - [ ] A las 20:00 PET del 7J: abrir ONPE, pegar script en DevTools Console
 - [ ] Verificar primer POST exitoso (console.log `✅ Guardado. snapshot_id=X`)
