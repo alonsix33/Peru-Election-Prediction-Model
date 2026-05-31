@@ -724,7 +724,12 @@ router.get('/model-history', async (req, res) => {
     // Group by run
     const runMap = new Map();
     for (const row of rows) {
-      const ts = row.generated_at_lima;
+      // pg returns TIMESTAMPTZ as a Date object — use ISO string as Map key so that
+      // two rows from the same run (same timestamp value, different object refs) are
+      // grouped together instead of creating separate single-candidate entries.
+      const ts = row.generated_at_lima instanceof Date
+        ? row.generated_at_lima.toISOString()
+        : String(row.generated_at_lima);
       if (!runMap.has(ts)) runMap.set(ts, []);
       runMap.get(ts).push({
         candidate:        row.candidate,
