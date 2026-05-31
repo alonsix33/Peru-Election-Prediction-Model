@@ -821,6 +821,12 @@ router.get('/post-mortem', async (req, res) => {
 // Último snapshot de resultados ONPE R2 en tiempo real + historial de tendencia
 router.get('/onpe/live', async (req, res) => {
   try {
+    // Don't surface snapshots before election day — prevents test data from leaking
+    const phase = electoralPhase();
+    if (phase === 'pre_veda' || phase === 'veda') {
+      return res.json({ status: 'pre_election', has_data: false });
+    }
+
     const { rows: [latest] } = await db.query(
       `SELECT * FROM onpe_live_snapshots ORDER BY captured_at DESC LIMIT 1`
     );
@@ -872,6 +878,12 @@ router.get('/onpe/live', async (req, res) => {
 // Devuelve { status: 'pre_election' } si no hay snapshots con datos.
 router.get('/onpe/projection', async (req, res) => {
   try {
+    // Guard: don't serve projections before election day
+    const phase = electoralPhase();
+    if (phase === 'pre_veda' || phase === 'veda') {
+      return res.json({ status: 'pre_election', message: 'Sin datos ONPE aún' });
+    }
+
     const { rows: [latest] } = await db.query(
       `SELECT * FROM onpe_live_snapshots WHERE has_data = true ORDER BY captured_at DESC LIMIT 1`
     );
@@ -941,6 +953,12 @@ function _normalCDF(z) {
 
 router.get('/live-projection', async (req, res) => {
   try {
+    // Guard: don't serve live results before election day — prevents test snapshots from leaking
+    const phase = electoralPhase();
+    if (phase === 'pre_veda' || phase === 'veda') {
+      return res.json({ status: 'pre_election', pct_actas: 0 });
+    }
+
     const { rows: [latest] } = await db.query(
       `SELECT * FROM onpe_live_snapshots WHERE has_data = true ORDER BY captured_at DESC LIMIT 1`
     );
@@ -1124,6 +1142,37 @@ router.post('/admin/inject-snapshot', async (req, res) => {
     res.json({ ok: true, snapshot_id: snapshotId, has_data: hasData });
   } catch (err) {
     console.error('📊 Error en inject-snapshot:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── DELETE /api/admin/snapshots ────────────────────────────
+// Limpia snapshots de prueba antes del 7J. Requiere ADMIN_SECRET.
+router.delete('/admin/snapshots', async (req, res) => {
+  const adminSecret = process.env.ADMIN_SECRET;
+  if (!adminSecret) {
+    return res.status(503).json({ error: 'ADMIN_SECRET not configured on Railway' });
+  }
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  let authorized = false;
+  try {
+    authorized = token.length > 0 &&
+      token.length === adminSecret.length &&
+      crypto.timingSafeEqual(Buffer.from(token), Buffer.from(adminSecret));
+  } catch { authorized = false; }
+  if (!authorized) return res.status(401).json({ error: 'Unauthorized' });
+
+  try {
+    const { rowCount: s } = await db.query(`DELETE FROM onpe_live_snapshots`);
+    let p = 0;
+    try {
+      const r = await db.query(`DELETE FROM r2_election_projections`);
+      p = r.rowCount;
+    } catch { /* table may not exist yet */ }
+    console.log(`🧹 Admin: deleted ${s} snapshots, ${p} projections`);
+    res.json({ ok: true, snapshots_deleted: s, projections_deleted: p });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
