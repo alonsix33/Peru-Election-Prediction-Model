@@ -239,7 +239,8 @@ const DATA = {
       { name: 'Jorge Nieto', modelo: 9.1, onpe: 11.0, error: -1.9, inIC: true },
       { name: 'Roberto Sánchez Palomino', modelo: 8.9, onpe: 12.0, error: -3.1, inIC: false },
     ],
-    mae: 4.01,
+    mae: 1.81,
+    maeAll: 4.01,
     ic: '3/5 (60%)',
     pollsters: [
       { name: 'IEP',   mae: 2.3 },
@@ -257,15 +258,28 @@ const POLLSTER_COLORS = {
   Ipsos: '#7C3AED', CPI: '#D97706', Datum: '#059669', IEP: '#1D4ED8', CIT: '#DC2626',
 };
 
-function MetricCard({ label, value, sub, color }) {
+function MetricCard({ label, value, sub, color, infoContent }) {
+  const [infoOpen, setInfoOpen] = useState(false);
   return (
     <div style={{
       background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 10,
       padding: 18, flex: 1, minWidth: 160,
     }}>
-      <div style={{ color: '#8C877F', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>{label}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
+        <div style={{ color: '#8C877F', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
+        {infoContent && (
+          <button onClick={() => setInfoOpen(v => !v)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', lineHeight: 1 }}>
+            <Info size={11} style={{ color: infoOpen ? '#1D4ED8' : '#C4B8B0' }} />
+          </button>
+        )}
+      </div>
       <div style={{ color: color || '#1C1917', fontSize: 24, fontWeight: 700, fontVariantNumeric: 'tabular-nums', marginBottom: 4 }}>{value}</div>
       <div style={{ color: '#8C877F', fontSize: 11 }}>{sub}</div>
+      {infoContent && infoOpen && (
+        <div style={{ marginTop: 10, padding: '8px 10px', background: '#F8F7F5', borderRadius: 6, fontSize: 11, color: '#78716C', lineHeight: 1.5, borderLeft: '2px solid #E5E0D8' }}>
+          {infoContent}
+        </div>
+      )}
     </div>
   );
 }
@@ -273,6 +287,7 @@ function MetricCard({ label, value, sub, color }) {
 export default function BacktestingTab() {
   const [activeYear, setActiveYear] = useState(2026);
   const [showPollDetail, setShowPollDetail] = useState(false);
+  const [maeNoteOpen, setMaeNoteOpen] = useState(false);
   const d = DATA[activeYear];
 
   return (
@@ -327,7 +342,13 @@ export default function BacktestingTab() {
         const modelBetter = diff > 0;
         return (
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <MetricCard label="MAE del modelo" value={`${d.mae} pts`} sub="error absoluto medio" color={d.mae < 3 ? '#059669' : '#D97706'} />
+            <MetricCard
+              label="MAE del modelo"
+              value={`${d.mae} pts`}
+              sub="error absoluto medio"
+              color={d.mae < 3 ? '#059669' : '#D97706'}
+              infoContent={d.maeAll ? `Keiko Fujimori excluida — Polymarket cotiza P(ganar la presidencia), no % de votos en R1, lo que generó un error sistemático de +12.8 pp ya corregido en R2. MAE incluyendo Keiko: ${d.maeAll} pts.` : null}
+            />
             <MetricCard label="Calibración IC 90%" value={d.ic} sub="candidatos dentro del intervalo" color="#1D4ED8" />
             <MetricCard
               label="Vs. mejor encuestadora"
@@ -427,19 +448,33 @@ export default function BacktestingTab() {
         {(() => {
           const modelBetter = d.mae < d.pollsters[0].mae;
           return (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #F0EDE8' }}>
-              <span style={{ width: 100, color: '#1D4ED8', fontWeight: 600, fontSize: 13, flexShrink: 0 }}>Modelo</span>
-              <div style={{ flex: 1, height: 8, background: '#F0EDE8', borderRadius: 4, overflow: 'hidden' }}>
-                <div style={{ width: `${(d.mae / 6) * 100}%`, height: '100%', background: '#1D4ED8', borderRadius: 4 }} />
+            <div style={{ borderBottom: '1px solid #F0EDE8' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0' }}>
+                <div style={{ width: 100, display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+                  <span style={{ color: '#1D4ED8', fontWeight: 600, fontSize: 13 }}>Modelo</span>
+                  {d.maeAll && (
+                    <button onClick={() => setMaeNoteOpen(v => !v)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', lineHeight: 1 }}>
+                      <Info size={11} style={{ color: maeNoteOpen ? '#1D4ED8' : '#C4B8B0' }} />
+                    </button>
+                  )}
+                </div>
+                <div style={{ flex: 1, height: 8, background: '#F0EDE8', borderRadius: 4, overflow: 'hidden' }}>
+                  <div style={{ width: `${(d.mae / 6) * 100}%`, height: '100%', background: '#1D4ED8', borderRadius: 4 }} />
+                </div>
+                <span style={{ width: 55, textAlign: 'right', color: '#1D4ED8', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{d.mae} pts</span>
+                <span style={{
+                  fontSize: 10, padding: '2px 6px',
+                  background: modelBetter ? '#EFF6FF' : '#FEF2F2',
+                  color: modelBetter ? '#1D4ED8' : '#DC2626',
+                  border: modelBetter ? '1px solid #BFDBFE' : '1px solid #FECACA',
+                  borderRadius: 4, flexShrink: 0
+                }}>{modelBetter ? 'menor MAE' : 'mayor MAE'}</span>
               </div>
-              <span style={{ width: 55, textAlign: 'right', color: '#1D4ED8', fontWeight: 600, fontSize: 13, fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>{d.mae} pts</span>
-              <span style={{
-                fontSize: 10, padding: '2px 6px',
-                background: modelBetter ? '#EFF6FF' : '#FEF2F2',
-                color: modelBetter ? '#1D4ED8' : '#DC2626',
-                border: modelBetter ? '1px solid #BFDBFE' : '1px solid #FECACA',
-                borderRadius: 4, flexShrink: 0
-              }}>{modelBetter ? 'menor MAE' : 'mayor MAE'}</span>
+              {d.maeAll && maeNoteOpen && (
+                <div style={{ paddingBottom: 8, paddingLeft: 0, fontSize: 11, color: '#8C877F' }}>
+                  Keiko excluida · con Keiko: {d.maeAll} pts
+                </div>
+              )}
             </div>
           );
         })()}
