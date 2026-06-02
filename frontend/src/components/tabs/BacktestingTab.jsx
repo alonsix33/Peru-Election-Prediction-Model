@@ -561,7 +561,7 @@ export default function BacktestingTab() {
         </p>
         <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: 0 }}>
           Ajustes para R2: <strong style={{ color: '#1C1917' }}>conversión P(ganar)→voto share implícito</strong> antes de integrar;{' '}
-          <strong style={{ color: '#1C1917' }}>alpha cap 0.60</strong> (era 0.77 en R1);{' '}
+          <strong style={{ color: '#1C1917' }}>alpha cap 0.50</strong> (era 0.77 en R1);{' '}
           <strong style={{ color: '#1C1917' }}>IEP 1.00×</strong> (mejor MAE pre-veda, 1.3pp) e{' '}
           <strong style={{ color: '#1C1917' }}>Ipsos 1.05×</strong> vs <strong style={{ color: '#1C1917' }}>Datum 1.15×</strong> basados en MAE de las últimas encuestas pre-veda.
         </p>

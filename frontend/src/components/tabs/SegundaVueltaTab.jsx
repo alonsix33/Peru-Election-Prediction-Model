@@ -460,7 +460,7 @@ function PMvsPollsSection({ polymarket, r2polls }) {
       </div>
       <p style={{ color: '#8C877F', fontSize: 12, margin: 0 }}>
         En R2 Polymarket cotiza P(ganar la presidencia), que corresponde directamente con lo que mide la segunda vuelta.
-        El modelo convierte esa probabilidad a voto share implícito (Φ⁻¹, σ=3pp) y le asigna un peso α entre 20% (pre-veda) y 60% (día de la elección).
+        El modelo convierte esa probabilidad a voto share implícito (Φ⁻¹, σ=3pp) y le asigna un peso α entre 20% (pre-veda) y 50% (día de la elección).
         La brecha PM–encuestas puede reflejar información no capturada en sondeos o volatilidad especulativa del mercado.
       </p>
     </div>
