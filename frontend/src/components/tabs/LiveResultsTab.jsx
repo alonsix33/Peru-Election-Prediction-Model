@@ -115,53 +115,57 @@ function CandidateCards({ kf_r2_share, proj_kf_r2_share, ci_low, ci_high, kf_vot
 
   const fmtVotos = (v) => v != null ? v.toLocaleString('es-PE') : null;
 
-  const card = (name, color, share, proj, votos, isLeader) => (
-    <div style={{
-      flex: 1, minWidth: 200,
-      background: '#FFFFFF',
-      border: `2px solid ${isLeader ? color + '40' : '#E5E0D8'}`,
-      borderRadius: 14, padding: '18px 20px',
-      position: 'relative',
-    }}>
-      {isLeader && (
-        <div style={{
-          position: 'absolute', top: 10, right: 12,
-          background: color + '15', color, borderRadius: 20,
-          padding: '2px 8px', fontSize: 10, fontWeight: 700,
-        }}>
-          VA GANANDO
+  const card = (name, color, share, proj, votos, isLeader) => {
+    const primary = proj ?? share;
+    return (
+      <div style={{
+        flex: 1, minWidth: 200,
+        background: '#FFFFFF',
+        border: `2px solid ${isLeader ? color + '40' : '#E5E0D8'}`,
+        borderRadius: 14, padding: '18px 20px',
+        position: 'relative',
+      }}>
+        {isLeader && (
+          <div style={{
+            position: 'absolute', top: 10, right: 12,
+            background: color + '15', color, borderRadius: 20,
+            padding: '2px 8px', fontSize: 10, fontWeight: 700,
+          }}>
+            VA GANANDO
+          </div>
+        )}
+        <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>{name}</div>
+
+        {/* PRIMARY: projected % — the number that matters */}
+        <div style={{ color, fontWeight: 800, fontSize: 38, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+          {primary != null ? primary.toFixed(1) + '%' : '—'}
         </div>
-      )}
-      <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 4 }}>{name}</div>
-      <div style={{ color, fontWeight: 800, fontSize: 38, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-        {share != null ? share.toFixed(1) + '%' : '—'}
-      </div>
-      <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 3 }}>
-        votos válidos {isDemo ? '(baseline R1)' : 'contabilizados'}
-      </div>
-      {votos != null && (
-        <div style={{ color: '#78716C', fontSize: 12, marginTop: 4, fontVariantNumeric: 'tabular-nums' }}>
-          {fmtVotos(votos)} votos
+        <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 3 }}>
+          {proj != null ? 'Proyectado al 100% de actas' : (isDemo ? 'votos válidos (baseline R1)' : 'votos válidos contabilizados')}
         </div>
-      )}
-      {proj != null && (
+
+        {isLeader && ci_low != null && !isDemo && (
+          <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 4 }}>
+            CI 90%: [{ci_low.toFixed(1)}, {ci_high.toFixed(1)}]
+          </div>
+        )}
+
+        {/* SECONDARY: raw ONPE count — context only, reduced opacity */}
         <div style={{
           marginTop: 12, paddingTop: 12, borderTop: '1px solid #F0EDE8',
           display: 'flex', alignItems: 'baseline', gap: 6,
+          opacity: 0.55,
         }}>
           <span style={{ color, fontWeight: 700, fontSize: 20, fontVariantNumeric: 'tabular-nums' }}>
-            {proj.toFixed(1)}%
+            {share != null ? share.toFixed(1) + '%' : '—'}
           </span>
-          <span style={{ color: '#A8A29E', fontSize: 11 }}>proyectado al 100%</span>
+          <span style={{ color: '#A8A29E', fontSize: 11 }}>
+            Votos válidos{votos != null ? ` · ${fmtVotos(votos)} votos` : (isDemo ? ' (baseline R1)' : '')}
+          </span>
         </div>
-      )}
-      {isLeader && ci_low != null && !isDemo && (
-        <div style={{ color: '#A8A29E', fontSize: 10, marginTop: 4 }}>
-          CI 90%: [{ci_low.toFixed(1)}, {ci_high.toFixed(1)}]
-        </div>
-      )}
-    </div>
-  );
+      </div>
+    );
+  };
 
   return (
     <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
