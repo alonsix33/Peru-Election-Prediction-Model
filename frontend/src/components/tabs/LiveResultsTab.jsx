@@ -138,7 +138,7 @@ function CandidateCards({ kf_r2_share, proj_kf_r2_share, ci_low, ci_high, kf_vot
 
         {/* PRIMARY: projected % — the number that matters */}
         <div style={{ color, fontWeight: 800, fontSize: 38, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
-          {primary != null ? primary.toFixed(1) + '%' : '—'}
+          {primary != null ? primary.toFixed(2) + '%' : '—'}
         </div>
         <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 3 }}>
           {proj != null ? 'Proyectado al 100% de actas' : (isDemo ? 'votos válidos (baseline R1)' : 'votos válidos contabilizados')}
@@ -157,7 +157,7 @@ function CandidateCards({ kf_r2_share, proj_kf_r2_share, ci_low, ci_high, kf_vot
           opacity: 0.55,
         }}>
           <span style={{ color, fontWeight: 700, fontSize: 20, fontVariantNumeric: 'tabular-nums' }}>
-            {share != null ? share.toFixed(1) + '%' : '—'}
+            {share != null ? share.toFixed(2) + '%' : '—'}
           </span>
           <span style={{ color: '#A8A29E', fontSize: 11 }}>
             Votos válidos{votos != null ? ` · ${fmtVotos(votos)} votos` : (isDemo ? ' (baseline R1)' : '')}
