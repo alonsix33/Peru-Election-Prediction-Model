@@ -199,14 +199,17 @@ manualmente. La deduplicación es idempotente (IF NOT EXISTS por pollster + fiel
 | `backend/data/r1_exterior.json` | Baseline exterior R1 (86.78% KF, 77 países) |
 | `backend/data/r1_zda_dept_model.json` | Modelo ZDA por dept (25 depts, fuentes A/B/C/D) |
 | `backend/data/r1_province_baseline.json` | Baseline provincial R1 (196 provincias, 100% cobertura) |
-| `backend/data/r1_districts_flat.json` | Baseline distrital R1 (1518/1892 con datos) |
+| `backend/data/r1_districts_flat.json` | Baseline distrital R1 (1886/1892 con datos — 368 rellenados con proxy 2021 R2) |
 | `frontend/public/r1_districts_flat.json` | Copia pública para panel distrital del mapa (lazy-load) |
 | `scripts/verify_r2_onpe.js` | Verificación pre-electoral (correr 7J ~19:45 PET) |
-| `scripts/onpe_bookmarklet.js` | Script de noche electoral — correr en browser ONPE para relay a Railway. Recoge nacional + 25 depts + 196 provincias + 1518 distritos + exterior. PROV_CATALOG y DIST_CATALOG hardcodeados (evita bug `/ubigeos/provincias`). |
+| `scripts/onpe_bookmarklet.js` | Script de noche electoral — correr en browser ONPE para relay a Railway. Recoge nacional + 25 depts + 196 provincias + **1886 distritos** + exterior. PROV_CATALOG y DIST_CATALOG hardcodeados (evita bug `/ubigeos/provincias`). |
 | `POST_MORTEM_2026.md` | Análisis completo post R1, incluye §8 contrafactual |
 | `ELECTION_NIGHT_PLAN.md` | Especificación técnica projector (metodología, activación) |
 | `ONPE_API.md` | Documentación ingeniería inversa ONPE API |
 | `scripts/sandbox_r1_corrections.py` | Pruebas de correcciones (MAE 4.00→1.59pp) |
+| `scripts/build_proxy_districts_2021.py` | Rellena 374 baselines distritales faltantes usando proxy 2021 R2; 368/374 matched (98.4%). Aliases: CAPASO↔CAPAZO, ESTIQUE PAMPA↔ESTIQUE-PAMPA, RAIMONDI↔RAYMONDI |
+| `scripts/sandbox_r2_backtest_2021.py` | Backtest real R2 2021 con datos jmcastagnetto. Valida: al 42% actas, proyector -1.0pp vs raw +3.0pp |
+| `scripts/sandbox_election_night_2021.py` | Simula noche electoral 2021 minuto a minuto con timestamps reales de noticiarios. Calibra expectativas para 7J 2026. |
 | `frontend/src/components/tabs/BacktestingTab.jsx` | Visualización histórica |
 | `frontend/src/components/tabs/LiveResultsTab.jsx` | Tab 7J Resultados — mapa, panel drill-down (dept→provincia→distrito en live), tabla, needle. `ShiftBadge` ±pp, `StatusBar` con granularidad activa. |
 | `frontend/src/components/PeruDeptMap.jsx` | Mapa SVG departamental (react-simple-maps, matching por nombre) |
@@ -304,10 +307,11 @@ el cron siempre obtendrá HTML y `has_data` se mantendrá `false`.
 - [ ] NO activar `ONPE_POLLING_ENABLED` en Railway — inútil y consume compute
 
 ### Cobertura distrital (panel mapa)
-`frontend/public/r1_districts_flat.json`: 1892 distritos, 1518 con kf_r2_share (80%).
-Los 374 sin datos pertenecen a 11 depts: Moquegua, Pasco, Piura, Puno, San Martín,
-Tacna, Tumbes, Ucayali (0/N) + Cajamarca 126/127, Loreto 51/54, Madre de Dios 4/11.
-Comportamiento UI: esos depts muestran "Sin desglose distrital disponible" — correcto.
+`frontend/public/r1_districts_flat.json`: 1892 distritos, **1886 con kf_r2_share (99.7%)**.
+Los 368 antes faltantes fueron rellenados con proxy 2021 R2 (`source: '2021_r2_proxy'`).
+Solo 6 distritos sin datos: 4 creados post-2021 (nuevos ubigeos) + 2 con cero votos en 2021.
+Esos 6 usan fallback provincia/dept en el proyector — correcto.
+DIST_CATALOG en bookmarklet extendido de 1518 → 1886 ubigeos para colectar datos en vivo el 7J.
 
 ### API endpoints nuevos (7J)
 | Endpoint | Propósito |
@@ -327,3 +331,60 @@ Comportamiento UI: esos depts muestran "Sin desglose distrital disponible" — c
 - `district_shifts JSONB` — shift per-district con fallback chain
 
 Migraciones idempotentes en `startup.js → autoMigrate()` para Railway live DB (no requieren rollback manual).
+
+---
+
+## Calibración noche electoral — backtest 2021 (sandbox_election_night_2021.py)
+
+### Cronología real 6-7 junio 2021 (fuente: RPP/Gestión/La República live blogs)
+
+| Hora PET | % Actas | Raw KF% | Proyector KF% | Error proy |
+|---|---|---|---|---|
+| 23:04 Jun 6 | 42.0% | **52.9%** | ~47.5% | -2.2pp |
+| 02:38 Jun 7 | 80.7% | 51.5% | ~49.0% | -0.7pp |
+| 04:12 Jun 7 | 86.5% | 50.8% | ~49.2% | -0.5pp |
+| 05:30 Jun 7 | 88.2% | 50.4% | ~49.5% | -0.2pp |
+| 09:06 Jun 7 | 91.2% | 50.1% | ~49.4% | -0.3pp |
+| **11:29 Jun 7** | **92.6%** | **49.9%** | ~49.5% | Raw flip aquí |
+| 13:04 Jun 7 | 93.0% | 49.875% | ~49.5% | -0.2pp |
+
+**Keiko celebró toda la noche porque el raw la mostraba ganando de 23:04 hasta las 11:29 AM (12.5 horas).
+El proyector habría mostrado a Castillo ganando desde el primer snapshot.**
+
+### Sesgo Lima-primero (2021)
+- Lima+Callao = **39.5% del VV total**, reporta primero (delay 0.00-0.05)
+- Lima R2 KF: 64.8% → al dominar el conteo inicial, infla el raw KF en ~3pp
+- Sierra Sur = 12.5% del VV, reporta último (delay 0.68-0.93), KF ~15% en 2021
+- Diferencial Lima vs Sierra Sur: **-7.7pp** de shift entre regiones
+
+### Errores del proyector por milestone (2021 R2, n=1835 distritos)
+| % Actas | Error proyector vs final |
+|---|---|
+| ~40% (11 PM) | ±2.2pp (simulado, Lima-first puro) |
+| ~80% (3 AM) | ±0.7pp |
+| ~88% (6 AM) | ±0.2–0.5pp |
+| ~92% (11 AM) | ±0.2pp |
+
+*Nota: el error simulado al 40% es mayor que el backtest porque la simulación pone Lima 100% primero; en realidad también llegan distritos mixtos en ese rango, lo que mejora el proyector.*
+
+### Efectos geográficos para 2026
+- **Arequipa**: 2021 shift R1→R2 = **+20pp para KF** (Mendoza voters → anti-Castillo). En 2026 esperamos shift positivo similar: Aliaga/Nieto/Belmont voters → pro-KF vs Sánchez.
+- **Puno**: 2021 R1 KF=6.2%, R2 KF=10.7% (pro-Castillo). En 2026 será pro-Sánchez. Reporta tarde (delay 0.68) → proyector corregirá cuando entren sus datos.
+- **Lima+Callao**: El bias de reporte temprano es estructural, igual en 2026.
+
+### Cronología esperada 7J 2026 (basada en 2021)
+| Hora PET | Evento |
+|---|---|
+| 16:00 | Cierran urnas |
+| ~23:00 | Primer snapshot ONPE (~40-45% actas) — bookmarklet activo |
+| ~03:00 | ~80% actas |
+| ~06:00 | ~88-90% actas |
+| ~11:00 | ~92% actas (zona de resolución si margen pequeño) |
+| +1 día | Votos impugnados / exterior completado |
+
+### Umbrales para llamar la carrera (proyector)
+- **≥3pp al 40% (~11 PM)** → llamable con confianza razonable
+- **≥2pp al 80% (~3 AM)** → llamable con alta confianza
+- **≥0.5pp al 90% (~6 AM)** → definitivo (< 0.5pp error esperado)
+
+**NO usar raw count para llamar la carrera** — el raw en 2021 estuvo 12.5 horas equivocado.
