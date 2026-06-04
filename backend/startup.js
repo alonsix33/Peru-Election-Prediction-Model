@@ -166,10 +166,11 @@ async function autoMigrate() {
   try {
     await db.query(`ALTER TABLE onpe_live_snapshots ADD COLUMN IF NOT EXISTS province_breakdown JSONB`);
     await db.query(`ALTER TABLE onpe_live_snapshots ADD COLUMN IF NOT EXISTS district_breakdown JSONB`);
+    await db.query(`ALTER TABLE onpe_live_snapshots ADD COLUMN IF NOT EXISTS pais_breakdown JSONB`);
     await db.query(`ALTER TABLE r2_election_projections ADD COLUMN IF NOT EXISTS shift_granularity VARCHAR(20)`);
     await db.query(`ALTER TABLE r2_election_projections ADD COLUMN IF NOT EXISTS province_shifts JSONB`);
     await db.query(`ALTER TABLE r2_election_projections ADD COLUMN IF NOT EXISTS district_shifts JSONB`);
-    console.log('   ✅ Columnas province/district granularity: verificadas');
+    console.log('   ✅ Columnas province/district/pais granularity: verificadas');
   } catch (e) {
     console.warn('⚠️  Province/district granularity migration falló (no fatal):', e.message);
   }

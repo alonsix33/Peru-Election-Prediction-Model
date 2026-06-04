@@ -408,15 +408,55 @@ async function fetchExtranjero() {
   return results.filter(Boolean);
 }
 
+// 77 países: [contUbigeo, paisUbigeo] — catálogo hardcodeado desde r1_exterior.json
+const PAIS_CATALOG = [
+  ['910000','910100'],['910000','910300'],['910000','910400'],['910000','910500'],
+  ['910000','910600'],['910000','911200'],['920000','920100'],['920000','920200'],
+  ['920000','920400'],['920000','920500'],['920000','920600'],['920000','920700'],
+  ['920000','920800'],['920000','920900'],['920000','921000'],['920000','921100'],
+  ['920000','921200'],['920000','921300'],['920000','921500'],['920000','921700'],
+  ['920000','921900'],['920000','922000'],['920000','922100'],['920000','922200'],
+  ['920000','922300'],['920000','922400'],['920000','922600'],['920000','922700'],
+  ['920000','922800'],['920000','923000'],['930000','930100'],['930000','930200'],
+  ['930000','930400'],['930000','930600'],['930000','930700'],['930000','930800'],
+  ['930000','931000'],['930000','931100'],['930000','931300'],['930000','931500'],
+  ['930000','931900'],['930000','932000'],['930000','932400'],['930000','932500'],
+  ['930000','932800'],['930000','933000'],['930000','933200'],['930000','933700'],
+  ['930000','933800'],['940000','940200'],['940000','940300'],['940000','940400'],
+  ['940000','940600'],['940000','940800'],['940000','940900'],['940000','941000'],
+  ['940000','941100'],['940000','941200'],['940000','941300'],['940000','941400'],
+  ['940000','941500'],['940000','941700'],['940000','941800'],['940000','942000'],
+  ['940000','942100'],['940000','942300'],['940000','942400'],['940000','942500'],
+  ['940000','942600'],['940000','942700'],['940000','942800'],['940000','942900'],
+  ['940000','943600'],['940000','943700'],['940000','944200'],['950000','950100'],
+  ['950000','950200'],
+];
+
+async function fetchPaises() {
+  const results = await pAll(PAIS_CATALOG, async ([contUbigeo, paisUbigeo]) => {
+    const data = await g(
+      `resumen-general/participantes?idEleccion=${ID_ELECCION}` +
+      `&idAmbitoGeografico=${AMBITO_EXT}&tipoFiltro=ubigeo_nivel_02` +
+      `&idUbigeoDepartamento=${contUbigeo}&idUbigeoProvincia=${paisUbigeo}`
+    );
+    const pair = extractPair(data);
+    if (!pair) return null;
+    if ((pair.keiko_votos + pair.sanchez_votos) === 0) return null;
+    return { ubigeo: paisUbigeo, contUbigeo, ...pair };
+  }, 20);
+  return results.filter(Boolean);
+}
+
 async function buildSnapshot() {
   // All fetchers run in parallel; fetchDistritos throttles internally to 25 concurrent
-  const [nacional, totales, departamentos, provincias, distritos, extranjero] = await Promise.all([
+  const [nacional, totales, departamentos, provincias, distritos, extranjero, paises] = await Promise.all([
     fetchNacional(),
     fetchTotales(),
     fetchDepartamentos(),
     fetchProvincias(),
     fetchDistritos(),
     fetchExtranjero(),
+    fetchPaises(),
   ]);
 
   const hasData = nacional !== null && (nacional.keiko_votos > 0 || nacional.sanchez_votos > 0);
@@ -435,6 +475,7 @@ async function buildSnapshot() {
     province_breakdown: provincias,
     district_breakdown: distritos,
     ext_breakdown:      extranjero,
+    pais_breakdown:     paises,
     totales_raw:        totales?.raw ?? null,
   };
 }
@@ -456,6 +497,7 @@ async function poll() {
       ` provs=${snap.province_breakdown.length}` +
       ` dists=${snap.district_breakdown.length}` +
       ` ext=${snap.ext_breakdown.length}` +
+      ` paises=${snap.pais_breakdown.length}` +
       ` (${elapsed}s) → enviando a Railway...`
     );
 
@@ -488,7 +530,7 @@ function startONPE() {
   if (_onpeTimer) { console.log('Ya corriendo. Usa stopONPE() para detener.'); return; }
   console.log(`🗳️  ONPE bookmarklet started. Polling every ${POLL_INTERVAL/60000} min.`);
   console.log(`   Railway: ${RAILWAY_URL}`);
-  console.log(`   Niveles: nacional + 25 depts + 196 provs + 1518 dists + exterior`);
+  console.log(`   Niveles: nacional + 25 depts + 196 provs + 1518 dists + ext (5 cont + 77 países)`);
   poll();
   _onpeTimer = setInterval(poll, POLL_INTERVAL);
 }

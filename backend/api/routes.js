@@ -900,12 +900,15 @@ router.get('/onpe/projection', async (req, res) => {
     const { project } = require('../model/electionNightProjector');
 
     const snapshot = {
-      pct_actas:      latest.pct_actas      != null ? parseFloat(latest.pct_actas)      : 0,
-      keiko_votos:    latest.keiko_votos     != null ? parseInt(latest.keiko_votos)       : 0,
-      sanchez_votos:  latest.sanchez_votos   != null ? parseInt(latest.sanchez_votos)     : 0,
-      dept_breakdown: Array.isArray(latest.dept_breakdown) ? latest.dept_breakdown : [],
-      ext_breakdown:  Array.isArray(latest.ext_breakdown)  ? latest.ext_breakdown  : [],
-      captured_at:    latest.captured_at,
+      pct_actas:          latest.pct_actas         != null ? parseFloat(latest.pct_actas)  : 0,
+      keiko_votos:        latest.keiko_votos        != null ? parseInt(latest.keiko_votos)   : 0,
+      sanchez_votos:      latest.sanchez_votos      != null ? parseInt(latest.sanchez_votos) : 0,
+      dept_breakdown:     Array.isArray(latest.dept_breakdown)     ? latest.dept_breakdown     : [],
+      province_breakdown: Array.isArray(latest.province_breakdown) ? latest.province_breakdown : [],
+      district_breakdown: Array.isArray(latest.district_breakdown) ? latest.district_breakdown : [],
+      ext_breakdown:      Array.isArray(latest.ext_breakdown)      ? latest.ext_breakdown      : [],
+      pais_breakdown:     Array.isArray(latest.pais_breakdown)     ? latest.pais_breakdown     : [],
+      captured_at:        latest.captured_at,
     };
 
     const result = project(snapshot);
@@ -978,6 +981,7 @@ router.get('/live-projection', async (req, res) => {
       province_breakdown: Array.isArray(latest.province_breakdown) ? latest.province_breakdown : [],
       district_breakdown: Array.isArray(latest.district_breakdown) ? latest.district_breakdown : [],
       ext_breakdown:      Array.isArray(latest.ext_breakdown)      ? latest.ext_breakdown      : [],
+      pais_breakdown:     Array.isArray(latest.pais_breakdown)     ? latest.pais_breakdown     : [],
       captured_at:        latest.captured_at,
     };
 
@@ -1111,8 +1115,9 @@ router.post('/admin/inject-snapshot', async (req, res) => {
       `INSERT INTO onpe_live_snapshots
          (captured_at, has_data, actas_total, actas_processed, pct_actas,
           keiko_votos, keiko_pct, sanchez_votos, sanchez_pct,
-          dept_breakdown, province_breakdown, district_breakdown, ext_breakdown, totales_raw)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+          dept_breakdown, province_breakdown, district_breakdown, ext_breakdown, totales_raw,
+          pais_breakdown)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
        RETURNING id`,
       [
         snap.captured_at || new Date().toISOString(),
@@ -1129,6 +1134,7 @@ router.post('/admin/inject-snapshot', async (req, res) => {
         JSON.stringify(snap.district_breakdown || []),
         JSON.stringify(snap.ext_breakdown      || []),
         snap.totales_raw ? JSON.stringify(snap.totales_raw) : null,
+        JSON.stringify(snap.pais_breakdown     || []),
       ]
     );
 
@@ -1150,6 +1156,7 @@ router.post('/admin/inject-snapshot', async (req, res) => {
           province_breakdown: Array.isArray(snap.province_breakdown) ? snap.province_breakdown : [],
           district_breakdown: Array.isArray(snap.district_breakdown) ? snap.district_breakdown : [],
           ext_breakdown:      Array.isArray(snap.ext_breakdown)      ? snap.ext_breakdown      : [],
+          pais_breakdown:     Array.isArray(snap.pais_breakdown)     ? snap.pais_breakdown     : [],
           captured_at:        snap.captured_at,
         });
         if (pr.status === 'ok') {
