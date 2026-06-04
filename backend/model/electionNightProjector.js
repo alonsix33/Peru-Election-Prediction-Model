@@ -459,7 +459,7 @@ function project(snapshot) {
     const reported_pair = d ? (d.keiko_votos || 0) + (d.sanchez_votos || 0) : 0;
     const remaining_vv = Math.max(0, r1_vv - reported_pair);
     if (remaining_vv < 50) continue;
-    const shift = deptShiftMap.get(ubigeo) ?? national_shift;
+    const shift = deptShiftMap.get(ubigeo) ?? 0;
     _da_sum_vv += remaining_vv;
     _da_sum_kf += remaining_vv * _clamp(r1.kf_r2_share + shift, 0, 100);
   }
