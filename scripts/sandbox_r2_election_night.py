@@ -80,7 +80,7 @@ def load_districts():
     for ubigeo, d in raw.items():
         if d.get('kf_r2_share') is None:
             continue
-        if d.get('totalVotosValidos', 0) <= 0:
+        if (d.get('totalVotosValidos') or 0) <= 0:
             continue
         dept_ubigeo = d.get('deptUbigeo', '')
         profile = DEPT_PROFILES.get(dept_ubigeo, {
