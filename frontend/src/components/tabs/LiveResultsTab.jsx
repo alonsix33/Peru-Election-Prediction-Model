@@ -283,7 +283,7 @@ function ShiftBadge({ shift_pp }) {
 function ResultRow({ nombre, kf_r2_share, shift_pp, onClick, isClickable }) {
   const kfLeads  = kf_r2_share != null && kf_r2_share >= 50;
   const rspShare = kf_r2_share != null ? 100 - kf_r2_share : null;
-  const margin   = kf_r2_share != null ? Math.abs(kf_r2_share - 50) : null;
+  const margin   = kf_r2_share != null ? Math.abs(kf_r2_share - rspShare) : null;
   const winner   = kfLeads ? 'K' : 'S';
   const color    = kfLeads ? KEIKO_COLOR : SANCHEZ_COLOR;
 
@@ -337,7 +337,7 @@ function DeptDetailPanel({ dept, r1Districts, r1Loading, liveProvinces, liveDist
 
   const kf      = dept.kf_r2_share;
   const rsp     = kf != null ? 100 - kf : null;
-  const margin  = kf != null ? Math.abs(kf - 50) : null;
+  const margin  = kf != null ? Math.abs(kf - rsp) : null;
   const kfLeads = kf != null && kf >= 50;
 
   const deptHeader = (
@@ -509,7 +509,7 @@ function DeptTable({ deptData, extranjero, isDemo }) {
             {rows.map(dept => {
               const share    = dept.kf_r2_share;
               const rspShare = share != null ? 100 - share : null;
-              const margin   = share != null ? Math.abs(share - 50).toFixed(1) : null;
+              const margin   = share != null ? Math.abs(share - rspShare).toFixed(1) : null;
               const kfLeads  = share != null && share >= 50;
               const pct      = dept.pct_actas ?? 100;
               return (
