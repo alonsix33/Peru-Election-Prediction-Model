@@ -90,7 +90,7 @@ ax.set_xticklabels(['5%', '20%', '40%', '60%', '80%', '92.6%\n(raw flip)', '100%
 ax.grid(axis='y', color=GRID_COLOR, linewidth=0.6, alpha=0.7)
 
 # ── Título y leyenda ─────────────────────────────────────────────
-ax.set_title('Backtest noche electoral · R2 2021 (Castillo vs Fujimori)',
+ax.set_title('Backtest noche electoral · Segunda Vuelta 2021 · Proyección Keiko Fujimori',
              color=TEXT_COLOR, fontsize=13, fontweight='bold', pad=14)
 
 legend_handles = [
