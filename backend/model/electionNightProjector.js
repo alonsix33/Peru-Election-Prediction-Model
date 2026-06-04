@@ -173,8 +173,7 @@ function _round2(v) {
 
 // ─── Bootstrap CI ─────────────────────────────────────────────────────────────
 
-function _bootstrapCI(obs_kf, obs_rsp, regular_remaining, zda_remaining, national_shift, sigma) {
-  const obs_kf_r2_share = 100 * obs_kf / (obs_kf + obs_rsp);
+function _bootstrapCI(obs_kf, obs_rsp, regular_remaining, zda_remaining, reg_proj_kf_r2, national_shift, sigma) {
   const obs_pair = obs_kf + obs_rsp;
   const rem_reg_vv = regular_remaining * VV_PER_MESA;
   const rem_zda_vv = zda_remaining * VV_PER_MESA;
@@ -184,7 +183,7 @@ function _bootstrapCI(obs_kf, obs_rsp, regular_remaining, zda_remaining, nationa
   for (let i = 0; i < N_SIMS; i++) {
     const noise = sigma * _tSample(T_DF);
 
-    const reg_proj = _clamp(obs_kf_r2_share + noise, 0, 100);
+    const reg_proj = _clamp(reg_proj_kf_r2 + noise, 0, 100);
     const zda_proj = _clamp(ZDA_KF_R2_SHARE_R1 + national_shift + noise, 0, 100);
 
     const final_kf    = obs_kf + rem_reg_vv * reg_proj / 100 + rem_zda_vv * zda_proj / 100;
@@ -434,8 +433,41 @@ function project(snapshot) {
     : dom_kf_r2_share - R1_KF_R2_SHARE_DOMESTIC;
   const shift_level = shiftResult?.level ?? 'naive';
 
+  // ── Dept-adjusted projection for remaining regular mesas ─────────────────
+  // Each unreported dept uses its own observed shift; depts without enough
+  // data fall back to national_shift. Remaining VV per dept is estimated as
+  // R1 bilateral minus reported R2 bilateral (reasonable proxy).
+  const deptBreakdownMap = new Map();
+  for (const d of (dept_breakdown || [])) {
+    if (d?.ubigeo) deptBreakdownMap.set(d.ubigeo, d);
+  }
+
+  const deptShiftMap = new Map();
+  for (const [ubigeo, r1] of Object.entries(_r1ByDept)) {
+    const d = deptBreakdownMap.get(ubigeo);
+    if (!d) continue;
+    const pair = (d.keiko_votos || 0) + (d.sanchez_votos || 0);
+    if (pair < 200) continue;
+    deptShiftMap.set(ubigeo, 100 * (d.keiko_votos || 0) / pair - r1.kf_r2_share);
+  }
+
+  let _da_sum_vv = 0, _da_sum_kf = 0;
+  for (const [ubigeo, r1] of Object.entries(_r1ByDept)) {
+    const r1_vv = (r1.kfV || 0) + (r1.rspV || 0);
+    if (r1_vv === 0) continue;
+    const d = deptBreakdownMap.get(ubigeo);
+    const reported_pair = d ? (d.keiko_votos || 0) + (d.sanchez_votos || 0) : 0;
+    const remaining_vv = Math.max(0, r1_vv - reported_pair);
+    if (remaining_vv < 50) continue;
+    const shift = deptShiftMap.get(ubigeo) ?? 0;
+    _da_sum_vv += remaining_vv;
+    _da_sum_kf += remaining_vv * _clamp(r1.kf_r2_share + shift, 0, 100);
+  }
+
   // ── Projected kf_r2_share for remaining strata ───────────────────────────
-  const reg_proj_kf_r2 = _clamp(R1_KF_R2_SHARE_DOMESTIC + national_shift, 0, 100);
+  const reg_proj_kf_r2 = _da_sum_vv > 0
+    ? _clamp(_da_sum_kf / _da_sum_vv, 0, 100)
+    : _clamp(R1_KF_R2_SHARE_DOMESTIC + national_shift, 0, 100);
   const zda_proj_kf_r2 = _clamp(ZDA_KF_R2_SHARE_R1 + national_shift, 0, 100);
 
   // ── Exterior projection ───────────────────────────────────────────────────
@@ -489,7 +521,7 @@ function project(snapshot) {
   // ── Bootstrap CI ─────────────────────────────────────────────────────────
   const pct_remaining = 1 - pct / 100;
   const sigma = Math.max(0.3, SIGMA_BASE * Math.sqrt(pct_remaining));
-  const ci = _bootstrapCI(dom_kf, dom_rsp, regular_remaining, zda_remaining, national_shift, sigma);
+  const ci = _bootstrapCI(dom_kf, dom_rsp, regular_remaining, zda_remaining, reg_proj_kf_r2, national_shift, sigma);
 
   // ── Phase ─────────────────────────────────────────────────────────────────
   let phase, phaseLabel;

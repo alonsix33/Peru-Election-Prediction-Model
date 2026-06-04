@@ -368,7 +368,7 @@ El proyector habría mostrado a Castillo ganando desde el primer snapshot.**
 *Nota: el error simulado al 40% es mayor que el backtest porque la simulación pone Lima 100% primero; en realidad también llegan distritos mixtos en ese rango, lo que mejora el proyector.*
 
 ### Efectos geográficos para 2026
-- **Arequipa**: 2021 shift R1→R2 = **+20pp para KF** (Mendoza voters → anti-Castillo). En 2026 esperamos shift positivo similar: Aliaga/Nieto/Belmont voters → pro-KF vs Sánchez.
+- **Arequipa**: 2021 shift R1→R2 = **+20pp para KF** (fuente: De Soto 18.7% + Aliaga + derecha anti-Castillo se consolidaron detrás de KF; Mendoza/Lescano fueron a Castillo). R2 2021 final: Castillo **64.9%** / KF **35.1%** (margen ~30pp). En 2026 el patrón es INVERSO: Nieto 18.7% + Belmont 10.9% + Aliaga 10.6% → RSP. Esperamos shift NEGATIVO grande para KF en Arequipa.
 - **Puno**: 2021 R1 KF=6.2%, R2 KF=10.7% (pro-Castillo). En 2026 será pro-Sánchez. Reporta tarde (delay 0.68) → proyector corregirá cuando entren sus datos.
 - **Lima+Callao**: El bias de reporte temprano es estructural, igual en 2026.
 
@@ -388,3 +388,110 @@ El proyector habría mostrado a Castillo ganando desde el primer snapshot.**
 - **≥0.5pp al 90% (~6 AM)** → definitivo (< 0.5pp error esperado)
 
 **NO usar raw count para llamar la carrera** — el raw en 2021 estuvo 12.5 horas equivocado.
+
+---
+
+## Análisis de validación del shift estratificado (scripts/analyze_shift_2021.py)
+
+### Hallazgos clave — datos reales jmcastagnetto 2021 (1835 distritos)
+
+| Métrica | Valor |
+|---|---|
+| Correlación R1 bilateral → R2 bilateral | **0.928** |
+| R² (R1 predice R2) | **0.773** |
+| Shift nacional medio (ponderado VV) | **-0.35pp** (≈ cero) |
+| MAE asumiendo shift=0 | **6.99pp** |
+| MAE con shift regional uniforme | **5.51pp** (21% mejora) |
+| MAE con shift departamental uniforme | **4.32pp** (38% mejora) |
+
+**Conclusión**: R1 bilateral es buen prior para R2 (corr=0.928), pero asumir shift=0 da 7pp de error. Aplicar shift por dept reduce a 4.32pp. El shift varía enormemente por dept — no es uniforme.
+
+### Shifts por dept 2021 (los más extremos)
+| Dept | R1 KF% | R2 KF% | Shift |
+|---|---|---|---|
+| Loreto | 76.5% | 52.7% | **-23.8pp** |
+| Tumbes | 82.4% | 65.9% | **-16.6pp** |
+| Piura | 72.5% | 60.0% | **-12.5pp** |
+| Arequipa | 15.1% | 35.1% | **+20.0pp** |
+| Tacna | 15.2% | 28.8% | **+13.6pp** |
+| Moquegua | 13.4% | 26.8% | **+13.5pp** |
+| Lima | 67.0% | 64.6% | **-2.4pp** |
+
+**Para 2026**: el patrón por dept será diferente (R2 es KF vs RSP, no KF vs Castillo). La magnitud de los shifts puede ser similar pero las direcciones cambian según cómo migran Aliaga/Nieto/Belmont en cada región.
+
+### Problema crítico: producción vs sandbox
+
+El sandbox (`sandbox_r2_backtest_2021.py`) usa **shifts por dept** en la proyección:
+```python
+shift = dept_shift.get(d['dept'], nat_shift)  # dept-específico, fallback a nacional
+```
+
+El projector de producción (`electionNightProjector.js`) usa **un único shift nacional** para todos los distritos pendientes. El backtest fue validado con la versión correcta (dept-level), pero production corre con la versión menos precisa.
+
+### Problema de simulación de llegada (señalado por @chubakueno)
+
+El sandbox simula llegada con `dept_delay + Normal(0, σ=0.07)`. Con σ=0.07:
+- Un distrito de Lima puede llegar en t=0.14 (tarde)
+- Un distrito de Cajamarca puede llegar en t=0.35 (pronto)
+- Esto no es realista: en la realidad Lima llega como **bloque** antes de que la sierra empiece
+
+Consecuencia: el error estimado al 40% (~±2.2pp) puede ser **optimista**. Con llegada más extrema (Lima 100% antes de cualquier sierra), el shift nacional al 40% estaría más contaminado por Lima, y el error real podría ser mayor.
+
+### Corrección importante — mejora dept-shift en tiempo real vs oracle
+
+El análisis `analyze_shift_2021.py` mostraba MAE 6.99pp → 4.32pp (38%) con dept-shift.
+**Ese número asume conocer los shifts finales de cada dept (oracle).** En tiempo real:
+- Al 40% de actas: dept-shift mejora solo **0.15pp** vs shift nacional
+- Razón: a 40%, los depts con shifts grandes (Arequipa +20pp, Loreto -24pp) tienen pocos
+  distritos reportando → estimación ruidosa. 42.7% del VV pendiente cae a fallback nacional.
+- La mejora crece progresivamente conforme llegan más datos (60-80% actas)
+
+El proyector actual ya reduce el error del raw en **~85%** desde el primer snapshot:
+- Raw at 40%: +14pp de error vs final
+- Proyector actual at 40%: ~-2.1pp de error vs final
+
+### Fixes implementados (commit 158a21a — 4 jun 2026)
+
+**Bug #1 — CI centrado en raw, no en proyección (CRÍTICO — silencioso)**
+`_bootstrapCI()` usaba `obs_kf_r2_share` (raw) como centro del bootstrap en vez de
+`reg_proj_kf_r2` (proyección corregida). A 40% actas Lima-first producía CI [73%, 83%]
+cuando lo correcto era [41.5%, 51.7%]. **Fijo: CI ahora centrado en la proyección.**
+
+**Bug #2 — Shift nacional uniforme para todos los depts (MEJORADO)**
+`reg_proj_kf_r2` ahora es promedio ponderado por VV de proyecciones por dept:
+cada dept usa su propio shift observado; si no hay datos suficientes, cae al shift nacional.
+VV restante por dept estimado como `max(0, r1_bilateral_vv - reported_r2_pair)`.
+
+**Ubigeos ONPE (≠ INEI) — crítico para mocks y tests**
+El sistema usa ubigeos propios de ONPE (confirmado en ONPE_API.md):
+- Lima = `140000`, Callao = `240000`, Arequipa = `040000`
+- ICA = `100000`, Puno = `200000`, Loreto = `150000`
+- **NO** usar INEI (donde Lima sería 150000)
+
+**Bug #3 — Fallback nacional contamina depts sin datos (CRÍTICO — corregido)**
+Depts sin datos usaban `national_shift` (Lima-contaminado) como fallback, en vez de `0pp`.
+El shift nacional R1→R2 es ≈0 globalmente; aplicar el shift de Lima (-2.7pp) a la sierra era
+estrictamente peor. Cambio: `deptShiftMap.get(ubigeo) ?? 0` en vez de `?? national_shift`.
+Mismo fix en `sandbox_r2_backtest_2021.py` para consistencia.
+
+**Validación final (backtest 2021, todos los fixes combinados):**
+| % Actas | Raw error | Proyector error | Mejora vs raw |
+|---|---|---|---|
+| 5% | +10.6pp | **+0.13pp** | 80× |
+| 10% | +14.6pp | **+0.16pp** | 91× |
+| 40% | +14.3pp | **-0.70pp** | 20× |
+| 80% | +6.3pp | **-0.71pp** | 9× |
+
+CI 95%: [43.7, 53.9] @40% · width 10pp @40%, 2.1pp @80%, 16pp @5% ✅
+A 5-10% actas (solo Lima reportando): error ~0.15pp vs 3pp antes del fix ✅
+
+### Verificación del relay (Priority 1 — hacer antes del 7J)
+Script: `node scripts/verify_relay.js` (sin vars = localhost:3000 con secret "test-secret")
+Con Railway: `RAILWAY_URL=https://xxx.railway.app ADMIN_SECRET=xxx node scripts/verify_relay.js`
+Tests: OPTIONS preflight CORS, 401 sin auth, 401 con auth incorrecta, POST vacío, POST snapshot real.
+
+### Sigma del sandbox (análisis en curso — scripts/analyze_sigma_arrival.py)
+σ=0.07 permite mezcla artificial entre depts. Con llegada bloc (Lima como bloque puro),
+el error al 40% puede ser mayor que ±2.2pp. El análisis MC cuantifica el rango realista.
+**Implicación**: si el margen real es ~0.5-1pp, el proyector podría tener incertidumbre
+sobre el ganador al primer snapshot incluso con los fixes de hoy.
