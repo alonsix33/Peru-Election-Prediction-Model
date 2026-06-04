@@ -70,22 +70,22 @@ function errColor(err) {
 function PollsterDetailTable() {
   const { candidates, pollsters } = POLLSTER_DETAIL_2026;
   return (
-    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-      <table style={{ borderCollapse: 'collapse', fontSize: 12, minWidth: 520 }}>
+    <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+      <table style={{ borderCollapse: 'collapse', fontSize: 12, width: '100%', minWidth: 520 }}>
         <thead>
           <tr style={{ borderBottom: '2px solid #E5E0D8' }}>
             <th style={{
               textAlign: 'left', padding: '8px 10px 8px 0',
               color: '#8C877F', fontWeight: 500, fontSize: 11,
-              position: 'sticky', left: 0, background: '#FAFAF9', minWidth: 72,
+              position: 'sticky', left: 0, background: '#FAFAF9', minWidth: 72, width: '10%',
             }}>
               Candidato
             </th>
-            <th style={{ textAlign: 'right', padding: '8px 10px', color: '#1C1917', fontWeight: 600, fontSize: 11, minWidth: 52 }}>
+            <th style={{ textAlign: 'right', padding: '8px 10px', color: '#1C1917', fontWeight: 600, fontSize: 11, minWidth: 52, width: '9%' }}>
               ONPE
             </th>
             {pollsters.map(p => (
-              <th key={p.name} style={{ textAlign: 'center', padding: '6px 8px', minWidth: 80 }}>
+              <th key={p.name} style={{ textAlign: 'center', padding: '6px 8px', minWidth: 80, width: '16%' }}>
                 <div style={{ color: p.color, fontWeight: 700, fontSize: 12 }}>{p.name}</div>
                 <div style={{ color: '#8C877F', fontWeight: 400, fontSize: 10, marginTop: 1 }}>{p.dates}</div>
               </th>
@@ -537,7 +537,7 @@ export default function BacktestingTab() {
               }}>
                 <p style={{ color: '#92400E', fontSize: 11, lineHeight: 1.6, margin: 0 }}>
                   <strong>Patrón común:</strong> todas las encuestadoras subestimaron a Sánchez
-                  (Ipsos −3.4pp, Datum −4.5pp, CPI −6.1pp, CIT −9.0pp). Solo IEP estuvo cerca (−0.2pp).
+                  (Ipsos −5.2pp, Datum −6.8pp, CPI −6.0pp, CIT −8.1pp). Solo IEP estuvo cerca (−2.4pp).
                   El mismo sesgo rural afectó a Nieto y Belmont. Aliaga fue sobreestimado en 3 de 5 casas.
                 </p>
               </div>
@@ -561,7 +561,7 @@ export default function BacktestingTab() {
         </p>
         <p style={{ color: '#78716C', fontSize: 13, lineHeight: 1.7, margin: 0 }}>
           Ajustes para R2: <strong style={{ color: '#1C1917' }}>conversión P(ganar)→voto share implícito</strong> antes de integrar;{' '}
-          <strong style={{ color: '#1C1917' }}>alpha cap 0.60</strong> (era 0.77 en R1);{' '}
+          <strong style={{ color: '#1C1917' }}>alpha cap 0.50</strong> (era 0.77 en R1);{' '}
           <strong style={{ color: '#1C1917' }}>IEP 1.00×</strong> (mejor MAE pre-veda, 1.3pp) e{' '}
           <strong style={{ color: '#1C1917' }}>Ipsos 1.05×</strong> vs <strong style={{ color: '#1C1917' }}>Datum 1.15×</strong> basados en MAE de las últimas encuestas pre-veda.
         </p>

@@ -56,9 +56,10 @@ pipeline.js     → orquesta todo, expone API REST
 | σ base | 3.0pp | Calibrado contra R2 histórico peruano |
 | σ dinámico | `√(9 + (días×0.30)²)` | A 20 días: ~6.7pp |
 | λ decay pre-veda | 0.08 | Encuestas de 10d = 45% peso |
-| λ decay post-veda | 0.12 | Más agresivo sin encuestas nuevas |
-| α R2 election day | 0.60 | N-scaling desde α_r2_max |
-| α R1 máximo | ≤ 0.27 | α_r2 / √N_eff = 0.60/√5 |
+| λ decay veda/post-veda | 0.05 | Sin info nueva → no penalizar más; simulacros 29-30 may retienen ~70% el 7J |
+| α R2 election day | 0.50 | Cap conservador: PM tiene sesgo estructural hacia candidato conocido en mercados de baja liquidez |
+| α R2 veda inicio | 0.22 | Mismo techo que pre_veda — evita caída brusca al congelarse encuestas |
+| α R1 máximo | ≤ 0.27 | α_r2 / √N_eff = 0.50/√5 |
 | Voto oculto shock | +3 a +6pp | 10% sims, **solo Sánchez** en R2 |
 | Shock líder negativo | -5 a -15pp | 15% sims |
 | Shock #2 negativo | -5 a -12pp | 10% sims |
@@ -161,7 +162,7 @@ Aliaga aparece ~+3pp en todas las encuestas pre-R1. Sin corrección (modelo corr
 - [x] Decay λ=0.08/0.12, pool normalization
 - [x] House effects Sánchez calibrados con ONPE R1 ✅ (commit d9c9609)
 - [x] Voto oculto Sánchez-específico por nombre ✅ (commit d9c9609)
-- [x] N-scaling α: pre_veda 0.20-0.25, veda →0.60, election_day 0.60
+- [x] N-scaling α: pre_veda 0.20-0.22, veda →0.50, election_day 0.50 (rebajado de 0.60: PM sesgo estructural Keiko)
 - [x] Cholesky para errores correlacionados entre encuestadoras
 - [x] seed_r2.sql: Ipsos ×1.30, Datum ×1.05 (mejor desempeño R1 en R2)
 - [x] Encuesta IEP mayo 22-26 ingresada (KF 36%, RSP 30%, n=1204) — nota metodológica: B/N no se leyó como opción → 6% espontáneo (no comparable con abr 24%)

@@ -24,6 +24,12 @@ const KEIKO_ALLIANCES = [
     note: 'Partido Popular Cristiano. Apoyo institucional anunciado el 28/05 por "defensa de la democracia y el Estado de Derecho". Sin candidato propio en R1. Carlos Neuhaus (presidente PPC) participó en el debate técnico de Fuerza Popular.',
   },
   {
+    name: 'Avanza País',
+    pct: 0.2,
+    status: 'formal',
+    note: 'Bancada parlamentaria anunció respaldo el 29/05. Fue la bancada, no el partido completo. Justificación: "preservar estabilidad económica, propiedad privada y democracia". Candidato presidencial propio obtuvo 0.2% en R1; tienen mayor presencia en el Congreso.',
+  },
+  {
     name: 'Carlos Espá',
     pct: 3.35,
     status: 'formal',
@@ -65,7 +71,10 @@ const SANCHEZ_ADJACENT = [
 ];
 
 const SIN_POSICION = [
-  { name: 'Jorge Nieto', pct: 11.0, note: 'Llama al voto viciado. "No estamos de acuerdo con esas dos alternativas".' },
+  { name: 'Jorge Nieto',   pct: 11.0, note: 'Voto viciado. "No estamos de acuerdo con esas dos alternativas".' },
+  { name: 'Carlos Álvarez', pct: 7.9,  note: 'País para Todos. Rechazó adhesión institucional a cualquier candidato. Militantes en libertad de voto.' },
+  { name: 'Partido Morado', pct: null,  note: 'Declaró que "no puede apoyar de modo institucional a ninguno de los partidos en pugna". Militantes votan libremente.' },
+  { name: 'Perú Libre',     pct: null,  note: 'Cerrón descartó apoyo a Keiko y apoyo explícito a Sánchez. "Las bases deciden." Voto libre.' },
 ];
 
 function parseDate(raw) {
@@ -460,7 +469,7 @@ function PMvsPollsSection({ polymarket, r2polls }) {
       </div>
       <p style={{ color: '#8C877F', fontSize: 12, margin: 0 }}>
         En R2 Polymarket cotiza P(ganar la presidencia), que corresponde directamente con lo que mide la segunda vuelta.
-        El modelo convierte esa probabilidad a voto share implícito (Φ⁻¹, σ=3pp) y le asigna un peso α entre 20% (pre-veda) y 60% (día de la elección).
+        El modelo convierte esa probabilidad a voto share implícito (Φ⁻¹, σ=3pp) y le asigna un peso α entre 20% (pre-veda) y 50% (día de la elección).
         La brecha PM–encuestas puede reflejar información no capturada en sondeos o volatilidad especulativa del mercado.
       </p>
     </div>
@@ -554,7 +563,7 @@ function AllianceSection() {
           {SIN_POSICION.map(a => (
             <div key={a.name} style={{ background: '#F7F4EF', borderRadius: 6, padding: '4px 10px', fontSize: 12 }}>
               <span style={{ color: '#1C1917', fontWeight: 600 }}>{a.name}</span>
-              <span style={{ color: '#A8A29E', marginLeft: 6 }}>{a.pct}% en R1 · {a.note}</span>
+              <span style={{ color: '#A8A29E', marginLeft: 6 }}>{a.pct != null ? `${a.pct}% en R1 · ` : ''}{a.note}</span>
             </div>
           ))}
         </div>
