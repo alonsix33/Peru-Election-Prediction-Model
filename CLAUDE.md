@@ -449,7 +449,36 @@ El proyector actual ya reduce el error del raw en **~85%** desde el primer snaps
 - Raw at 40%: +14pp de error vs final
 - Proyector actual at 40%: ~-2.1pp de error vs final
 
-### Mejoras pendientes (ordenadas por impacto real)
-1. **[Alta prioridad — domingo]** Verificar bookmarklet relay end-to-end: `RAILWAY_URL`, `ADMIN_SECRET`, inject-snapshot de prueba. El projector funciona bien; el punto de falla más probable es el relay.
-2. **[Media — vale hacerlo hoy]** Upgrade `electionNightProjector.js`: usar shift por dept para proyectar distritos pendientes. Mejora ~0.15pp al 40%, más a 60-80%. Ver línea ~460: `cont_kf_r2 + national_shift` → usar shift específico del dept con fallback nacional.
-3. **[Baja — solo sandbox]** Mejorar simulación de llegada: σ=0.07 es demasiado suave pero no afecta producción. Producción trabaja con snapshots reales de ONPE, no simula llegada.
+### Fixes implementados (commit 158a21a — 4 jun 2026)
+
+**Bug #1 — CI centrado en raw, no en proyección (CRÍTICO — silencioso)**
+`_bootstrapCI()` usaba `obs_kf_r2_share` (raw) como centro del bootstrap en vez de
+`reg_proj_kf_r2` (proyección corregida). A 40% actas Lima-first producía CI [73%, 83%]
+cuando lo correcto era [41.5%, 51.7%]. **Fijo: CI ahora centrado en la proyección.**
+
+**Bug #2 — Shift nacional uniforme para todos los depts (MEJORADO)**
+`reg_proj_kf_r2` ahora es promedio ponderado por VV de proyecciones por dept:
+cada dept usa su propio shift observado; si no hay datos suficientes, cae al shift nacional.
+VV restante por dept estimado como `max(0, r1_bilateral_vv - reported_r2_pair)`.
+
+**Ubigeos ONPE (≠ INEI) — crítico para mocks y tests**
+El sistema usa ubigeos propios de ONPE (confirmado en ONPE_API.md):
+- Lima = `140000`, Callao = `240000`, Arequipa = `040000`
+- ICA = `100000`, Puno = `200000`, Loreto = `150000`
+- **NO** usar INEI (donde Lima sería 150000)
+
+**Validación post-fix (mock 40% actas, Lima+Callao+ICA):**
+- Raw KF: 80.55% → Proyectado: 47.27% → Corrección: 33.28pp ✅
+- CI 95%: [41.5, 51.7] centrado en proyección ✅
+- CI width: 10pp @40%, 2.1pp @80%, 16pp @5% (estrecha correctamente) ✅
+
+### Verificación del relay (Priority 1 — hacer antes del 7J)
+Script: `node scripts/verify_relay.js` (sin vars = localhost:3000 con secret "test-secret")
+Con Railway: `RAILWAY_URL=https://xxx.railway.app ADMIN_SECRET=xxx node scripts/verify_relay.js`
+Tests: OPTIONS preflight CORS, 401 sin auth, 401 con auth incorrecta, POST vacío, POST snapshot real.
+
+### Sigma del sandbox (análisis en curso — scripts/analyze_sigma_arrival.py)
+σ=0.07 permite mezcla artificial entre depts. Con llegada bloc (Lima como bloque puro),
+el error al 40% puede ser mayor que ±2.2pp. El análisis MC cuantifica el rango realista.
+**Implicación**: si el margen real es ~0.5-1pp, el proyector podría tener incertidumbre
+sobre el ganador al primer snapshot incluso con los fixes de hoy.
