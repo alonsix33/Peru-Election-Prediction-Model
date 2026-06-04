@@ -203,7 +203,7 @@ def stratified_projector(districts, reported, r1_national):
     total_kf = rep_kf
     total_vv = rep_vv
     for d in unr:
-        shift = dept_shift.get(d['dept'], nat_shift)
+        shift = dept_shift.get(d['dept'], 0.0)
         proj = max(0.0, min(100.0, d['r1_share'] + shift))
         total_kf += proj * d['vv'] / 100
         total_vv += d['vv']

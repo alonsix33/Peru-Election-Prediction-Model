@@ -186,7 +186,7 @@ def stratified_projector(districts, r2_shares, reported, r1_national):
 
     for i in unrep_idx:
         du = districts[i]['dept_ubigeo']
-        shift = dept_shift.get(du, nat_shift)
+        shift = dept_shift.get(du, 0.0)
         proj = max(0.0, min(100.0, districts[i]['r1_share'] + shift))
         total_kf_vv += proj * districts[i]['vv'] / 100.0
         total_vv += districts[i]['vv']

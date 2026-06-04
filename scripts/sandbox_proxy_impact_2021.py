@@ -275,7 +275,7 @@ def project(reported, baseline):
 
         # Get best available shift for this district
         dept_shift = dept_shifts.get(d['dept_name'])
-        shift = dept_shift if dept_shift is not None else nat_shift
+        shift = dept_shift if dept_shift is not None else 0.0
 
         # Baseline share for this district
         r1 = baseline.get(d['ubigeo'])
