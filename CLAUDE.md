@@ -367,7 +367,7 @@ El proyector habría mostrado a Castillo ganando desde el primer snapshot.**
 *Nota: el error simulado al 40% es mayor que el backtest porque la simulación pone Lima 100% primero; en realidad también llegan distritos mixtos en ese rango, lo que mejora el proyector.*
 
 ### Efectos geográficos para 2026
-- **Arequipa**: 2021 shift R1→R2 = **+20pp para KF** (Mendoza voters → anti-Castillo). En 2026 esperamos shift positivo similar: Aliaga/Nieto/Belmont voters → pro-KF vs Sánchez.
+- **Arequipa**: 2021 shift R1→R2 = **+20pp para KF** (fuente: De Soto 18.7% + Aliaga + derecha anti-Castillo se consolidaron detrás de KF; Mendoza/Lescano fueron a Castillo). R2 2021 final: Castillo **64.9%** / KF **35.1%** (margen ~30pp). En 2026 el patrón es INVERSO: Nieto 18.7% + Belmont 10.9% + Aliaga 10.6% → RSP. Esperamos shift NEGATIVO grande para KF en Arequipa.
 - **Puno**: 2021 R1 KF=6.2%, R2 KF=10.7% (pro-Castillo). En 2026 será pro-Sánchez. Reporta tarde (delay 0.68) → proyector corregirá cuando entren sus datos.
 - **Lima+Callao**: El bias de reporte temprano es estructural, igual en 2026.
 
@@ -387,3 +387,56 @@ El proyector habría mostrado a Castillo ganando desde el primer snapshot.**
 - **≥0.5pp al 90% (~6 AM)** → definitivo (< 0.5pp error esperado)
 
 **NO usar raw count para llamar la carrera** — el raw en 2021 estuvo 12.5 horas equivocado.
+
+---
+
+## Análisis de validación del shift estratificado (scripts/analyze_shift_2021.py)
+
+### Hallazgos clave — datos reales jmcastagnetto 2021 (1835 distritos)
+
+| Métrica | Valor |
+|---|---|
+| Correlación R1 bilateral → R2 bilateral | **0.928** |
+| R² (R1 predice R2) | **0.773** |
+| Shift nacional medio (ponderado VV) | **-0.35pp** (≈ cero) |
+| MAE asumiendo shift=0 | **6.99pp** |
+| MAE con shift regional uniforme | **5.51pp** (21% mejora) |
+| MAE con shift departamental uniforme | **4.32pp** (38% mejora) |
+
+**Conclusión**: R1 bilateral es buen prior para R2 (corr=0.928), pero asumir shift=0 da 7pp de error. Aplicar shift por dept reduce a 4.32pp. El shift varía enormemente por dept — no es uniforme.
+
+### Shifts por dept 2021 (los más extremos)
+| Dept | R1 KF% | R2 KF% | Shift |
+|---|---|---|---|
+| Loreto | 76.5% | 52.7% | **-23.8pp** |
+| Tumbes | 82.4% | 65.9% | **-16.6pp** |
+| Piura | 72.5% | 60.0% | **-12.5pp** |
+| Arequipa | 15.1% | 35.1% | **+20.0pp** |
+| Tacna | 15.2% | 28.8% | **+13.6pp** |
+| Moquegua | 13.4% | 26.8% | **+13.5pp** |
+| Lima | 67.0% | 64.6% | **-2.4pp** |
+
+**Para 2026**: el patrón por dept será diferente (R2 es KF vs RSP, no KF vs Castillo). La magnitud de los shifts puede ser similar pero las direcciones cambian según cómo migran Aliaga/Nieto/Belmont en cada región.
+
+### Problema crítico: producción vs sandbox
+
+El sandbox (`sandbox_r2_backtest_2021.py`) usa **shifts por dept** en la proyección:
+```python
+shift = dept_shift.get(d['dept'], nat_shift)  # dept-específico, fallback a nacional
+```
+
+El projector de producción (`electionNightProjector.js`) usa **un único shift nacional** para todos los distritos pendientes. El backtest fue validado con la versión correcta (dept-level), pero production corre con la versión menos precisa.
+
+### Problema de simulación de llegada (señalado por @chubakueno)
+
+El sandbox simula llegada con `dept_delay + Normal(0, σ=0.07)`. Con σ=0.07:
+- Un distrito de Lima puede llegar en t=0.14 (tarde)
+- Un distrito de Cajamarca puede llegar en t=0.35 (pronto)
+- Esto no es realista: en la realidad Lima llega como **bloque** antes de que la sierra empiece
+
+Consecuencia: el error estimado al 40% (~±2.2pp) puede ser **optimista**. Con llegada más extrema (Lima 100% antes de cualquier sierra), el shift nacional al 40% estaría más contaminado por Lima, y el error real podría ser mayor.
+
+### Mejoras pendientes (ordenadas por impacto)
+1. **[Alta prioridad]** Upgrade `electionNightProjector.js`: usar shift por dept para proyectar distritos pendientes (ya implementado en sandbox, solo hay que portarlo a producción). Ver línea ~460: `cont_kf_r2 + national_shift` → usar shift específico del dept.
+2. **[Media]** Mejorar simulación de llegada: menor σ dentro de dept (0.02-0.03), mayor separación entre depts. O usar `pct_actas` real de snapshot temprano como prior de llegada.
+3. **[Baja/informativa]** Calibrar prior de shift por dept para 2026 usando patrones 2021 como referencia de magnitud (no dirección).
