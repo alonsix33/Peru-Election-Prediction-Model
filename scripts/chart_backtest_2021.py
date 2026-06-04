@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.ticker as ticker
 import numpy as np
-from scipy.interpolate import make_interp_spline
+from scipy.interpolate import PchipInterpolator
 
 # ── Datos reales documentados (fuente: RPP/Gestión live blogs Jun 6-7 2021) ──
 # pct_actas, raw_kf%, proj_kf% (proyector = 49.875 + error_proy de CLAUDE.md)
@@ -44,13 +44,12 @@ horas = [m[3] for m in MILESTONES]
 # Error absoluto del proyector en cada punto (para banda dinámica)
 errors = np.array([2.2, 0.7, 0.5, 0.2, 0.3, 0.2, 0.2, 0.0])
 
-# ── Interpolación ─────────────────────────────────────────────────
+# ── Interpolación monotónica (PCHIP — sin overshooting) ───────────
 x_smooth = np.linspace(42, 100, 500)
-k = min(3, len(pct) - 1)
-raw_smooth   = make_interp_spline(pct, raw,    k=k)(x_smooth)
-proj_smooth  = make_interp_spline(pct, proj,   k=k)(x_smooth)
-err_smooth   = make_interp_spline(pct, errors, k=k)(x_smooth)
-err_smooth   = np.clip(err_smooth, 0, None)
+raw_smooth  = PchipInterpolator(pct, raw)(x_smooth)
+proj_smooth = PchipInterpolator(pct, proj)(x_smooth)
+err_smooth  = PchipInterpolator(pct, errors)(x_smooth)
+err_smooth  = np.clip(err_smooth, 0, None)
 
 # ── Colores ────────────────────────────────────────────────────────
 KEIKO_COLOR = '#F97316'
