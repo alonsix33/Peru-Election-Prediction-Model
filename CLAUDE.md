@@ -467,10 +467,22 @@ El sistema usa ubigeos propios de ONPE (confirmado en ONPE_API.md):
 - ICA = `100000`, Puno = `200000`, Loreto = `150000`
 - **NO** usar INEI (donde Lima sería 150000)
 
-**Validación post-fix (mock 40% actas, Lima+Callao+ICA):**
-- Raw KF: 80.55% → Proyectado: 47.27% → Corrección: 33.28pp ✅
-- CI 95%: [41.5, 51.7] centrado en proyección ✅
-- CI width: 10pp @40%, 2.1pp @80%, 16pp @5% (estrecha correctamente) ✅
+**Bug #3 — Fallback nacional contamina depts sin datos (CRÍTICO — corregido)**
+Depts sin datos usaban `national_shift` (Lima-contaminado) como fallback, en vez de `0pp`.
+El shift nacional R1→R2 es ≈0 globalmente; aplicar el shift de Lima (-2.7pp) a la sierra era
+estrictamente peor. Cambio: `deptShiftMap.get(ubigeo) ?? 0` en vez de `?? national_shift`.
+Mismo fix en `sandbox_r2_backtest_2021.py` para consistencia.
+
+**Validación final (backtest 2021, todos los fixes combinados):**
+| % Actas | Raw error | Proyector error | Mejora vs raw |
+|---|---|---|---|
+| 5% | +10.6pp | **+0.13pp** | 80× |
+| 10% | +14.6pp | **+0.16pp** | 91× |
+| 40% | +14.3pp | **-0.70pp** | 20× |
+| 80% | +6.3pp | **-0.71pp** | 9× |
+
+CI 95%: [43.7, 53.9] @40% · width 10pp @40%, 2.1pp @80%, 16pp @5% ✅
+A 5-10% actas (solo Lima reportando): error ~0.15pp vs 3pp antes del fix ✅
 
 ### Verificación del relay (Priority 1 — hacer antes del 7J)
 Script: `node scripts/verify_relay.js` (sin vars = localhost:3000 con secret "test-secret")
