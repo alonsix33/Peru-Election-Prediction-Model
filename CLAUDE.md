@@ -436,7 +436,20 @@ El sandbox simula llegada con `dept_delay + Normal(0, σ=0.07)`. Con σ=0.07:
 
 Consecuencia: el error estimado al 40% (~±2.2pp) puede ser **optimista**. Con llegada más extrema (Lima 100% antes de cualquier sierra), el shift nacional al 40% estaría más contaminado por Lima, y el error real podría ser mayor.
 
-### Mejoras pendientes (ordenadas por impacto)
-1. **[Alta prioridad]** Upgrade `electionNightProjector.js`: usar shift por dept para proyectar distritos pendientes (ya implementado en sandbox, solo hay que portarlo a producción). Ver línea ~460: `cont_kf_r2 + national_shift` → usar shift específico del dept.
-2. **[Media]** Mejorar simulación de llegada: menor σ dentro de dept (0.02-0.03), mayor separación entre depts. O usar `pct_actas` real de snapshot temprano como prior de llegada.
-3. **[Baja/informativa]** Calibrar prior de shift por dept para 2026 usando patrones 2021 como referencia de magnitud (no dirección).
+### Corrección importante — mejora dept-shift en tiempo real vs oracle
+
+El análisis `analyze_shift_2021.py` mostraba MAE 6.99pp → 4.32pp (38%) con dept-shift.
+**Ese número asume conocer los shifts finales de cada dept (oracle).** En tiempo real:
+- Al 40% de actas: dept-shift mejora solo **0.15pp** vs shift nacional
+- Razón: a 40%, los depts con shifts grandes (Arequipa +20pp, Loreto -24pp) tienen pocos
+  distritos reportando → estimación ruidosa. 42.7% del VV pendiente cae a fallback nacional.
+- La mejora crece progresivamente conforme llegan más datos (60-80% actas)
+
+El proyector actual ya reduce el error del raw en **~85%** desde el primer snapshot:
+- Raw at 40%: +14pp de error vs final
+- Proyector actual at 40%: ~-2.1pp de error vs final
+
+### Mejoras pendientes (ordenadas por impacto real)
+1. **[Alta prioridad — domingo]** Verificar bookmarklet relay end-to-end: `RAILWAY_URL`, `ADMIN_SECRET`, inject-snapshot de prueba. El projector funciona bien; el punto de falla más probable es el relay.
+2. **[Media — vale hacerlo hoy]** Upgrade `electionNightProjector.js`: usar shift por dept para proyectar distritos pendientes. Mejora ~0.15pp al 40%, más a 60-80%. Ver línea ~460: `cont_kf_r2 + national_shift` → usar shift específico del dept con fallback nacional.
+3. **[Baja — solo sandbox]** Mejorar simulación de llegada: σ=0.07 es demasiado suave pero no afecta producción. Producción trabaja con snapshots reales de ONPE, no simula llegada.
