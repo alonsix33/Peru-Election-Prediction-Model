@@ -48,7 +48,7 @@ function Tooltip({ tooltip }) {
                 : `Sánchez ${(100 - dept.kf_r2_share).toFixed(1)}%`}
             </div>
             <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 2 }}>
-              margen {Math.abs(dept.kf_r2_share - 50).toFixed(1)}pp
+              margen {Math.abs(dept.kf_r2_share - (100 - dept.kf_r2_share)).toFixed(1)}pp
             </div>
           </>
         ) : (
@@ -77,7 +77,7 @@ function Tooltip({ tooltip }) {
               : `Sánchez ${(100 - dept.kf_r2_share).toFixed(1)}%`}
           </div>
           <div style={{ color: '#A8A29E', fontSize: 11 }}>
-            margen {Math.abs(dept.kf_r2_share - 50).toFixed(1)}pp
+            margen {Math.abs(dept.kf_r2_share - (100 - dept.kf_r2_share)).toFixed(1)}pp
           </div>
         </>
       ) : (
