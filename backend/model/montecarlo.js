@@ -264,8 +264,9 @@ function simulateRunoff(finalistA, finalistB, allFirstRoundResults, dynamicRejec
   }
 
   // 5. Incertidumbre propia de segunda vuelta:
-  // 7 semanas de campaña — debates, escándalos, movilización.
-  const runoffUncertainty = 11.0;
+  // Recalibrado T-2: 11pp era volatilidad de 7 semanas de campaña; a T-2 esas semanas
+  // ya ocurrieron. 6pp da rango p10-p90 de ~±7pp, apropiado para incertidumbre residual.
+  const runoffUncertainty = 6.0;
   const shockA = randn() * runoffUncertainty;
   const shockB = -shockA * 0.7;
   votesA += shockA;
