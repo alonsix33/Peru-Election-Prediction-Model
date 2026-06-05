@@ -63,7 +63,9 @@ function runTest(keikoBase, sanchezBase, runoffUncertainty) {
   let keikoWins    = 0;
   let sanchezWins  = 0;
   let closeCount   = 0;
-  const margins    = [];
+  const margins       = [];
+  const keikoShares   = [];
+  const sanchezShares = [];
 
   for (let i = 0; i < N_SIMS; i++) {
     // 1. MC perturbation (t-Student, same as montecarlo.js)
@@ -93,17 +95,32 @@ function runTest(keikoBase, sanchezBase, runoffUncertainty) {
     const margin = Math.abs(k - s);
     if (margin < CLOSE_THRESHOLD) closeCount++;
     margins.push(k - s); // positive = Keiko leads
+    keikoShares.push(k);
+    sanchezShares.push(s);
   }
 
-  // Median absolute margin
+  // Percentiles
+  const pct = (arr, q) => arr.sort((a, b) => a - b)[Math.floor(N_SIMS * q)];
+  const kSorted = [...keikoShares].sort((a, b) => a - b);
+  const sSorted = [...sanchezShares].sort((a, b) => a - b);
   const absMargins = margins.map(Math.abs).sort((a, b) => a - b);
   const medianMargin = absMargins[Math.floor(N_SIMS / 2)];
+
+  const mean = arr => arr.reduce((s, v) => s + v, 0) / arr.length;
 
   return {
     keikoPwin:    (keikoWins   / N_SIMS * 100).toFixed(1),
     sanchezPwin:  (sanchezWins / N_SIMS * 100).toFixed(1),
     pCloseRace:   (closeCount  / N_SIMS * 100).toFixed(1),
     medianMargin: medianMargin.toFixed(2),
+    // Vote share distribution
+    kMean:  mean(keikoShares).toFixed(2),
+    sMean:  mean(sanchezShares).toFixed(2),
+    kP10:   kSorted[Math.floor(N_SIMS * 0.10)].toFixed(1),
+    kP25:   kSorted[Math.floor(N_SIMS * 0.25)].toFixed(1),
+    kP50:   kSorted[Math.floor(N_SIMS * 0.50)].toFixed(1),
+    kP75:   kSorted[Math.floor(N_SIMS * 0.75)].toFixed(1),
+    kP90:   kSorted[Math.floor(N_SIMS * 0.90)].toFixed(1),
   };
 }
 
@@ -121,13 +138,14 @@ for (const scenario of SCENARIOS) {
   const comp0 = logisticCompress(scenario.keiko, scenario.sanchez);
   console.log(`    Post-compresión logística: Keiko ${comp0.keiko.toFixed(3)}%  vs  Sánchez ${comp0.sanchez.toFixed(3)}%`);
   console.log();
-  console.log(`    ${'runoffUncert'.padEnd(14)} | ${'KF P(win)'.padStart(10)} | ${'RSP P(win)'.padStart(11)} | ${'p_close_race'.padStart(13)} | ${'mediana margen'.padStart(15)}`);
-  console.log(`    ${'─'.repeat(75)}`);
+  console.log(`    ${'u'.padEnd(4)} | ${'KF %vv'.padStart(8)} | ${'RSP %vv'.padStart(8)} | ${'KF P(win)'.padStart(10)} | ${'RSP P(win)'.padStart(10)} | ${'p_close'.padStart(8)} | ${'KF p10–p50–p90'.padStart(20)}`);
+  console.log(`    ${'─'.repeat(88)}`);
 
   for (const u of UNCERTAINTY_VALUES) {
     const r = runTest(scenario.keiko, scenario.sanchez, u);
     const tag = u === 11 ? ' ← actual' : '';
-    console.log(`    ${String(u).padEnd(14)} | ${(r.keikoPwin + '%').padStart(10)} | ${(r.sanchezPwin + '%').padStart(11)} | ${(r.pCloseRace + '%').padStart(13)} | ${(r.medianMargin + 'pp').padStart(15)}${tag}`);
+    const range = `${r.kP10}–${r.kP50}–${r.kP90}`;
+    console.log(`    ${String(u).padEnd(4)} | ${(r.kMean + '%').padStart(8)} | ${(r.sMean + '%').padStart(8)} | ${(r.keikoPwin + '%').padStart(10)} | ${(r.sanchezPwin + '%').padStart(10)} | ${(r.pCloseRace + '%').padStart(8)} | ${range.padStart(20)}${tag}`);
   }
   console.log();
 }
