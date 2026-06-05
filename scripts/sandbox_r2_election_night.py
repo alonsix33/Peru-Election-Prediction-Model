@@ -80,7 +80,7 @@ def load_districts():
     for ubigeo, d in raw.items():
         if d.get('kf_r2_share') is None:
             continue
-        if d.get('totalVotosValidos', 0) <= 0:
+        if (d.get('totalVotosValidos') or 0) <= 0:
             continue
         dept_ubigeo = d.get('deptUbigeo', '')
         profile = DEPT_PROFILES.get(dept_ubigeo, {
@@ -186,7 +186,7 @@ def stratified_projector(districts, r2_shares, reported, r1_national):
 
     for i in unrep_idx:
         du = districts[i]['dept_ubigeo']
-        shift = dept_shift.get(du, nat_shift)
+        shift = dept_shift.get(du, 0.0)
         proj = max(0.0, min(100.0, districts[i]['r1_share'] + shift))
         total_kf_vv += proj * districts[i]['vv'] / 100.0
         total_vv += districts[i]['vv']

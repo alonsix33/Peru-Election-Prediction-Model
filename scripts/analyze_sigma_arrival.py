@@ -118,7 +118,7 @@ def projector(districts, reported):
 
     total_kf = rep_kf; total_vv = rep_vv
     for d in unr:
-        shift = dept_shift.get(d['dept'], nat_shift)
+        shift = dept_shift.get(d['dept'], 0.0)
         total_kf += max(0, min(100, d['r1'] + shift)) * d['vv'] / 100
         total_vv += d['vv']
     return total_kf / total_vv * 100

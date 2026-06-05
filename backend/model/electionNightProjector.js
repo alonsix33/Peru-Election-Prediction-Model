@@ -141,6 +141,7 @@ function _loadBaselines() {
       kfV:          ext.meta?.total_kfV          ?? 0,
       rspV:         ext.meta?.total_rspV         ?? 0,
       byContinente: ext.continentes              ?? {},
+      byPais:       ext.paises                   ?? {},
     };
     console.log(`[projector] Baselines loaded — ${Object.keys(_r1ByProv).length} provs, ${Object.keys(_r1ByDist).length} dists`);
   } else {
@@ -386,6 +387,7 @@ function project(snapshot) {
     province_breakdown = [],
     district_breakdown = [],
     ext_breakdown      = [],
+    pais_breakdown     = [],
     captured_at,
   } = snapshot;
 
@@ -476,7 +478,24 @@ function project(snapshot) {
     ? _clamp(r1_ext_kf_r2_global + national_shift, 0, 100)
     : obs_kf_r2_share;
 
-  if (_r1Exterior?.byContinente && Array.isArray(ext_breakdown) && ext_breakdown.length > 0) {
+  // Country-level (most precise) → continent-level fallback
+  if (_r1Exterior?.byPais && Array.isArray(pais_breakdown) && pais_breakdown.length > 0) {
+    const reportedPais = new Set(
+      pais_breakdown
+        .filter(p => (p.keiko_votos || 0) + (p.sanchez_votos || 0) > 0)
+        .map(p => String(p.ubigeo))
+    );
+    let sum_vv = 0, sum_kf_proj = 0;
+    for (const [ubigeo, pais] of Object.entries(_r1Exterior.byPais)) {
+      if (reportedPais.has(ubigeo)) continue;
+      const r1_bilateral = (pais.kfV || 0) + (pais.rspV || 0);
+      if (r1_bilateral === 0) continue;
+      const pais_kf_r2 = pais.kf_r2_share ?? r1_ext_kf_r2_global;
+      sum_vv      += r1_bilateral;
+      sum_kf_proj += r1_bilateral * _clamp(pais_kf_r2 + national_shift, 0, 100);
+    }
+    if (sum_vv > 0) ext_proj_kf_r2 = sum_kf_proj / sum_vv;
+  } else if (_r1Exterior?.byContinente && Array.isArray(ext_breakdown) && ext_breakdown.length > 0) {
     const reportedCont = new Set(
       ext_breakdown
         .filter(c => (c.keiko_votos || 0) + (c.sanchez_votos || 0) > 0)
