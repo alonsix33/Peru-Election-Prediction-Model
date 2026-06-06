@@ -171,7 +171,7 @@ Aliaga aparece ~+3pp en todas las encuestas pre-R1. Sin corrección (modelo corr
 - [x] Datum mayo 26-30 ingresado (simulacro KF 39.7%/RSP 35.4%, n=1501, ±2.5pp) — última encuesta Datum antes de veda
 - [x] **Phase 1 — Projector estratificado** (commit en PR #131): `electionNightProjector.js` extiende shift a 3 granularidades (district → province → dept → naive). Backtest R1: shift=0.00pp ✅, district 1270 units / 3,766,559 VV R1. Nuevas columnas DB: `province_breakdown`, `district_breakdown` en `onpe_live_snapshots`; `province_shifts`, `district_shifts`, `shift_granularity` en `r2_election_projections`.
 - [x] **Phase 2 — API routes** (PR #131): `inject-snapshot` almacena province/district breakdown; `live-projection` devuelve `provinces[]`, `districts[]`, `shift_granularity`
-- [x] **Phase 3 — Bookmarklet extendido** (PR #131): recoge 196 provincias + 1518 distritos con throttle 20/25 concurrent. Catálogos hardcodeados para evitar bug ONPE `/ubigeos/provincias`.
+- [x] **Phase 3 — Bookmarklet extendido** (PR #131): recoge 196 provincias + 1886 distritos con throttle 20/25 concurrent. Catálogos hardcodeados para evitar bug ONPE `/ubigeos/provincias`. DIST_CATALOG actualizado a 1886 (1518 ONPE R1 + 368 proxy 2021 R2).
 - [x] **Phase 4 — LiveResultsTab drill-down** (PR #131): panel de dept → lista de provincias → lista de distritos en modo live; `ShiftBadge` ±pp; `StatusBar` muestra granularidad activa.
 - [x] `startup.js` migraciones idempotentes (`ALTER TABLE ... ADD COLUMN IF NOT EXISTS`) para columnas province/district en Railway live DB
 - [ ] Pesos IEP en seed_r2.sql: verificar que refleja desempeño R1 (cerca a ONPE)
@@ -289,7 +289,7 @@ el cron siempre obtendrá HTML y `has_data` se mantendrá `false`.
 
 2. `scripts/onpe_bookmarklet.js` (correr en DevTools Console en el sitio ONPE)
    - Desde dentro del dominio ONPE, los fetches son same-origin → funcionan
-   - Recoge: nacional + totales + 25 depts + **196 provincias** + **1518 distritos** + exterior
+   - Recoge: nacional + totales + 25 depts + **196 provincias** + **1886 distritos** + exterior
    - POST a Railway cada 2 minutos (auto-loop). Tiempo por poll: ~15-20s (throttle 20/25 concurrent)
    - Contiene versión minificada como bookmarklet de barra de favoritos
    - Catálogos `PROV_CATALOG` y `DIST_CATALOG` hardcodeados — evita bug de ONPE:
@@ -311,7 +311,7 @@ el cron siempre obtendrá HTML y `has_data` se mantendrá `false`.
 Los 368 antes faltantes fueron rellenados con proxy 2021 R2 (`source: '2021_r2_proxy'`).
 Solo 6 distritos sin datos: 4 creados post-2021 (nuevos ubigeos) + 2 con cero votos en 2021.
 Esos 6 usan fallback provincia/dept en el proyector — correcto.
-DIST_CATALOG en bookmarklet extendido de 1518 → 1886 ubigeos para colectar datos en vivo el 7J.
+DIST_CATALOG en bookmarklet actualizado a 1886 ubigeos (incluye los 368 proxy) — cobertura total el 7J.
 
 ### API endpoints nuevos (7J)
 | Endpoint | Propósito |
@@ -323,7 +323,7 @@ DIST_CATALOG en bookmarklet extendido de 1518 → 1886 ubigeos para colectar dat
 
 **`onpe_live_snapshots`:**
 - `province_breakdown JSONB` — array de `{ubigeo, deptUbigeo, keiko_votos, sanchez_votos}` (196 provincias)
-- `district_breakdown JSONB` — array de `{ubigeo, keiko_votos, sanchez_votos}` (1518 distritos)
+- `district_breakdown JSONB` — array de `{ubigeo, keiko_votos, sanchez_votos}` (hasta 1886 distritos)
 
 **`r2_election_projections`:**
 - `shift_granularity VARCHAR(20)` — `'district'` | `'province'` | `'dept'` | `'naive'`
