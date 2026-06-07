@@ -463,7 +463,23 @@ async function buildSnapshot() {
     fetchPaises(),
   ]);
 
-  const hasData = nacional !== null && (nacional.keiko_votos > 0 || nacional.sanchez_votos > 0);
+  // Si el endpoint nacional falla, derivar totales de la suma de departamentos
+  let keiko_votos  = nacional?.keiko_votos  ?? null;
+  let sanchez_votos = nacional?.sanchez_votos ?? null;
+  let keiko_pct    = nacional?.keiko_pct    ?? null;
+  let sanchez_pct  = nacional?.sanchez_pct  ?? null;
+
+  if (keiko_votos === null && departamentos.length > 0) {
+    keiko_votos  = departamentos.reduce((s, d) => s + (d.keiko_votos  || 0), 0);
+    sanchez_votos = departamentos.reduce((s, d) => s + (d.sanchez_votos || 0), 0);
+    const tot = keiko_votos + sanchez_votos;
+    if (tot > 0) {
+      keiko_pct   = parseFloat((keiko_votos  / tot * 100).toFixed(3));
+      sanchez_pct = parseFloat((sanchez_votos / tot * 100).toFixed(3));
+    }
+  }
+
+  const hasData = (keiko_votos ?? 0) > 0 || (sanchez_votos ?? 0) > 0;
 
   return {
     captured_at:        new Date().toISOString(),
@@ -471,10 +487,10 @@ async function buildSnapshot() {
     actas_total:        totales?.total     ?? null,
     actas_processed:    totales?.processed ?? null,
     pct_actas:          totales?.pct       ?? null,
-    keiko_votos:        nacional?.keiko_votos   ?? null,
-    keiko_pct:          nacional?.keiko_pct     ?? null,
-    sanchez_votos:      nacional?.sanchez_votos ?? null,
-    sanchez_pct:        nacional?.sanchez_pct   ?? null,
+    keiko_votos,
+    keiko_pct,
+    sanchez_votos,
+    sanchez_pct,
     dept_breakdown:     departamentos,
     province_breakdown: provincias,
     district_breakdown: distritos,
