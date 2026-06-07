@@ -1,8 +1,8 @@
 const TABS = [
+  { id: 'live', label: '7J · Resultados', highlight: true },
   { id: 'dashboard', label: 'Dashboard' },
   // { id: 'primera', label: 'Primera Vuelta' },  // hidden for R2 sharing
   { id: 'segunda', label: 'Segunda Vuelta' },
-  { id: 'live', label: '7J · Resultados', highlight: true },
   { id: 'metodologia', label: 'Metodología' },
   { id: 'backtesting', label: 'Precisión' },
 ];

@@ -41,7 +41,7 @@ class ErrorBoundary extends Component {
 }
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('live');
   const { status, predictions, r1predictions, polymarket, polls, r2polls, antivoto, loading, error, lastUpdated, refresh } = useElectionData();
 
   return (
