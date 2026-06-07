@@ -1,4 +1,4 @@
-import { useState, Component } from 'react';
+import { useState, useEffect, Component } from 'react';
 import { useElectionData } from './hooks/useElectionData';
 import Header from './components/Header';
 import TabNav from './components/TabNav';
@@ -40,14 +40,31 @@ class ErrorBoundary extends Component {
   }
 }
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 function AppContent() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab]         = useState('dashboard');
+  const [isElectionLive, setIsElectionLive] = useState(false);
   const { status, predictions, r1predictions, polymarket, polls, r2polls, antivoto, loading, error, lastUpdated, refresh } = useElectionData();
+
+  useEffect(() => {
+    let cancelled = false;
+    async function check() {
+      try {
+        const res  = await fetch(`${API_BASE}/api/live-projection`);
+        const json = await res.json();
+        if (!cancelled && json?.status === 'ok') setIsElectionLive(true);
+      } catch { /* silent */ }
+    }
+    check();
+    const id = setInterval(check, 60_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-page)' }}>
       <Header status={status} predictions={predictions} />
-      <TabNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <TabNav activeTab={activeTab} onTabChange={setActiveTab} isElectionLive={isElectionLive} />
 
       {/* Banner FOTO FINAL R2 — visible solo cuando el modelo de segunda vuelta está congelado */}
       {predictions?.is_frozen && (

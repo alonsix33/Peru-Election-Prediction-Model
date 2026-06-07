@@ -1,4 +1,4 @@
-const TABS = [
+const TABS_BASE = [
   { id: 'dashboard', label: 'Dashboard' },
   // { id: 'primera', label: 'Primera Vuelta' },  // hidden for R2 sharing
   { id: 'segunda', label: 'Segunda Vuelta' },
@@ -7,7 +7,10 @@ const TABS = [
   { id: 'backtesting', label: 'Precisión' },
 ];
 
-export default function TabNav({ activeTab, onTabChange }) {
+export default function TabNav({ activeTab, onTabChange, isElectionLive }) {
+  const TABS = isElectionLive
+    ? [TABS_BASE.find(t => t.id === 'live'), ...TABS_BASE.filter(t => t.id !== 'live')]
+    : TABS_BASE;
   return (
     <nav role="tablist" style={{
       display: 'flex', gap: '4px', padding: '0 16px',
