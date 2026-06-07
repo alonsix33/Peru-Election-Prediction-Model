@@ -833,7 +833,7 @@ router.get('/onpe/live', async (req, res) => {
     }
 
     const { rows: [latest] } = await db.query(
-      `SELECT * FROM onpe_live_snapshots ORDER BY captured_at DESC LIMIT 1`
+      `SELECT * FROM onpe_live_snapshots WHERE has_data = true ORDER BY captured_at DESC LIMIT 1`
     );
 
     if (!latest) {
