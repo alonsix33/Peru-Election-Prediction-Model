@@ -60,6 +60,16 @@ async function saveProjection(snapshotId, snapshot) {
 async function runPoll() {
   try {
     const snapshot = await fetchOnpeLiveSnapshot();
+
+    // Skip insert entirely if no data — avoids polluting the snapshots table
+    // with empty rows that could interfere with /api/onpe/live queries.
+    // Note: ONPE's API is same-origin only; external Railway requests always
+    // return HTML, so has_data will almost always be false here.
+    if (!snapshot.has_data) {
+      console.log('📊 ONPE R2 polling: sin datos (cron externo — usar bookmarklet relay)');
+      return;
+    }
+
     const { rows: [{ id: snapshotId }] } = await db.query(
       `INSERT INTO onpe_live_snapshots
          (captured_at, has_data, actas_total, actas_processed, pct_actas,
@@ -83,15 +93,11 @@ async function runPoll() {
       ]
     );
 
-    if (snapshot.has_data) {
-      console.log(
-        `📊 ONPE R2 snapshot: K=${snapshot.keiko_pct}% S=${snapshot.sanchez_pct}%` +
-        ` actas=${snapshot.pct_actas ?? '?'}%`
-      );
-      await saveProjection(snapshotId, snapshot);
-    } else {
-      console.log('📊 ONPE R2 polling: sin datos aún (204)');
-    }
+    console.log(
+      `📊 ONPE R2 snapshot: K=${snapshot.keiko_pct}% S=${snapshot.sanchez_pct}%` +
+      ` actas=${snapshot.pct_actas ?? '?'}%`
+    );
+    await saveProjection(snapshotId, snapshot);
   } catch (err) {
     console.error('📊 Error polling ONPE:', err.message);
   }
