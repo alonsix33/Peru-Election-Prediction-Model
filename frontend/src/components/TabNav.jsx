@@ -1,16 +1,13 @@
-const TABS_BASE = [
+const TABS = [
+  { id: 'live', label: '7J · Resultados', highlight: true },
   { id: 'dashboard', label: 'Dashboard' },
   // { id: 'primera', label: 'Primera Vuelta' },  // hidden for R2 sharing
   { id: 'segunda', label: 'Segunda Vuelta' },
-  { id: 'live', label: '7J · Resultados', highlight: true },
   { id: 'metodologia', label: 'Metodología' },
   { id: 'backtesting', label: 'Precisión' },
 ];
 
-export default function TabNav({ activeTab, onTabChange, isElectionLive }) {
-  const TABS = isElectionLive
-    ? [TABS_BASE.find(t => t.id === 'live'), ...TABS_BASE.filter(t => t.id !== 'live')]
-    : TABS_BASE;
+export default function TabNav({ activeTab, onTabChange }) {
   return (
     <nav role="tablist" style={{
       display: 'flex', gap: '4px', padding: '0 16px',
