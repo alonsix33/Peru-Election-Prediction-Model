@@ -50,7 +50,7 @@ function AppContent() {
       <TabNav activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Banner FOTO FINAL R2 — visible cuando el modelo está congelado o en post_election */}
-      {(predictions?.is_frozen || status?.electoral_phase === 'post_election') && (
+      {(predictions?.is_frozen || status?.electoral_phase === 'post_election') && activeTab !== 'live' && (
         <div style={{
           background: '#FFFBEB', borderBottom: '2px solid #F59E0B',
           padding: '16px 20px', textAlign: 'center',
