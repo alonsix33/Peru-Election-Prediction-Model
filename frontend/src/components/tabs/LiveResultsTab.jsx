@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getPartyColor } from '../../config/partyColors';
 import WinProbabilityNeedle from '../WinProbabilityNeedle';
 import PeruDeptMap from '../PeruDeptMap';
+import ElectionNightEvolutionChart from '../ElectionNightEvolutionChart';
 
 const KEIKO_COLOR   = getPartyColor('Keiko Fujimori').primary;           // #F97316
 const SANCHEZ_COLOR = getPartyColor('Roberto Sánchez Palomino').primary; // #16A34A
@@ -664,6 +665,8 @@ export default function LiveResultsTab({ predictions }) {
         </div>
         <WinProbabilityNeedle keiko={needleKeiko} sanchez={needleSanchez} />
       </div>
+
+      <ElectionNightEvolutionChart history={isLive ? liveData?.history : null} />
 
       <VoteBars
         total={isLive ? liveData?.national : DEMO.national}
