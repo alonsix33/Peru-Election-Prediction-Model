@@ -335,9 +335,9 @@ async function fetchTotales() {
   );
   if (!data) return null;
   return {
-    processed: data.actasProcesadas ?? data.actas_procesadas ?? data.actasContabilizadas ?? null,
-    total:     data.actasTotal      ?? data.actas_total      ?? data.totalActas          ?? null,
-    pct:       data.porcentajeActas ?? data.pct_actas        ?? data.porcentaje          ?? data.actasContabilizadas ?? null,
+    processed: data.actasProcesadas ?? data.actas_procesadas ?? data.contabilizadas ?? null,
+    total:     data.actasTotal      ?? data.actas_total      ?? data.totalActas      ?? null,
+    pct:       data.porcentajeActas ?? data.pct_actas        ?? data.porcentaje      ?? data.actasContabilizadas ?? null,
     raw:       data,
   };
 }
