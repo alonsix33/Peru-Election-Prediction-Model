@@ -38,7 +38,7 @@ function electoralPhase() {
   const now = nowPeru();
   const veda        = DateTime.fromISO(VEDA_START, { zone: PERU_TIMEZONE });
   const electionOpen  = DateTime.fromISO(ELECTION_DAY, { zone: PERU_TIMEZONE }).startOf('day').plus({ hours: 8  }); // 08:00 apertura
-  const electionClose = DateTime.fromISO(ELECTION_DAY, { zone: PERU_TIMEZONE }).startOf('day').plus({ hours: 16 }); // 16:00 cierre
+  const electionClose = DateTime.fromISO(ELECTION_DAY, { zone: PERU_TIMEZONE }).startOf('day').plus({ hours: 17 }); // 17:00 cierre (urnas cierran 16:00, modelo corre hasta 17:00)
 
   if (now < veda)           return 'pre_veda';
   if (now < electionOpen)   return 'veda';
