@@ -117,11 +117,24 @@ export default function ElectionNightEvolutionChart({ history }) {
         position: 'bottom',
         labels: {
           color: '#78716C',
-          padding: 12,
-          usePointStyle: true,
-          pointStyleWidth: 10,
+          padding: 16,
           font: { size: 11 },
-          filter: item => !item.text.startsWith('_'),
+          generateLabels: (chart) =>
+            chart.data.datasets
+              .filter(ds => !ds.label.startsWith('_'))
+              .map((ds, rawIdx) => {
+                const i = chart.data.datasets.indexOf(ds);
+                return {
+                  text:        ds.label,
+                  strokeStyle: ds.borderColor,
+                  fillStyle:   'transparent',
+                  lineWidth:   ds.borderWidth ?? 2,
+                  lineDash:    ds.borderDash  ?? [],
+                  hidden:      !chart.isDatasetVisible(i),
+                  datasetIndex: i,
+                  pointStyle:  'line',
+                };
+              }),
         },
       },
       tooltip: {
