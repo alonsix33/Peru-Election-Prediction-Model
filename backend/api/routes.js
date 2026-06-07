@@ -666,7 +666,7 @@ router.get('/force-run', async (req, res) => {
     // Forzar pipeline R2 — si es post-cierre del 7 junio, guardar como foto final R2
     const { nowPeru, ELECTION_DAY } = require('../model/clock');
     const now = nowPeru();
-    const isPostClose = now.toISODate() === ELECTION_DAY && now.hour >= 17;
+    const isPostClose = now.toISODate() === ELECTION_DAY && now.hour >= 16;
 
     // Guard: don't create duplicate final_election_day entries
     if (isPostClose) {

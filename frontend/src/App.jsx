@@ -49,8 +49,8 @@ function AppContent() {
       <Header status={status} predictions={predictions} />
       <TabNav activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {/* Banner FOTO FINAL R2 — visible solo cuando el modelo de segunda vuelta está congelado */}
-      {predictions?.is_frozen && (
+      {/* Banner FOTO FINAL R2 — visible cuando el modelo está congelado o en post_election */}
+      {(predictions?.is_frozen || status?.electoral_phase === 'post_election') && (
         <div style={{
           background: '#FFFBEB', borderBottom: '2px solid #F59E0B',
           padding: '16px 20px', textAlign: 'center',
