@@ -1001,6 +1001,14 @@ router.get('/live-projection', async (req, res) => {
       if (d?.ubigeo && d.pct_actas != null) deptPctMap[d.ubigeo] = d.pct_actas;
     }
 
+    const { rows: projHistory } = await db.query(
+      `SELECT projected_at, pct_actas, obs_kf_r2_share,
+              proj_kf_r2_share, proj_ci95_lo, proj_ci95_hi
+       FROM r2_election_projections
+       ORDER BY projected_at ASC`
+    );
+    const pf = v => (v != null ? parseFloat(v) : null);
+
     res.json({
       status:           'ok',
       pct_actas:        r.pct_actas,
@@ -1073,6 +1081,15 @@ router.get('/live-projection', async (req, res) => {
       })),
 
       shift_granularity: r.shift_granularity,
+
+      history: projHistory.map(h => ({
+        time:             h.projected_at,
+        pct_actas:        pf(h.pct_actas),
+        obs_kf_r2_share:  pf(h.obs_kf_r2_share),
+        proj_kf_r2_share: pf(h.proj_kf_r2_share),
+        ci95_lo:          pf(h.proj_ci95_lo),
+        ci95_hi:          pf(h.proj_ci95_hi),
+      })),
     });
   } catch (err) {
     if (err.code === '42P01') return res.json({ status: 'pre_election', pct_actas: 0 });
