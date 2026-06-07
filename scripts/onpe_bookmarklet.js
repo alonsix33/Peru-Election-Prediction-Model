@@ -346,14 +346,18 @@ async function fetchDepartamentos() {
   );
   if (!Array.isArray(ubigeos) || !ubigeos.length) return [];
   const results = await Promise.all(ubigeos.map(async dept => {
-    const data = await g(
-      `resumen-general/participantes?idEleccion=${ID_ELECCION}` +
-      `&idAmbitoGeografico=${AMBITO_NAC}&tipoFiltro=ubigeo_nivel_01` +
-      `&idUbigeoDepartamento=${dept.ubigeo}`
-    );
+    const [data, tot] = await Promise.all([
+      g(`resumen-general/participantes?idEleccion=${ID_ELECCION}` +
+        `&idAmbitoGeografico=${AMBITO_NAC}&tipoFiltro=ubigeo_nivel_01` +
+        `&idUbigeoDepartamento=${dept.ubigeo}`),
+      g(`resumen-general/totales?idEleccion=${ID_ELECCION}` +
+        `&idAmbitoGeografico=${AMBITO_NAC}&tipoFiltro=ubigeo_nivel_01` +
+        `&idUbigeoDepartamento=${dept.ubigeo}`),
+    ]);
     const pair = extractPair(data);
     if (!pair) return null;
-    return { nombre: dept.nombre, ubigeo: dept.ubigeo, ...pair };
+    const pct_actas = tot?.porcentajeActas ?? tot?.pct_actas ?? tot?.porcentaje ?? null;
+    return { nombre: dept.nombre, ubigeo: dept.ubigeo, ...pair, pct_actas };
   }));
   return results.filter(Boolean);
 }

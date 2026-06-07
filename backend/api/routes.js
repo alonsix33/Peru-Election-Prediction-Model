@@ -996,6 +996,11 @@ router.get('/live-projection', async (req, res) => {
     const sigma    = r.projected.sigma_pp || 3.0;
     const probWinKF = Math.round(_normalCDF((r.projected.kf_r2_share - 50) / sigma) * 100);
 
+    const deptPctMap = {};
+    for (const d of snapshot.dept_breakdown) {
+      if (d?.ubigeo && d.pct_actas != null) deptPctMap[d.ubigeo] = d.pct_actas;
+    }
+
     res.json({
       status:           'ok',
       pct_actas:        r.pct_actas,
@@ -1038,7 +1043,7 @@ router.get('/live-projection', async (req, res) => {
         shift_pp:      d.shift_pp,
         keiko_votos:   d.keiko_votos   ?? null,
         sanchez_votos: d.sanchez_votos ?? null,
-        pct_actas:     null,
+        pct_actas:     deptPctMap[d.ubigeo] ?? null,
       })),
 
       // Province and district arrays — populated when bookmarklet sends them
