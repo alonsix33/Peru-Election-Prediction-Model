@@ -356,8 +356,10 @@ async function fetchDepartamentos() {
     ]);
     const pair = extractPair(data);
     if (!pair) return null;
-    const pct_actas = tot?.porcentajeActas ?? tot?.pct_actas ?? tot?.porcentaje ?? null;
-    return { nombre: dept.nombre, ubigeo: dept.ubigeo, ...pair, pct_actas };
+    const pct_actas       = tot?.porcentajeActas ?? tot?.pct_actas ?? tot?.porcentaje ?? null;
+    const actas_procesadas = tot?.actasProcesadas ?? tot?.actasContabilizadas ?? null;
+    const actas_total      = tot?.actasTotal ?? tot?.totalActas ?? null;
+    return { nombre: dept.nombre, ubigeo: dept.ubigeo, ...pair, pct_actas, actas_procesadas, actas_total };
   }));
   return results.filter(Boolean);
 }
@@ -464,13 +466,13 @@ async function buildSnapshot() {
   ]);
 
   // Si el endpoint nacional falla, derivar totales de la suma de departamentos
-  let keiko_votos  = nacional?.keiko_votos  ?? null;
+  let keiko_votos   = nacional?.keiko_votos  ?? null;
   let sanchez_votos = nacional?.sanchez_votos ?? null;
-  let keiko_pct    = nacional?.keiko_pct    ?? null;
-  let sanchez_pct  = nacional?.sanchez_pct  ?? null;
+  let keiko_pct     = nacional?.keiko_pct    ?? null;
+  let sanchez_pct   = nacional?.sanchez_pct  ?? null;
 
   if (keiko_votos === null && departamentos.length > 0) {
-    keiko_votos  = departamentos.reduce((s, d) => s + (d.keiko_votos  || 0), 0);
+    keiko_votos   = departamentos.reduce((s, d) => s + (d.keiko_votos  || 0), 0);
     sanchez_votos = departamentos.reduce((s, d) => s + (d.sanchez_votos || 0), 0);
     const tot = keiko_votos + sanchez_votos;
     if (tot > 0) {
@@ -479,14 +481,28 @@ async function buildSnapshot() {
     }
   }
 
+  // pct_actas: sumar actas de depts si el endpoint de totales nacional no responde
+  let pct_actas      = totales?.pct       ?? null;
+  let actas_total    = totales?.total     ?? null;
+  let actas_processed = totales?.processed ?? null;
+  if (pct_actas === null && departamentos.length > 0) {
+    const sumTotal     = departamentos.reduce((s, d) => s + (d.actas_total      || 0), 0);
+    const sumProcessed = departamentos.reduce((s, d) => s + (d.actas_procesadas || 0), 0);
+    if (sumTotal > 0) {
+      actas_total     = sumTotal;
+      actas_processed = sumProcessed;
+      pct_actas       = parseFloat((sumProcessed / sumTotal * 100).toFixed(2));
+    }
+  }
+
   const hasData = (keiko_votos ?? 0) > 0 || (sanchez_votos ?? 0) > 0;
 
   return {
     captured_at:        new Date().toISOString(),
     has_data:           hasData,
-    actas_total:        totales?.total     ?? null,
-    actas_processed:    totales?.processed ?? null,
-    pct_actas:          totales?.pct       ?? null,
+    actas_total:        actas_total,
+    actas_processed:    actas_processed,
+    pct_actas:          pct_actas,
     keiko_votos,
     keiko_pct,
     sanchez_votos,
