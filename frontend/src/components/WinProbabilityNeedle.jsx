@@ -310,7 +310,7 @@ export default function WinProbabilityNeedle({ keiko, sanchez }) {
             {`${keikoLeads ? 'K' : 'S'}+${Math.abs(meanMargin).toFixed(2)}pp · ${leader.prob_win.toFixed(2)}% de probabilidad de ganar`}
           </div>
           <div style={{ color: '#A8A29E', fontSize: 11, marginTop: 5, fontVariantNumeric: 'tabular-nums' }}>
-            IC 80%: [{fmtMargin(keiko.p10)}pp, {fmtMargin(keiko.p90)}pp]
+            {keiko.p25 != null ? 'IC 80%' : 'IC 95%'}: [{fmtMargin(keiko.p10)}pp, {fmtMargin(keiko.p90)}pp]
             {keiko.p25 != null && (
               <span style={{ color: '#C4BDB5' }}>
                 {' · '}IC 50%: [{fmtMargin(keiko.p25)}pp, {fmtMargin(keiko.p75)}pp]
@@ -340,7 +340,7 @@ export default function WinProbabilityNeedle({ keiko, sanchez }) {
         )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <div style={{ width: 18, height: 7, borderRadius: 3, background: coneColor, opacity: 0.22 }} />
-          <span style={{ color: '#8C877F', fontSize: 10 }}>IC 80%</span>
+          <span style={{ color: '#8C877F', fontSize: 10 }}>{keiko?.p25 != null ? 'IC 80%' : 'IC 95%'}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <svg width="18" height="7">
