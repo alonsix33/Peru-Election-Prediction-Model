@@ -638,7 +638,7 @@ export default function LiveResultsTab({ predictions }) {
           Resultados en Vivo · 7 de junio de 2026
         </h2>
         <p style={{ color: '#78716C', fontSize: 14, margin: 0, lineHeight: 1.5 }}>
-          Proyección a 100% de actas en tiempo real. Actualización cada 30 segundos durante el conteo.
+          Proyección a 100% de actas en tiempo real. Nueva data cada ~2 minutos durante el conteo.
         </p>
       </div>
 
