@@ -312,8 +312,9 @@ async function pAll(items, fn, limit) {
 // ── Fetchers ──────────────────────────────────────────────────────────
 
 async function fetchNacional() {
+  // tipoFiltro=ambito_geografico es el correcto para R2 2026 (confirmado via XHR intercept 7J)
   const data = await g(
-    `resumen-general/participantes?idEleccion=${ID_ELECCION}&idAmbitoGeografico=${AMBITO_NAC}&tipoFiltro=nacional`
+    `resumen-general/participantes?idEleccion=${ID_ELECCION}&tipoFiltro=ambito_geografico&idAmbitoGeografico=${AMBITO_NAC}`
   );
   if (!Array.isArray(data)) return null;
   const pair = extractPair(data);
@@ -328,8 +329,9 @@ async function fetchNacional() {
 }
 
 async function fetchTotales() {
+  // tipoFiltro=eleccion da el total nacional de actas (confirmado via XHR intercept 7J)
   const data = await g(
-    `resumen-general/totales?idEleccion=${ID_ELECCION}&idAmbitoGeografico=${AMBITO_NAC}&tipoFiltro=nacional`
+    `resumen-general/totales?idEleccion=${ID_ELECCION}&tipoFiltro=eleccion`
   );
   if (!data) return null;
   return {
