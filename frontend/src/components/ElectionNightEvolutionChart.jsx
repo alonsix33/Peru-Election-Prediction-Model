@@ -4,10 +4,10 @@ import {
   Chart as ChartJS,
   CategoryScale, LinearScale,
   PointElement, LineElement,
-  Tooltip, Legend, Filler,
+  Tooltip, Legend,
 } from 'chart.js';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
 const KF_COLOR  = '#F97316';
 const RSP_COLOR = '#16A34A';
@@ -19,39 +19,14 @@ export default function ElectionNightEvolutionChart({ history }) {
     const sorted = [...history].sort((a, b) => (a.pct_actas ?? 0) - (b.pct_actas ?? 0));
 
     const labels   = sorted.map(h => `${(h.pct_actas ?? 0).toFixed(1)}%`);
-    const obsKf    = sorted.map(h => h.obs_kf_r2_share  != null ? +h.obs_kf_r2_share.toFixed(2)         : null);
-    const obsRsp   = sorted.map(h => h.obs_kf_r2_share  != null ? +(100 - h.obs_kf_r2_share).toFixed(2) : null);
-    const projKf   = sorted.map(h => h.proj_kf_r2_share != null ? +h.proj_kf_r2_share.toFixed(2)        : null);
-    const projRsp  = sorted.map(h => h.proj_kf_r2_share != null ? +(100 - h.proj_kf_r2_share).toFixed(2): null);
-    const ciHi     = sorted.map(h => h.ci95_hi != null ? +h.ci95_hi.toFixed(2) : null);
-    const ciLo     = sorted.map(h => h.ci95_lo != null ? +h.ci95_lo.toFixed(2) : null);
+    const obsKf    = sorted.map(h => h.obs_kf_r2_share  != null ? +h.obs_kf_r2_share.toFixed(2)          : null);
+    const obsRsp   = sorted.map(h => h.obs_kf_r2_share  != null ? +(100 - h.obs_kf_r2_share).toFixed(2)  : null);
+    const projKf   = sorted.map(h => h.proj_kf_r2_share != null ? +h.proj_kf_r2_share.toFixed(2)         : null);
+    const projRsp  = sorted.map(h => h.proj_kf_r2_share != null ? +(100 - h.proj_kf_r2_share).toFixed(2) : null);
 
     return {
       labels,
       datasets: [
-        // CI band rendered behind everything else
-        {
-          label: 'IC 95% KF',
-          data: ciHi,
-          borderColor: 'transparent',
-          backgroundColor: KF_COLOR + '22',
-          pointRadius: 0,
-          fill: '+1',
-          tension: 0.3,
-          spanGaps: true,
-          order: 10,
-        },
-        {
-          label: '_ci_lo',
-          data: ciLo,
-          borderColor: 'transparent',
-          backgroundColor: 'transparent',
-          pointRadius: 0,
-          fill: false,
-          tension: 0.3,
-          spanGaps: true,
-          order: 10,
-        },
         // Observed (solid)
         {
           label: 'KF observado',
@@ -125,11 +100,9 @@ export default function ElectionNightEvolutionChart({ history }) {
 
   const allVals = history.flatMap(h => [
     h.obs_kf_r2_share,
-    h.obs_kf_r2_share != null ? 100 - h.obs_kf_r2_share : null,
+    h.obs_kf_r2_share  != null ? 100 - h.obs_kf_r2_share  : null,
     h.proj_kf_r2_share,
     h.proj_kf_r2_share != null ? 100 - h.proj_kf_r2_share : null,
-    h.ci95_hi,
-    h.ci95_lo,
   ]).filter(v => v != null);
 
   const yMin = Math.max(0,   Math.floor(Math.min(...allVals) - 3));
