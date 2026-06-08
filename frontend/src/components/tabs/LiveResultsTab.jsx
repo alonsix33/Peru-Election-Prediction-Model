@@ -471,26 +471,33 @@ function PaisesTable({ paises }) {
     );
   }
 
-  const rows = [...paises].map(p => ({
-    ...p,
-    nombre:    PAIS_INFO[p.ubigeo]?.nombre    ?? p.ubigeo,
-    continente: PAIS_INFO[p.ubigeo]?.continente ?? '—',
-    total:     (p.keiko_votos ?? 0) + (p.sanchez_votos ?? 0),
-    kf_share:  (p.keiko_votos ?? 0) + (p.sanchez_votos ?? 0) > 0
-      ? (p.keiko_votos ?? 0) / ((p.keiko_votos ?? 0) + (p.sanchez_votos ?? 0)) * 100
-      : null,
-  })).sort((a, b) => {
-    if (sortBy === 'votos')  return b.total - a.total;
-    if (sortBy === 'kf')     return (b.kf_share ?? 0) - (a.kf_share ?? 0);
-    if (sortBy === 'rsp')    return (a.kf_share ?? 100) - (b.kf_share ?? 100);
-    if (sortBy === 'cont')   return a.continente.localeCompare(b.continente) || a.nombre.localeCompare(b.nombre);
+  const rows = [...paises].map(p => {
+    const kf  = p.keiko_votos  ?? 0;
+    const rsp = p.sanchez_votos ?? 0;
+    const tot = kf + rsp;
+    return {
+      ...p,
+      nombre:     PAIS_INFO[p.ubigeo]?.nombre     ?? p.ubigeo,
+      continente: PAIS_INFO[p.ubigeo]?.continente ?? '—',
+      total:      tot,
+      kf_share:   tot > 0 ? kf / tot * 100 : null,
+      rsp_share:  tot > 0 ? rsp / tot * 100 : null,
+    };
+  }).sort((a, b) => {
+    if (sortBy === 'votos') return b.total - a.total;
+    if (sortBy === 'kf')    return (b.kf_share ?? 0) - (a.kf_share ?? 0);
+    if (sortBy === 'rsp')   return (b.rsp_share ?? 0) - (a.rsp_share ?? 0);
+    if (sortBy === 'pct')   return (b.pct_actas ?? -1) - (a.pct_actas ?? -1);
+    if (sortBy === 'cont')  return a.continente.localeCompare(b.continente) || a.nombre.localeCompare(b.nombre);
     return a.nombre.localeCompare(b.nombre);
   });
 
   const totKf  = paises.reduce((s, p) => s + (p.keiko_votos  ?? 0), 0);
   const totRsp = paises.reduce((s, p) => s + (p.sanchez_votos ?? 0), 0);
   const totAll = totKf + totRsp;
-  const totKfPct = totAll > 0 ? (totKf / totAll * 100).toFixed(2) : null;
+  const totKfPct  = totAll > 0 ? (totKf  / totAll * 100).toFixed(2) : null;
+  const totRspPct = totAll > 0 ? (totRsp / totAll * 100).toFixed(2) : null;
+  const hasPct    = paises.some(p => p.pct_actas != null);
 
   const colBtn = (key, label) => (
     <button onClick={() => setSortBy(key)} style={{
@@ -509,7 +516,7 @@ function PaisesTable({ paises }) {
           {paises.length} / 77 países &nbsp;·&nbsp;
           <span style={{ color: KEIKO_COLOR }}>{totKfPct}% KF</span>
           &nbsp;/&nbsp;
-          <span style={{ color: SANCHEZ_COLOR }}>{totAll > 0 ? (100 - +totKfPct).toFixed(2) : '—'}% RSP</span>
+          <span style={{ color: SANCHEZ_COLOR }}>{totRspPct ?? '—'}% RSP</span>
           &nbsp;·&nbsp;
           <span style={{ color: '#78716C', fontWeight: 400 }}>{totAll.toLocaleString()} votos válidos</span>
         </span>
@@ -518,6 +525,7 @@ function PaisesTable({ paises }) {
           {colBtn('votos', 'Más votos')}
           {colBtn('kf',    'Mayor KF%')}
           {colBtn('rsp',   'Mayor RSP%')}
+          {hasPct && colBtn('pct', '% contado')}
           {colBtn('cont',  'Continente')}
           {colBtn('nombre','A-Z')}
         </div>
@@ -528,29 +536,46 @@ function PaisesTable({ paises }) {
             <tr style={{ borderBottom: '2px solid #E5E0D8' }}>
               <th style={{ textAlign: 'left',  padding: '5px 8px', color: '#78716C', fontWeight: 600 }}>País</th>
               <th style={{ textAlign: 'left',  padding: '5px 8px', color: '#78716C', fontWeight: 600 }}>Continente</th>
+              {hasPct && <th style={{ textAlign: 'right', padding: '5px 8px', color: '#78716C', fontWeight: 600 }}>% contado</th>}
               <th style={{ textAlign: 'right', padding: '5px 8px', color: KEIKO_COLOR,   fontWeight: 600 }}>KF votos</th>
               <th style={{ textAlign: 'right', padding: '5px 8px', color: SANCHEZ_COLOR, fontWeight: 600 }}>RSP votos</th>
-              <th style={{ textAlign: 'right', padding: '5px 8px', color: '#78716C', fontWeight: 600 }}>KF%</th>
-              <th style={{ textAlign: 'right', padding: '5px 8px', color: '#78716C', fontWeight: 600 }}>Margen</th>
+              <th style={{ textAlign: 'right', padding: '5px 8px', color: KEIKO_COLOR,   fontWeight: 600 }}>KF%</th>
+              <th style={{ textAlign: 'right', padding: '5px 8px', color: SANCHEZ_COLOR, fontWeight: 600 }}>RSP%</th>
+              <th style={{ textAlign: 'right', padding: '5px 8px', color: '#78716C',     fontWeight: 600 }}>Margen</th>
             </tr>
           </thead>
           <tbody>
             {rows.map(row => {
-              const kfLeads  = row.kf_share != null && row.kf_share >= 50;
-              const rspShare = row.kf_share != null ? 100 - row.kf_share : null;
-              const margin   = row.kf_share != null ? Math.abs(row.kf_share - 50) * 2 : null;
+              const kfLeads = row.kf_share != null && row.kf_share >= 50;
+              const margin  = row.kf_share != null ? Math.abs(row.kf_share - 50) * 2 : null;
+              const pct     = row.pct_actas;
               return (
                 <tr key={row.ubigeo} style={{ borderBottom: '1px solid #F0EDE8' }}>
                   <td style={{ padding: '7px 8px', color: '#1C1917', fontWeight: 600 }}>{row.nombre}</td>
                   <td style={{ padding: '7px 8px', color: '#A8A29E', fontSize: 11 }}>{row.continente}</td>
+                  {hasPct && (
+                    <td style={{ padding: '7px 8px', textAlign: 'right' }}>
+                      {pct != null ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>
+                          <div style={{ width: 32, height: 4, borderRadius: 2, background: '#E5E0D8', overflow: 'hidden' }}>
+                            <div style={{ width: `${pct}%`, height: '100%', background: pct >= 100 ? '#16A34A' : '#D97706', borderRadius: 2 }} />
+                          </div>
+                          <span style={{ color: '#78716C', fontVariantNumeric: 'tabular-nums' }}>{pct.toFixed(0)}%</span>
+                        </div>
+                      ) : <span style={{ color: '#D1C9C0' }}>—</span>}
+                    </td>
+                  )}
                   <td style={{ padding: '7px 8px', textAlign: 'right', color: kfLeads ? KEIKO_COLOR : '#A8A29E', fontWeight: kfLeads ? 700 : 400, fontVariantNumeric: 'tabular-nums' }}>
                     {(row.keiko_votos ?? 0).toLocaleString()}
                   </td>
                   <td style={{ padding: '7px 8px', textAlign: 'right', color: !kfLeads ? SANCHEZ_COLOR : '#A8A29E', fontWeight: !kfLeads ? 700 : 400, fontVariantNumeric: 'tabular-nums' }}>
                     {(row.sanchez_votos ?? 0).toLocaleString()}
                   </td>
-                  <td style={{ padding: '7px 8px', textAlign: 'right', color: kfLeads ? KEIKO_COLOR : SANCHEZ_COLOR, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                  <td style={{ padding: '7px 8px', textAlign: 'right', color: kfLeads ? KEIKO_COLOR : '#A8A29E', fontWeight: kfLeads ? 700 : 400, fontVariantNumeric: 'tabular-nums' }}>
                     {row.kf_share != null ? row.kf_share.toFixed(1) + '%' : '—'}
+                  </td>
+                  <td style={{ padding: '7px 8px', textAlign: 'right', color: !kfLeads ? SANCHEZ_COLOR : '#A8A29E', fontWeight: !kfLeads ? 700 : 400, fontVariantNumeric: 'tabular-nums' }}>
+                    {row.rsp_share != null ? row.rsp_share.toFixed(1) + '%' : '—'}
                   </td>
                   <td style={{ padding: '7px 8px', textAlign: 'right', color: kfLeads ? KEIKO_COLOR : SANCHEZ_COLOR, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
                     {margin != null ? `${kfLeads ? 'K' : 'S'}+${margin.toFixed(1)}` : '—'}
