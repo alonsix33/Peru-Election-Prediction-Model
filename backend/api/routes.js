@@ -1106,6 +1106,8 @@ router.get('/live-projection', async (req, res) => {
 
       shift_granularity: r.shift_granularity,
 
+      pais_breakdown: snapshot.pais_breakdown || [],
+
       history: projHistory.map(h => ({
         time:             h.projected_at,
         pct_actas:        pf(h.pct_actas),
