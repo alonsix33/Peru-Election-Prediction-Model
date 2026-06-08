@@ -580,6 +580,34 @@ function stopONPE() {
   console.log('🛑 ONPE bookmarklet stopped.');
 }
 
+// ── copySnapshot() — copia el último snapshot a clipboard para análisis ──
+window.copySnapshot = async function() {
+  console.log('📋 Recolectando snapshot...');
+  try {
+    const snap = await buildSnapshot();
+    const compact = {
+      pct_actas:    snap.pct_actas,
+      keiko_pct:    snap.keiko_pct,
+      sanchez_pct:  snap.sanchez_pct,
+      keiko_votos:  snap.keiko_votos,
+      sanchez_votos: snap.sanchez_votos,
+      actas_total:  snap.actas_total,
+      actas_processed: snap.actas_processed,
+      dept_breakdown: snap.dept_breakdown.map(d => ({
+        nombre: d.nombre, ubigeo: d.ubigeo,
+        kf: d.keiko_votos, rsp: d.sanchez_votos,
+        pct: d.pct_actas,
+      })),
+    };
+    const txt = JSON.stringify(compact, null, 2);
+    await navigator.clipboard.writeText(txt);
+    console.log(`📋 ✅ Copiado al clipboard (${snap.dept_breakdown.length} depts, ${snap.pct_actas?.toFixed(1)}% actas)`);
+    console.log(txt);
+  } catch(e) {
+    console.error('📋 Error:', e.message);
+  }
+};
+
 startONPE();
 
 /*
