@@ -215,7 +215,7 @@ export default function ElectionNightEvolutionChart({ history }) {
         }}>
           Evolución del conteo · Observado vs Proyectado
         </div>
-        <div style={{ display: 'flex', gap: 4 }}>
+        <div style={{ display: 'flex', background: '#F7F4EF', borderRadius: 8, padding: 3, gap: 2 }}>
           {TIME_WINDOWS.map(({ label, value }) => {
             const active = timeWindow === value;
             return (
@@ -223,16 +223,16 @@ export default function ElectionNightEvolutionChart({ history }) {
                 key={label}
                 onClick={() => setTimeWindow(value)}
                 style={{
-                  padding: '3px 9px',
+                  background: active ? '#FFFFFF' : 'transparent',
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  padding: '4px 10px',
                   fontSize: 11,
                   fontWeight: active ? 600 : 400,
-                  borderRadius: 20,
-                  border: active ? '1px solid #F97316' : '1px solid #E5E0D8',
-                  background: active ? '#FFF7ED' : '#FAFAF9',
-                  color: active ? '#C2410C' : '#78716C',
-                  cursor: 'pointer',
+                  color: active ? '#1C1917' : '#78716C',
+                  boxShadow: active ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                   transition: 'all 0.15s',
-                  lineHeight: 1.4,
                 }}
               >
                 {label}
