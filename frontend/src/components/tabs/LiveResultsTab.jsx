@@ -112,7 +112,7 @@ function StatusBar({ pct_actas, snapshot_ts, isDemo, shiftGranularity }) {
 function CandidateCards({ kf_r2_share, proj_kf_r2_share, ci_low, ci_high, kf_votos, rsp_votos, isDemo }) {
   const rsp_r2_share  = kf_r2_share  != null ? 100 - kf_r2_share  : null;
   const proj_rsp      = proj_kf_r2_share != null ? 100 - proj_kf_r2_share : null;
-  const kfLeads       = kf_r2_share >= 50;
+  const kfLeads       = (proj_kf_r2_share ?? kf_r2_share) >= 50;
 
   const fmtVotos = (v) => v != null ? v.toLocaleString('es-PE') : null;
 
@@ -472,7 +472,7 @@ function DeptTable({ deptData, extranjero, isDemo }) {
     ...Object.values(deptData),
     ...(extRow ? [extRow] : []),
   ].sort((a, b) => {
-    if (sortBy === 'pct_actas') return (a.pct_actas ?? 100) - (b.pct_actas ?? 100);
+    if (sortBy === 'pct_actas') return (a.pct_actas ?? 0) - (b.pct_actas ?? 0);
     if (sortBy === 'margin')    return Math.abs((b.kf_r2_share ?? 50) - 50) - Math.abs((a.kf_r2_share ?? 50) - 50);
     return a.nombre.localeCompare(b.nombre);
   });
@@ -512,20 +512,20 @@ function DeptTable({ deptData, extranjero, isDemo }) {
               const rspShare = share != null ? 100 - share : null;
               const margin   = share != null ? Math.abs(share - rspShare).toFixed(1) : null;
               const kfLeads  = share != null && share >= 50;
-              const pct      = dept.pct_actas ?? 100;
+              const pct      = dept.pct_actas ?? null;
               return (
                 <tr key={dept.ubigeo} style={{ borderBottom: '1px solid #F0EDE8', background: dept.isExtranjero ? '#F7F4EF' : undefined }}>
                   <td style={{ padding: '7px 8px', color: dept.isExtranjero ? '#78716C' : '#1C1917', fontWeight: 600, fontStyle: dept.isExtranjero ? 'italic' : 'normal' }}>
                     {dept.nombre}
                     {dept.subLabel && <span style={{ color: '#A8A29E', fontSize: 10, marginLeft: 5, fontWeight: 400, fontStyle: 'normal' }}>{dept.subLabel}</span>}
-                    {!dept.isExtranjero && pct < 100 && <span style={{ color: '#D97706', fontSize: 10, marginLeft: 5, fontWeight: 400 }}>⏳ {(100 - pct).toFixed(0)}% falta</span>}
+                    {!dept.isExtranjero && pct != null && pct < 100 && <span style={{ color: '#D97706', fontSize: 10, marginLeft: 5, fontWeight: 400 }}>⏳ {(100 - pct).toFixed(0)}% falta</span>}
                   </td>
                   <td style={{ padding: '7px 8px', textAlign: 'right' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>
                       <div style={{ width: 40, height: 4, borderRadius: 2, background: '#E5E0D8', overflow: 'hidden' }}>
-                        <div style={{ width: `${pct}%`, height: '100%', background: pct === 100 ? '#16A34A' : '#D97706', borderRadius: 2 }} />
+                        <div style={{ width: `${pct ?? 0}%`, height: '100%', background: (pct ?? 0) >= 100 ? '#16A34A' : '#D97706', borderRadius: 2 }} />
                       </div>
-                      <span style={{ color: '#78716C', fontVariantNumeric: 'tabular-nums' }}>{pct.toFixed(0)}%</span>
+                      <span style={{ color: '#78716C', fontVariantNumeric: 'tabular-nums' }}>{pct != null ? pct.toFixed(0) + '%' : '—'}</span>
                     </div>
                   </td>
                   <td style={{ padding: '7px 8px', textAlign: 'right', color: kfLeads ? KEIKO_COLOR : '#A8A29E', fontWeight: kfLeads ? 700 : 400, fontVariantNumeric: 'tabular-nums' }}>

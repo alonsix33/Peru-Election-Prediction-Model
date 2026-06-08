@@ -358,9 +358,11 @@ async function fetchDepartamentos() {
     ]);
     const pair = extractPair(data);
     if (!pair) return null;
-    const pct_actas       = tot?.porcentajeActas ?? tot?.pct_actas ?? tot?.porcentaje ?? null;
-    const actas_procesadas = tot?.actasProcesadas ?? tot?.actasContabilizadas ?? null;
+    const actas_procesadas = tot?.actasProcesadas ?? null;
     const actas_total      = tot?.actasTotal ?? tot?.totalActas ?? null;
+    let pct_actas = tot?.porcentajeActas ?? tot?.pct_actas ?? tot?.porcentaje ?? tot?.actasContabilizadas ?? null;
+    if (pct_actas === null && actas_procesadas != null && actas_total != null && actas_total > 0)
+      pct_actas = parseFloat((actas_procesadas / actas_total * 100).toFixed(2));
     return { nombre: dept.nombre, ubigeo: dept.ubigeo, ...pair, pct_actas, actas_procesadas, actas_total };
   }));
   return results.filter(Boolean);
