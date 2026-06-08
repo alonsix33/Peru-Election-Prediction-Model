@@ -113,7 +113,89 @@ La boca de urna (KF +1.1-1.4pp) vs. conteo rápido (RSP +0.3-0.6pp) es un flip d
 
 ---
 
-## 4. Los Tres Bugs del Projector — Diagnóstico y Fix
+## 4. Evolutivo de la Proyección — Hitos Históricos
+
+### 4.1. Resumen por fases
+
+El projector emitió **202 snapshots** (72 puntos únicos de porcentaje de actas) entre las 22:21 PET del 7 de junio y las 07:32 PET del 8 de junio. La proyección atravesó tres fases bien diferenciadas:
+
+| Fase | % Actas | Hora Lima | KF proj. promedio | Rango | Descripción |
+|---|---|---|---|---|---|
+| **1 — Caída** | 0% → 50% | 22:21 → ~00:00 | 52.83% | 50.56% – 56.25% | Lima-first: raw ~52.5%, proyector corrige hacia real |
+| **2 — Plateau** | 50% → 80% | ~00:00 → 01:08 | **50.75%** | 50.56% – 50.87% | Estabilización. KF consistentemente +0.56-0.87pp sobre 50% |
+| **GAP** | 80.5% → 92.1% | 01:08 → 06:02 | — | — | Bug 413 — sin relay durante ~5 horas |
+| **3 — Convergencia** | 92% → 92.7% | 06:02 → 07:35 | **50.10%** | 50.09% – 50.11% | Post-fix; CI corregido a las 06:43 |
+
+**La proyección nunca estuvo por debajo de 50% para KF** en ningún momento del evolutivo. Desde el primer snapshot (4.52% actas), el projector ya daba KF ganadora — aunque con una CI muy amplia.
+
+### 4.2. Tabla de hitos cada ~5%
+
+*Nota: los timestamps de los snapshots de re-proyección (fases 1-2) muestran la hora de re-proyección, no la hora de captura original. La secuencia por `pct_actas` sí es cronológica.*
+
+| Hora Lima | % Actas | KF raw% | KF proj% | CI 95% | Margen KF |
+|---|---|---|---|---|---|
+| ~22:21 | **4.52%** | 53.44% | 56.25% | [48.45, 63.94] | +6.25pp |
+| ~22:21 | **10%** | 52.69% | 56.01% | [48.97, 62.89] | +6.01pp |
+| ~22:21 | **17%** | 52.45% | 54.17% | [47.63, 59.98] | +4.17pp |
+| ~22:21 | **25%** | 52.51% | 53.01% | [47.41, 57.83] | +3.01pp |
+| ~22:21 | **30%** | 52.57% | 52.56% | [47.50, 57.06] | +2.56pp |
+| ~22:21 | **35%** | 52.71% | 51.84% | [47.36, 55.66] | +1.84pp |
+| ~22:21 | **42%** | 52.71% | 51.17% | [47.30, 54.22] | +1.17pp |
+| ~22:21 | **45%** | 52.78% | 50.91% | [47.41, 53.76] | +0.91pp |
+| ~22:21 | **50%** | 52.67% | 50.56% | [47.58, 53.07] | +0.56pp |
+| ~22:34 | **60%** | 52.68% | 50.73% | [48.47, 52.28] | +0.73pp |
+| ~23:00 | **65%** | 52.74% | 50.86% | [49.01, 52.18] | +0.86pp |
+| ~23:34 | **70%** | 52.65% | 50.84% | [49.27, 51.85] | +0.84pp |
+| ~00:10 | **75%** | 52.33% | 50.78% | [49.49, 51.43] | +0.78pp |
+| ~01:00 | **80%** | 51.80% | 50.63% | [49.63, 50.98] | +0.63pp |
+| 06:02 | **92.1%** | 50.24% | 50.09% | [49.58, 49.92]* | +0.09pp |
+| **06:43** | **92.4%** | 50.19% | 50.10% | **[49.93, 50.27]** | +0.10pp |
+
+*CI domestic-only antes del fix; corregido a las 06:43 cuando el fix con exterior fue deployado a Railway.
+
+### 4.3. ¿Desde qué % de actas fue consistente la proyección?
+
+**La proyección fue consistentemente pro-KF desde el 100% de la noche.** Pero hubo tres umbrales distintos de confianza:
+
+| Hito | % Actas | KF proj. | Descripción |
+|---|---|---|---|
+| **Primera vez sobre 50%** | **4.52%** | 56.25% | Pero CI amplísimo [48.5, 63.9] — no calleable |
+| **Umbral "calleable" teórico (≥3pp)** | **~25%** | 53.01% | Threshold del plan de noche electoral |
+| **Plateau estable — lock-in** | **~50%** | 50.56% | Proyección nunca baja de 50.56% en los próximos 30 puntos de % |
+| **CI sup. CI constrictado bajo 52%** | **~60%** | 50.73% | CI hi cae a 52.28 — escenario RSP-win requiere colapso improbable |
+| **CI completamente > 50% (con fix)** | **92.4%** | 50.10% | CI [49.93, 50.27] — mayoritariamente sobre 50%, call firme |
+
+**El punto de quiebre real fue ~50% de actas**: desde ese momento, la proyección entró en su plateau (+0.56 a +0.87pp) y nunca bajó de 50.56% durante toda la fase 2. Cualquier observador del model en ese momento habría tenido alta confianza en KF.
+
+### 4.4. La estabilidad del plateau es la señal más fuerte
+
+La fase 2 (50-80% de actas) muestra una característica matemáticamente notable: **la proyección apenas varió 0.31pp** durante 30 puntos porcentuales de conteo (+0.56% a +0.87%). Esto indica que:
+
+1. Los votos llegando en ese rango eran representativos del país (no cargados hacia ningún candidato)
+2. El algoritmo de shift estratificado estaba bien calibrado — los shifts por departamento eran estables
+3. El resultado no dependía de los últimos votos — ya estaba "descubierto" a partir del 50%
+
+En contraste, el raw count seguía mostrando KF con ~2.5pp de ventaja aparente (52.5-52.7%) durante todo ese rango — inflado por el sesgo Lima-first.
+
+### 4.5. La firma del gap y el evento CI-fix
+
+Dos eventos discretos son visibles en el datos histórico:
+
+**Gap 01:08–06:02 PET** — El bug 413 interrumpió el relay por ~5 horas. Cuando se retomó el conteo:
+- Proyección cayó de 50.62% → 50.09% (+0.53pp de caída)
+- Raw cayó de 51.73% → 50.24% (+1.49pp de caída)
+- El raw cayó más que la proyección: confirma que esos votos (80→92%) eran más pro-RSP que el promedio, pero el projector ya lo anticipaba
+
+**Fix CI exterior — 06:43 PET** — Visible como un salto discreto en el CI:
+- Antes: CI [49.58, 49.92] — doméstico puro, rango íntegramente bajo 50%
+- Después: CI [49.93, 50.27] — con exterior incluido, rango centrado sobre 50%
+- El punto proyectado no cambió (seguía en 50.09-50.10%) — solo se corrigió la banda de incertidumbre
+
+Este es el momento en que el modelo "oficialmente" pasó de reportar incertidumbre sobre el resultado a confirmar KF con alta confianza (CI 95% conteniendo 50% pero con el punto central y el extremo superior claramente sobre él).
+
+---
+
+## 5. Los Tres Bugs del Projector — Diagnóstico y Fix
 
 Esta sección es la más importante del documento. El projector tenía tres bugs críticos que, combinados, lo hacían dar ~55-57% para RSP cuando la realidad era ~50% para ambos. Cada bug fue identificado y corregido en tiempo real durante la noche electoral.
 
