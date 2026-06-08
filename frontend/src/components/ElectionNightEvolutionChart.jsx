@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -12,11 +12,30 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 const KF_COLOR  = '#F97316';
 const RSP_COLOR = '#16A34A';
 
-export default function ElectionNightEvolutionChart({ history }) {
-  const { labels, datasets } = useMemo(() => {
-    if (!history?.length) return { labels: [], datasets: [] };
+const TIME_WINDOWS = [
+  { label: 'Todo', value: null },
+  { label: '10h',  value: 10   },
+  { label: '5h',   value: 5    },
+  { label: '3h',   value: 3    },
+  { label: '1h',   value: 1    },
+];
 
-    const sorted = [...history].sort((a, b) => (a.pct_actas ?? 0) - (b.pct_actas ?? 0));
+export default function ElectionNightEvolutionChart({ history }) {
+  const [timeWindow, setTimeWindow] = useState(null);
+
+  const filtered = useMemo(() => {
+    if (!history?.length) return history;
+    if (timeWindow == null) return history;
+    const times  = history.map(h => h.time ? new Date(h.time).getTime() : 0);
+    const latest = Math.max(...times);
+    const cutoff = latest - timeWindow * 60 * 60 * 1000;
+    return history.filter(h => h.time && new Date(h.time).getTime() >= cutoff);
+  }, [history, timeWindow]);
+
+  const { labels, datasets } = useMemo(() => {
+    if (!filtered?.length) return { labels: [], datasets: [] };
+
+    const sorted = [...filtered].sort((a, b) => (a.pct_actas ?? 0) - (b.pct_actas ?? 0));
 
     const labels   = sorted.map(h => `${(h.pct_actas ?? 0).toFixed(1)}%`);
     const obsKf    = sorted.map(h => h.obs_kf_r2_share  != null ? +h.obs_kf_r2_share.toFixed(2)          : null);
@@ -85,7 +104,7 @@ export default function ElectionNightEvolutionChart({ history }) {
         },
       ],
     };
-  }, [history]);
+  }, [filtered]);
 
   if (!history?.length) {
     return (
@@ -98,7 +117,7 @@ export default function ElectionNightEvolutionChart({ history }) {
     );
   }
 
-  const allVals = history.flatMap(h => [
+  const allVals = (filtered ?? []).flatMap(h => [
     h.obs_kf_r2_share,
     h.obs_kf_r2_share  != null ? 100 - h.obs_kf_r2_share  : null,
     h.proj_kf_r2_share,
@@ -189,12 +208,38 @@ export default function ElectionNightEvolutionChart({ history }) {
       borderRadius: 14,
       padding: '20px 16px 16px',
     }}>
-      <div style={{
-        color: '#8C877F', fontSize: 11,
-        textTransform: 'uppercase', letterSpacing: '0.06em',
-        marginBottom: 12,
-      }}>
-        Evolución del conteo · Observado vs Proyectado
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div style={{
+          color: '#8C877F', fontSize: 11,
+          textTransform: 'uppercase', letterSpacing: '0.06em',
+        }}>
+          Evolución del conteo · Observado vs Proyectado
+        </div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {TIME_WINDOWS.map(({ label, value }) => {
+            const active = timeWindow === value;
+            return (
+              <button
+                key={label}
+                onClick={() => setTimeWindow(value)}
+                style={{
+                  padding: '3px 9px',
+                  fontSize: 11,
+                  fontWeight: active ? 600 : 400,
+                  borderRadius: 20,
+                  border: active ? '1px solid #F97316' : '1px solid #E5E0D8',
+                  background: active ? '#FFF7ED' : '#FAFAF9',
+                  color: active ? '#C2410C' : '#78716C',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  lineHeight: 1.4,
+                }}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
       </div>
       <div style={{ height: 260 }}>
         <Line data={{ labels, datasets }} options={options} />
