@@ -461,18 +461,16 @@ function project(snapshot) {
     const reported_pair = d ? (d.keiko_votos || 0) + (d.sanchez_votos || 0) : 0;
     const remaining_vv = Math.max(0, r1_vv - reported_pair);
     if (remaining_vv < 50) continue;
-    // Mixture formula: blend observed dept rate with nat-adjusted baseline.
-    // w ramps from 0→1 as dept goes from 0%→45% counted, reducing sierra
-    // within-dept bias (pro-RSP districts report first → shifts are too negative early).
-    const observed_rate = reported_pair > 0
-      ? 100 * ((d?.keiko_votos || 0) / reported_pair)
-      : r1.kf_r2_share;
-    const dept_pct = (d?.pct_actas != null && d.pct_actas > 0) ? d.pct_actas : pct;
-    const w = Math.min(1.0, dept_pct / 45);
-    const nat_adjusted = _clamp(r1.kf_r2_share + national_shift, 0, 100);
-    const projected_rate = _clamp(observed_rate * w + nat_adjusted * (1 - w), 0, 100);
+    // Dampen dept-specific shift by dept coverage to reduce within-dept reporting bias.
+    // Sierra pro-RSP districts report before pro-KF ones → early dept shift is too negative.
+    // Ramp trust from 0 (R1 baseline) at 0% dept coverage to 1.0 at 50%+ coverage.
+    // Do NOT fall back to national_shift — it is Lima-contaminated at early counts.
+    const dept_pct = (d?.pct_actas != null && d.pct_actas > 0) ? d.pct_actas : 0;
+    const raw_shift = deptShiftMap.get(ubigeo) ?? 0;
+    const trust = Math.min(1.0, dept_pct / 50);
+    const effective_shift = raw_shift * trust;
     _da_sum_vv += remaining_vv;
-    _da_sum_kf += remaining_vv * projected_rate;
+    _da_sum_kf += remaining_vv * _clamp(r1.kf_r2_share + effective_shift, 0, 100);
   }
 
   // ── Projected kf_r2_share for remaining strata ───────────────────────────
