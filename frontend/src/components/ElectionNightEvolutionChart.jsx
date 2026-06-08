@@ -134,9 +134,9 @@ export default function ElectionNightEvolutionChart({ history }) {
 
   const dataMin   = Math.min(...allVals);
   const dataMax   = Math.max(...allVals);
-  const padding   = Math.max(0.5, (dataMax - dataMin) * 0.5);
-  const yMin = Math.max(0,   Math.floor((dataMin - padding) * 10) / 10);
-  const yMax = Math.min(100, Math.ceil ((dataMax + padding) * 10) / 10);
+  const padding   = Math.max(0.05, (dataMax - dataMin) * 0.2);
+  const yMin = Math.max(0,   Math.floor((dataMin - padding) * 100) / 100);
+  const yMax = Math.min(100, Math.ceil ((dataMax + padding) * 100) / 100);
 
   const options = {
     responsive: true,
@@ -206,7 +206,7 @@ export default function ElectionNightEvolutionChart({ history }) {
         ticks: {
           color: '#78716C',
           font: { size: 11 },
-          callback: v => `${v}%`,
+          callback: v => `${(+v.toFixed(2))}%`,
         },
         title: {
           display: true,
