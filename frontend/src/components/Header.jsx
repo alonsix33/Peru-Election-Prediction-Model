@@ -113,11 +113,6 @@ export default function Header({ status, predictions }) {
             }}>{'\u03B1'} {(alpha * 100).toFixed(1)}%</span>
           )}
 
-          <span style={{
-            width: 8, height: 8, borderRadius: '50%', background: updatedDotColor,
-            display: 'inline-block',
-            boxShadow: updatedDotColor === '#059669' ? `0 0 6px ${updatedDotColor}` : 'none',
-          }} />
         </div>
       </div>
     </header>
