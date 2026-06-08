@@ -1052,12 +1052,20 @@ router.get('/live-projection', async (req, res) => {
         kf_votos:    domKf,
         rsp_votos:   domRsp,
       },
-      extranjero: {
-        kf_r2_share: r.exterior?.obs_kf_r2_share ?? null,
-        kf_votos:    extKf,
-        rsp_votos:   extRsp,
-        pct_actas:   (extKf > 0 || extRsp > 0) ? 100 : null,
-      },
+      extranjero: (() => {
+        const extReported  = extKf + extRsp;
+        const extRemaining = r.exterior?.remaining_vv_est ?? 0;
+        const extTotal     = extReported + extRemaining;
+        const extPct       = extTotal > 0 && extReported > 0
+          ? Math.round(extReported / extTotal * 1000) / 10   // one decimal
+          : (extReported > 0 ? 100 : null);
+        return {
+          kf_r2_share: r.exterior?.obs_kf_r2_share ?? null,
+          kf_votos:    extKf,
+          rsp_votos:   extRsp,
+          pct_actas:   extPct,
+        };
+      })(),
 
       // Department array for map + table (includes vote counts for sorting)
       departments: (r.dept_shifts || []).map(d => ({
