@@ -1040,7 +1040,7 @@ router.get('/live-projection', async (req, res) => {
         kf_r2_share: r.exterior?.obs_kf_r2_share ?? null,
         kf_votos:    extKf,
         rsp_votos:   extRsp,
-        pct_actas:   100,
+        pct_actas:   (extKf > 0 || extRsp > 0) ? 100 : null,
       },
 
       // Department array for map + table (includes vote counts for sorting)

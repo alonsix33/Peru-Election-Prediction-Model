@@ -464,7 +464,7 @@ function DeptTable({ deptData, extranjero, isDemo }) {
   const extRow = extranjero ? {
     ubigeo: 'EXT', nombre: 'Extranjero',
     kf_r2_share: extranjero.kf_r2_share,
-    pct_actas:   extranjero.pct_actas ?? 100,
+    pct_actas:   extranjero.pct_actas ?? null,
     isExtranjero: true, subLabel: '77 países',
   } : null;
 
