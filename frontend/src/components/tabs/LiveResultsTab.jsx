@@ -511,7 +511,16 @@ function PaisesTable({ paises }) {
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: 16, marginBottom: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ color: '#8C877F', fontSize: 11 }}>Ordenar:</span>
+        {colBtn('votos', 'Más votos')}
+        {colBtn('kf',    'Mayor KF%')}
+        {colBtn('rsp',   'Mayor RSP%')}
+        {hasPct && colBtn('pct', '% contado')}
+        {colBtn('cont',  'Continente')}
+        {colBtn('nombre','A-Z')}
+      </div>
+      <div style={{ marginBottom: 10 }}>
         <span style={{ color: '#1C1917', fontSize: 12, fontWeight: 600 }}>
           {paises.length} / 77 países &nbsp;·&nbsp;
           <span style={{ color: KEIKO_COLOR }}>{totKfPct}% KF</span>
@@ -520,15 +529,6 @@ function PaisesTable({ paises }) {
           &nbsp;·&nbsp;
           <span style={{ color: '#78716C', fontWeight: 400 }}>{totAll.toLocaleString()} votos válidos</span>
         </span>
-        <div style={{ display: 'flex', gap: 10, marginLeft: 'auto', alignItems: 'center' }}>
-          <span style={{ color: '#8C877F', fontSize: 11 }}>Ordenar:</span>
-          {colBtn('votos', 'Más votos')}
-          {colBtn('kf',    'Mayor KF%')}
-          {colBtn('rsp',   'Mayor RSP%')}
-          {hasPct && colBtn('pct', '% contado')}
-          {colBtn('cont',  'Continente')}
-          {colBtn('nombre','A-Z')}
-        </div>
       </div>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
@@ -853,12 +853,9 @@ export default function LiveResultsTab({ predictions }) {
 
       {isLive && (
         <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
-          <h3 style={{ color: '#1C1917', fontSize: 14, fontWeight: 600, margin: '0 0 4px' }}>
+          <h3 style={{ color: '#1C1917', fontSize: 14, fontWeight: 600, margin: '0 0 12px' }}>
             Voto Exterior · Por País
           </h3>
-          <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 12 }}>
-            Votos válidos transmitidos en tiempo real — actas del exterior llegan después del cierre nacional
-          </div>
           <PaisesTable paises={livePaises} />
         </div>
       )}
