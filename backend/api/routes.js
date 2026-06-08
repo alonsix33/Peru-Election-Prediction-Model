@@ -1234,6 +1234,84 @@ router.post('/admin/inject-snapshot', async (req, res) => {
   }
 });
 
+// ─── POST /api/admin/re-project-all ─────────────────────────
+// Re-runs the current projector on every stored snapshot to fix historical
+// chart lines after a projector code change. Safe to call multiple times.
+router.post('/admin/re-project-all', async (req, res) => {
+  const adminSecret = process.env.ADMIN_SECRET;
+  if (!adminSecret || req.headers.authorization !== `Bearer ${adminSecret}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const { project } = require('../model/electionNightProjector');
+
+  const { rows: snapshots } = await db.query(
+    `SELECT * FROM onpe_live_snapshots WHERE has_data = true ORDER BY captured_at ASC`
+  );
+
+  let updated = 0, skipped = 0, failed = 0;
+  for (const s of snapshots) {
+    try {
+      // Reconstruct pct_actas with same fallback used in live-projection
+      let pct = s.pct_actas != null ? parseFloat(s.pct_actas) : 0;
+      if (pct < 0.1 && s.actas_processed > 0 && s.actas_total > 0) {
+        pct = parseFloat((s.actas_processed / s.actas_total * 100).toFixed(2));
+      }
+      if (pct < 0.1 && Array.isArray(s.dept_breakdown) && s.dept_breakdown.length > 0) {
+        const sp = s.dept_breakdown.reduce((a, d) => a + (d.actas_procesadas || 0), 0);
+        const st = s.dept_breakdown.reduce((a, d) => a + (d.actas_total || 0), 0);
+        if (st > 0) pct = parseFloat((sp / st * 100).toFixed(2));
+      }
+
+      const snap = {
+        pct_actas:          pct,
+        keiko_votos:        s.keiko_votos   != null ? parseInt(s.keiko_votos)   : 0,
+        sanchez_votos:      s.sanchez_votos != null ? parseInt(s.sanchez_votos) : 0,
+        dept_breakdown:     Array.isArray(s.dept_breakdown)     ? s.dept_breakdown     : [],
+        province_breakdown: Array.isArray(s.province_breakdown) ? s.province_breakdown : [],
+        district_breakdown: Array.isArray(s.district_breakdown) ? s.district_breakdown : [],
+        ext_breakdown:      Array.isArray(s.ext_breakdown)      ? s.ext_breakdown      : [],
+        pais_breakdown:     Array.isArray(s.pais_breakdown)     ? s.pais_breakdown     : [],
+        captured_at:        s.captured_at,
+      };
+
+      const pr = project(snap);
+      if (pr.status !== 'ok') { skipped++; continue; }
+
+      await db.query(`DELETE FROM r2_election_projections WHERE snapshot_id = $1`, [s.id]);
+      await db.query(
+        `INSERT INTO r2_election_projections
+           (snapshot_id, pct_actas, phase,
+            obs_kf_r2_share, obs_keiko_votos, obs_sanchez_votos,
+            proj_kf_r2_share, proj_ci95_lo, proj_ci95_hi, proj_ci80_lo, proj_ci80_hi,
+            proj_winner, proj_margin_pp, proj_sigma_pp,
+            zda_correction_applied, zda_remaining_mesas, zda_proj_kf_r2_share, zda_effect_pp,
+            national_shift_pp, shift_granularity, dept_shifts, province_shifts, district_shifts, full_result)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)`,
+        [
+          s.id, pr.pct_actas, pr.phase,
+          pr.observed.kf_r2_share, pr.observed.keiko_votos, pr.observed.sanchez_votos,
+          pr.projected.kf_r2_share, pr.projected.ci_95.lo, pr.projected.ci_95.hi,
+          pr.projected.ci_80.lo, pr.projected.ci_80.hi,
+          pr.projected.winner, pr.projected.margin_pp, pr.projected.sigma_pp,
+          pr.zda.always_projected, pr.zda.remaining_mesas,
+          pr.zda.proj_kf_r2_share, pr.zda.effect_pp,
+          pr.national_shift_pp, pr.shift_granularity,
+          JSON.stringify(pr.dept_shifts),
+          JSON.stringify(pr.province_shifts),
+          JSON.stringify(pr.district_shifts),
+          JSON.stringify(pr),
+        ]
+      );
+      updated++;
+    } catch (e) {
+      failed++;
+    }
+  }
+
+  res.json({ ok: true, total: snapshots.length, updated, skipped, failed });
+});
+
 // ─── DELETE /api/admin/snapshots ────────────────────────────
 // Limpia snapshots de prueba antes del 7J. Requiere ADMIN_SECRET.
 router.delete('/admin/snapshots', async (req, res) => {
