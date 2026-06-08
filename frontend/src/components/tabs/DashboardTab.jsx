@@ -580,7 +580,7 @@ function OnpeLiveSection() {
         </div>
         <p style={{ color: '#78716C', fontSize: 13, margin: 0, lineHeight: 1.5 }}>
           Los resultados en tiempo real estarán disponibles el domingo 7 de junio desde las 8:00 PM (Lima).
-          El sistema está monitoreando la API de ONPE cada 2 minutos.
+          El sistema está monitoreando la API de ONPE cada 10 minutos.
         </p>
       </div>
     );

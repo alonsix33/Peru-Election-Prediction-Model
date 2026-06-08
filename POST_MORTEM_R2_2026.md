@@ -2,7 +2,7 @@
 
 **Fecha de elección:** 7 de junio de 2026  
 **Documento generado:** 8 de junio de 2026  
-**Estado:** Borrador — resultados ONPE al 92.9%; exterior pendiente de contabilización oficial  
+**Estado:** Borrador — resultados ONPE al 94.38%; primeros datos del exterior (3 países); pendiente contabilización oficial completa  
 **Autores del projector:** alonsix33 / Claude Code  
 
 ---
@@ -75,6 +75,10 @@ La API pública de ONPE (`resultadoelectoral.onpe.gob.pe`) opera con protección
 | ~03:00-05:00 | 80.5→92% | — | — | Sin snapshots nuevos (bookmarklet caído por error 413) |
 | 06:00 | 92.1% | **50.19-50.23%** | **50.09-50.11%** | **Call: KF gana** |
 | 08:21 | 92.9% | **50.10%** | **50.10%** | Proyector = raw; convergencia completa esperada a este % |
+| ~12:50 | **93.86%** | **50.00%** | 50.14% | **Cruce del raw**: raw llega a exactamente 50.00% — umbral simbólico |
+| ~13:00 | 93.92% | **49.99%** | 50.15% | **RSP "lidera" el raw por primera vez** en toda la noche — projector: KF +0.15pp |
+| ~14:40 | 94.36% | 49.95% | **50.16%** | **Primeros datos del exterior** (Argentina 56.9%, Ecuador 75.5%, Uruguay 63.2%) — projector sube levemente |
+| ~14:50 | **94.38%** | 49.95% | 50.15% | CI **[50.03, 50.26]** — completamente sobre 50%; 99% prob. KF |
 | TBD | 100% + exterior | TBD | ~50.28% | Resultado oficial final |
 
 **El error 413** fue causado por el payload de 1,777 distritos + 192 provincias superando el límite de 100kb del body parser de Express. Fix: `express.json({ limit: '10mb' })`. Ironicamente, la corrección llegó justo cuando el conteo casi había concluido (92%).
@@ -126,6 +130,7 @@ El projector emitió **202 snapshots** (72 puntos únicos de porcentaje de actas
 | **2 — Plateau** | 50% → 80% | ~00:00 → 01:08 | **50.75%** | 50.56% – 50.87% | Estabilización. KF consistentemente +0.56-0.87pp sobre 50% |
 | **GAP** | 80.5% → 92.1% | 01:08 → 06:02 | — | — | Bug 413 — sin relay durante ~5 horas |
 | **3 — Convergencia** | 92% → 92.7% | 06:02 → 07:35 | **50.10%** | 50.09% – 50.11% | Post-fix; CI corregido a las 06:43 |
+| **4 — Post-convergencia** | 92.7% → 94.4% | 07:35 → 14:50+ | **50.12%** | 50.08% – 50.16% | Projector mínimo: 50.08% (~07:49). Raw cruza 50% a las 12:50. Exterior llega ~14:40 → projector sube a 50.15-50.16%. CI final: [50.03, 50.26] |
 
 **La proyección nunca estuvo por debajo de 50% para KF** en ningún momento del evolutivo. Desde el primer snapshot (4.52% actas), el projector ya daba KF ganadora — aunque con una CI muy amplia.
 
@@ -152,6 +157,11 @@ El projector emitió **202 snapshots** (72 puntos únicos de porcentaje de actas
 | 06:02 | **92.1%** | 50.24% | 50.09% | [49.58, 49.92]* | +0.09pp |
 | **06:43** | **92.4%** | 50.19% | 50.10% | **[49.93, 50.27]** | +0.10pp |
 | 08:21 | **92.9%** | **50.10%** | **50.10%** | [49.9, 50.3]† | +0.10pp |
+| ~07:49 | 92.80% | 50.13% | **50.08%** | — | **Mínimo del projector** en toda la noche |
+| ~12:50 | **93.86%** | **50.00%** | 50.14% | — | **Raw llega a 50.00%** — cruce simbólico |
+| ~13:00 | **93.92%** | **49.99%** | 50.15% | — | **Raw RSP > KF** por primera vez |
+| ~14:40 | 94.36% | 49.95% | **50.16%** | — | Primeros 3 países del exterior reportan |
+| ~14:50 | **94.38%** | 49.95% | **50.15%** | **[50.03, 50.26]** | CI completamente sobre 50% |
 
 *CI domestic-only antes del fix; corregido a las 06:43 cuando el fix con exterior fue deployado a Railway.
 †CI 90% mostrado en el frontend (equivalente a CI 95% ~[49.85, 50.35]).
@@ -427,7 +437,29 @@ Los conteos rápidos ya estimaban el exterior a ~62-67% KF:
 
 Con 263,000 votos al 65% KF: **+86,000 votos netos para KF**.
 
-### 7.3. El baseline del exterior
+### 7.3. Datos reales del exterior — primeras actas (8 junio 2026, ~14:40 PET)
+
+A las ~14:40 PET del 8 de junio, tres países empezaron a reportar sus primeros resultados en ONPE:
+
+| País | Actas cont. | KF votos | RSP votos | KF% | R1 KF R2-share | Caída vs R1 |
+|---|---|---|---|---|---|---|
+| **Argentina** (920200) | 4.0% | 1,164 | 881 | **56.9%** | 84.4% | −27.5pp |
+| **Ecuador** (921100) | 31.3% | 689 | 223 | **75.5%** | 77.6% | −2.1pp |
+| **Uruguay** (922700) | 100% | 569 | 331 | **63.2%** | 88.2% | −25.0pp |
+| **Total 3 países** | — | 2,422 | 1,435 | **62.8%** | — | — |
+
+**Interpretación:**
+- Argentina y Uruguay confirman el patrón esperado: caída de ~25pp desde el R1 bilateral, ya que RSP era desconocido en el exterior durante R1. Los votos anti-Keiko que en R1 fueron a otros candidatos (Aliaga, etc.) migran a RSP en R2.
+- Ecuador tuvo poca caída porque ya en R1 tenía un R1 bilateral más bajo (~77.6%).
+- Los tres países tienen pocas actas en conjunto (~4,400 votos). Los países grandes (Chile ~51K est., España ~56K est., EEUU ~47K est.) aún no reportan.
+- El projector respondió subiendo 0.05pp (de 50.10% → 50.15-50.16%) porque el 62.8% observado, aunque menor al R1, confirma que el exterior sigue siendo un bloque KF sólido.
+
+**Break-even exterior calculado al 94.06% actas:**
+- RSP lidera doméstico por ~5,565 votos (después de domésticos restantes al ritmo actual)
+- KF necesita solo **50.96%** del exterior restante (~289K votos) para ganar
+- Incluso con Argentina proyectando 56.9% y Chile proyectando ~57-58%, KF supera el break-even
+
+### 7.4. El baseline del exterior
 
 | Región | R1 KF R2-share | VV R1 est. | % del ext total |
 |---|---|---|---|
@@ -534,16 +566,21 @@ El sistema bookmarklet funcionó correctamente en el rango 0-80.5% de actas. El 
 
 *Esta sección se completará cuando ONPE publique el 100% del conteo oficial, incluyendo el voto exterior.*
 
-| Métrica | Boca de urna | CR Ipsos | CR Datum | Projector (92.4%) | Rivera (91%) | ONPE 100% |
-|---|---|---|---|---|---|---|
-| KF% | ~50.6% | 49.7% | 49.86% | **50.09-50.11%** | **50.2%** | [TBD] |
-| RSP% | ~49.4% | 50.3% | 50.14% | 49.89-49.91% | 49.8% | [TBD] |
-| Margen KF | +1.1-1.4pp | −0.6pp (RSP) | −0.28pp (RSP) | +0.1pp | +0.4pp | [TBD] |
-| Incluye exterior | Sí (~66% KF) | Sí (parcial) | Sí (parcial) | Proyectado | Sí | Sí (100%) |
-| Declaró ganador | No (MoE) | No (empate técnico) | No (empate técnico) | **KF** | **KF (100% prob)** | [TBD] |
-| Error proyector | — | — | — | — | — | [TBD] |
+| Métrica | Boca de urna | CR Ipsos | CR Datum | Projector (92.4%) | Projector (94.4%) | Rivera (91%) | ONPE 100% |
+|---|---|---|---|---|---|---|---|
+| KF% | ~50.6% | 49.7% | 49.86% | **50.09-50.11%** | **50.15%** | **50.2%** | [TBD] |
+| RSP% | ~49.4% | 50.3% | 50.14% | 49.89-49.91% | 49.85% | 49.8% | [TBD] |
+| Margen KF | +1.1-1.4pp | −0.6pp (RSP) | −0.28pp (RSP) | +0.1pp | **+0.30pp** | +0.4pp | [TBD] |
+| CI 95% | — | — | — | [49.93, 50.27] | **[50.03, 50.26]** | — | — |
+| Prob. KF win | — | — | — | ~96% | **99%** | 100% | — |
+| Incluye exterior | Sí (~66% KF) | Sí (parcial) | Sí (parcial) | Proyectado | 3 países (62.8%) | Sí | Sí (100%) |
+| Declaró ganador | No (MoE) | No (empate técnico) | No (empate técnico) | **KF** | **KF** | **KF (100% prob)** | [TBD] |
+| Error proyector | — | — | — | — | — | — | [TBD] |
 
-**Proyección central:** KF **50.25-50.30%**, margen ~**+90,000-120,000 votos**, tras incluir exterior.
+**Proyección central actualizada (94.4% + 3 países exterior):** KF **50.15%**, CI [50.03, 50.26].  
+**Proyección final estimada (100% + exterior completo):** KF **~50.28-50.35%**, margen ~**+90,000-130,000 votos**.
+
+**Nota sobre el raw count:** A las ~13:00 PET del 8 de junio, el raw ONPE cruzó por debajo del 50% (49.99%) por primera vez. En ese momento el projector marcaba 50.15% — la brecha entre raw y proyectado se explicaba enteramente por los votos del exterior (no contabilizados en el raw doméstico). El raw "en contra" de KF es el resultado doméstico puro; la victoria se confirma cuando el exterior se suma al cómputo oficial.
 
 ---
 
@@ -618,10 +655,11 @@ El modelo de Monte Carlo incluía un shock de voto oculto de +3 a +6pp para RSP 
 |---|---|---|
 | 1.0 | 2026-06-08 | Versión inicial — análisis hasta 92.4% actas; exterior pendiente |
 | 1.1 | 2026-06-08 | Añadido snapshot 92.9% (08:21 PET); §4.5 convergencia proyector=raw; estado actualizado |
+| 1.2 | 2026-06-08 | Evolutivo completo hasta 94.38% (418 snapshots); Phase 4 post-convergencia; cruce raw 50% (~13:00); primeros 3 países del exterior (Argentina 56.9%, Ecuador 75.5%, Uruguay 63.2%); CI final [50.03, 50.26]; §7.3 datos reales del exterior; §11 actualizado con columna proyector 94.4% y nota sobre raw<0 |
 
 ---
 
-*Documento generado el 8 de junio de 2026.*  
-*Resultados al momento de redacción: ONPE 92.4% procesado; exterior sin contabilizar.*  
+*Documento generado el 8 de junio de 2026. Última actualización: 14:50 PET.*  
+*Resultados al momento de redacción: ONPE 94.38% procesado; exterior parcial (3 países, ~4,400 votos de ~290K estimados).*  
 *Este análisis es de carácter académico y experimental. No constituye asesoramiento electoral ni predicción oficial.*  
 *Repositorio: github.com/alonsix33/Peru-Election-Prediction-Model*

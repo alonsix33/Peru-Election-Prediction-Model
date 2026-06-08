@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Clock, Timer, RefreshCw } from 'lucide-react';
+import { Clock, Timer } from 'lucide-react';
 
 const PHASE_STYLES = {
   pre_veda: { label: 'Pre-Veda', color: '#1E40AF', bg: '#EFF6FF', border: '1px solid #BFDBFE' },
@@ -113,20 +113,6 @@ export default function Header({ status, predictions }) {
             }}>{'\u03B1'} {(alpha * 100).toFixed(1)}%</span>
           )}
 
-          {updatedText && (
-            <span style={{
-              display: 'flex', alignItems: 'center', gap: 5,
-              color: '#8C877F', fontSize: '11px'
-            }}>
-              <span style={{
-                width: 7, height: 7, borderRadius: '50%', background: updatedDotColor,
-                display: 'inline-block',
-                boxShadow: updatedDotColor === '#059669' ? `0 0 6px ${updatedDotColor}` : 'none'
-              }} />
-              <RefreshCw size={10} style={{ color: '#8C877F' }} />
-              {updatedText}
-            </span>
-          )}
         </div>
       </div>
     </header>
