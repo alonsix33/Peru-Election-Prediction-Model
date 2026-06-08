@@ -201,7 +201,7 @@ function VoteBars({ total, nacional, extranjero, isDemo }) {
     <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
         <h3 style={{ color: '#1C1917', fontSize: 15, fontWeight: 600, margin: 0 }}>
-          Votos emitidos{isDemo ? <span style={{ color: '#A8A29E', fontWeight: 400, fontSize: 12 }}> · Demo R1</span> : ''}
+          Votos emitidos{isDemo ? <span style={{ color: '#A8A29E', fontWeight: 400, fontSize: 12 }}> · Demo R1</span> : <span style={{ color: '#A8A29E', fontWeight: 400, fontSize: 12 }}> · ONPE</span>}
         </h3>
         <div style={{ display: 'flex', background: '#F7F4EF', borderRadius: 8, padding: 3, gap: 2 }}>
           {['total', 'nacional', 'extranjero'].map(v => (
