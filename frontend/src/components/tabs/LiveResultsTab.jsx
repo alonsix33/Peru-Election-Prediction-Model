@@ -457,6 +457,114 @@ function DeptDetailPanel({ dept, r1Districts, r1Loading, liveProvinces, liveDist
   );
 }
 
+// ─── Exterior countries table ────────────────────────────────
+const PAIS_INFO = {"910100":{"nombre":"ARGELIA","continente":"ÁFRICA"},"910300":{"nombre":"REP. ÁRABE DE EGIPTO","continente":"ÁFRICA"},"910400":{"nombre":"KENIA","continente":"ÁFRICA"},"910500":{"nombre":"MARRUECOS","continente":"ÁFRICA"},"910600":{"nombre":"SUDÁFRICA","continente":"ÁFRICA"},"911200":{"nombre":"GHANA","continente":"ÁFRICA"},"920100":{"nombre":"ANTILLAS HOLANDESAS","continente":"AMÉRICA"},"920200":{"nombre":"ARGENTINA","continente":"AMÉRICA"},"920400":{"nombre":"BOLIVIA","continente":"AMÉRICA"},"920500":{"nombre":"BRASIL","continente":"AMÉRICA"},"920600":{"nombre":"CANADÁ","continente":"AMÉRICA"},"920700":{"nombre":"COLOMBIA","continente":"AMÉRICA"},"920800":{"nombre":"COSTA RICA","continente":"AMÉRICA"},"920900":{"nombre":"CUBA","continente":"AMÉRICA"},"921000":{"nombre":"CHILE","continente":"AMÉRICA"},"921100":{"nombre":"ECUADOR","continente":"AMÉRICA"},"921200":{"nombre":"EL SALVADOR","continente":"AMÉRICA"},"921300":{"nombre":"ESTADOS UNIDOS","continente":"AMÉRICA"},"921500":{"nombre":"GUATEMALA","continente":"AMÉRICA"},"921700":{"nombre":"HONDURAS","continente":"AMÉRICA"},"921900":{"nombre":"MÉXICO","continente":"AMÉRICA"},"922000":{"nombre":"NICARAGUA","continente":"AMÉRICA"},"922100":{"nombre":"PANAMÁ","continente":"AMÉRICA"},"922200":{"nombre":"PARAGUAY","continente":"AMÉRICA"},"922300":{"nombre":"PUERTO RICO","continente":"AMÉRICA"},"922400":{"nombre":"REP. DOMINICANA","continente":"AMÉRICA"},"922600":{"nombre":"TRINIDAD Y TOBAGO","continente":"AMÉRICA"},"922700":{"nombre":"URUGUAY","continente":"AMÉRICA"},"922800":{"nombre":"VENEZUELA","continente":"AMÉRICA"},"923000":{"nombre":"GUAYANA FRANCESA","continente":"AMÉRICA"},"930100":{"nombre":"COREA DEL SUR","continente":"ASIA"},"930200":{"nombre":"CHINA","continente":"ASIA"},"930400":{"nombre":"INDIA","continente":"ASIA"},"930600":{"nombre":"ISRAEL","continente":"ASIA"},"930700":{"nombre":"JAPÓN","continente":"ASIA"},"930800":{"nombre":"LÍBANO","continente":"ASIA"},"931000":{"nombre":"TAILANDIA","continente":"ASIA"},"931100":{"nombre":"INDONESIA","continente":"ASIA"},"931300":{"nombre":"JORDANIA","continente":"ASIA"},"931500":{"nombre":"TURQUÍA","continente":"ASIA"},"931900":{"nombre":"ARABIA SAUDITA","continente":"ASIA"},"932000":{"nombre":"VIETNAM","continente":"ASIA"},"932400":{"nombre":"IRÁN","continente":"ASIA"},"932500":{"nombre":"SINGAPUR","continente":"ASIA"},"932800":{"nombre":"KUWAIT","continente":"ASIA"},"933000":{"nombre":"MALASIA","continente":"ASIA"},"933200":{"nombre":"FILIPINAS","continente":"ASIA"},"933700":{"nombre":"EMIRATOS ÁRABES","continente":"ASIA"},"933800":{"nombre":"CATAR","continente":"ASIA"},"940200":{"nombre":"ALEMANIA","continente":"EUROPA"},"940300":{"nombre":"AUSTRIA","continente":"EUROPA"},"940400":{"nombre":"BÉLGICA","continente":"EUROPA"},"940600":{"nombre":"REP. CHECA","continente":"EUROPA"},"940800":{"nombre":"DINAMARCA","continente":"EUROPA"},"940900":{"nombre":"ESPAÑA","continente":"EUROPA"},"941000":{"nombre":"FINLANDIA","continente":"EUROPA"},"941100":{"nombre":"FRANCIA","continente":"EUROPA"},"941200":{"nombre":"GRAN BRETAÑA","continente":"EUROPA"},"941300":{"nombre":"GRECIA","continente":"EUROPA"},"941400":{"nombre":"HOLANDA","continente":"EUROPA"},"941500":{"nombre":"HUNGRÍA","continente":"EUROPA"},"941700":{"nombre":"ITALIA","continente":"EUROPA"},"941800":{"nombre":"IRLANDA","continente":"EUROPA"},"942000":{"nombre":"LUXEMBURGO","continente":"EUROPA"},"942100":{"nombre":"MALTA","continente":"EUROPA"},"942300":{"nombre":"NORUEGA","continente":"EUROPA"},"942400":{"nombre":"POLONIA","continente":"EUROPA"},"942500":{"nombre":"PORTUGAL","continente":"EUROPA"},"942600":{"nombre":"RUMANÍA","continente":"EUROPA"},"942700":{"nombre":"SUECIA","continente":"EUROPA"},"942800":{"nombre":"SUIZA","continente":"EUROPA"},"942900":{"nombre":"RUSIA","continente":"EUROPA"},"943600":{"nombre":"BIELORRUSIA","continente":"EUROPA"},"943700":{"nombre":"MACEDONIA","continente":"EUROPA"},"944200":{"nombre":"ANDORRA","continente":"EUROPA"},"950100":{"nombre":"AUSTRALIA","continente":"OCEANÍA"},"950200":{"nombre":"NUEVA ZELANDA","continente":"OCEANÍA"}};
+
+function PaisesTable({ paises }) {
+  const [sortBy, setSortBy] = useState('votos');
+
+  if (!paises?.length) {
+    return (
+      <div style={{ color: '#78716C', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>
+        Sin datos del exterior por país aún — esperando transmisión...
+      </div>
+    );
+  }
+
+  const rows = [...paises].map(p => ({
+    ...p,
+    nombre:    PAIS_INFO[p.ubigeo]?.nombre    ?? p.ubigeo,
+    continente: PAIS_INFO[p.ubigeo]?.continente ?? '—',
+    total:     (p.keiko_votos ?? 0) + (p.sanchez_votos ?? 0),
+    kf_share:  (p.keiko_votos ?? 0) + (p.sanchez_votos ?? 0) > 0
+      ? (p.keiko_votos ?? 0) / ((p.keiko_votos ?? 0) + (p.sanchez_votos ?? 0)) * 100
+      : null,
+  })).sort((a, b) => {
+    if (sortBy === 'votos')  return b.total - a.total;
+    if (sortBy === 'kf')     return (b.kf_share ?? 0) - (a.kf_share ?? 0);
+    if (sortBy === 'rsp')    return (a.kf_share ?? 100) - (b.kf_share ?? 100);
+    if (sortBy === 'cont')   return a.continente.localeCompare(b.continente) || a.nombre.localeCompare(b.nombre);
+    return a.nombre.localeCompare(b.nombre);
+  });
+
+  const totKf  = paises.reduce((s, p) => s + (p.keiko_votos  ?? 0), 0);
+  const totRsp = paises.reduce((s, p) => s + (p.sanchez_votos ?? 0), 0);
+  const totAll = totKf + totRsp;
+  const totKfPct = totAll > 0 ? (totKf / totAll * 100).toFixed(2) : null;
+
+  const colBtn = (key, label) => (
+    <button onClick={() => setSortBy(key)} style={{
+      background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0',
+      color: sortBy === key ? '#1C1917' : '#A8A29E',
+      fontWeight: sortBy === key ? 700 : 500, fontSize: 11,
+    }}>
+      {label}{sortBy === key ? ' ↓' : ''}
+    </button>
+  );
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 16, marginBottom: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span style={{ color: '#1C1917', fontSize: 12, fontWeight: 600 }}>
+          {paises.length} / 77 países &nbsp;·&nbsp;
+          <span style={{ color: KEIKO_COLOR }}>{totKfPct}% KF</span>
+          &nbsp;/&nbsp;
+          <span style={{ color: SANCHEZ_COLOR }}>{totAll > 0 ? (100 - +totKfPct).toFixed(2) : '—'}% RSP</span>
+          &nbsp;·&nbsp;
+          <span style={{ color: '#78716C', fontWeight: 400 }}>{totAll.toLocaleString()} votos válidos</span>
+        </span>
+        <div style={{ display: 'flex', gap: 10, marginLeft: 'auto', alignItems: 'center' }}>
+          <span style={{ color: '#8C877F', fontSize: 11 }}>Ordenar:</span>
+          {colBtn('votos', 'Más votos')}
+          {colBtn('kf',    'Mayor KF%')}
+          {colBtn('rsp',   'Mayor RSP%')}
+          {colBtn('cont',  'Continente')}
+          {colBtn('nombre','A-Z')}
+        </div>
+      </div>
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+          <thead>
+            <tr style={{ borderBottom: '2px solid #E5E0D8' }}>
+              <th style={{ textAlign: 'left',  padding: '5px 8px', color: '#78716C', fontWeight: 600 }}>País</th>
+              <th style={{ textAlign: 'left',  padding: '5px 8px', color: '#78716C', fontWeight: 600 }}>Continente</th>
+              <th style={{ textAlign: 'right', padding: '5px 8px', color: KEIKO_COLOR,   fontWeight: 600 }}>KF votos</th>
+              <th style={{ textAlign: 'right', padding: '5px 8px', color: SANCHEZ_COLOR, fontWeight: 600 }}>RSP votos</th>
+              <th style={{ textAlign: 'right', padding: '5px 8px', color: '#78716C', fontWeight: 600 }}>KF%</th>
+              <th style={{ textAlign: 'right', padding: '5px 8px', color: '#78716C', fontWeight: 600 }}>Margen</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(row => {
+              const kfLeads  = row.kf_share != null && row.kf_share >= 50;
+              const rspShare = row.kf_share != null ? 100 - row.kf_share : null;
+              const margin   = row.kf_share != null ? Math.abs(row.kf_share - 50) * 2 : null;
+              return (
+                <tr key={row.ubigeo} style={{ borderBottom: '1px solid #F0EDE8' }}>
+                  <td style={{ padding: '7px 8px', color: '#1C1917', fontWeight: 600 }}>{row.nombre}</td>
+                  <td style={{ padding: '7px 8px', color: '#A8A29E', fontSize: 11 }}>{row.continente}</td>
+                  <td style={{ padding: '7px 8px', textAlign: 'right', color: kfLeads ? KEIKO_COLOR : '#A8A29E', fontWeight: kfLeads ? 700 : 400, fontVariantNumeric: 'tabular-nums' }}>
+                    {(row.keiko_votos ?? 0).toLocaleString()}
+                  </td>
+                  <td style={{ padding: '7px 8px', textAlign: 'right', color: !kfLeads ? SANCHEZ_COLOR : '#A8A29E', fontWeight: !kfLeads ? 700 : 400, fontVariantNumeric: 'tabular-nums' }}>
+                    {(row.sanchez_votos ?? 0).toLocaleString()}
+                  </td>
+                  <td style={{ padding: '7px 8px', textAlign: 'right', color: kfLeads ? KEIKO_COLOR : SANCHEZ_COLOR, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                    {row.kf_share != null ? row.kf_share.toFixed(1) + '%' : '—'}
+                  </td>
+                  <td style={{ padding: '7px 8px', textAlign: 'right', color: kfLeads ? KEIKO_COLOR : SANCHEZ_COLOR, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                    {margin != null ? `${kfLeads ? 'K' : 'S'}+${margin.toFixed(1)}` : '—'}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ─── Department table ─────────────────────────────────────────
 function DeptTable({ deptData, extranjero, isDemo }) {
   const [sortBy, setSortBy] = useState('pct_actas');
@@ -595,8 +703,9 @@ export default function LiveResultsTab({ predictions }) {
     ? Object.fromEntries(liveData.departments.map(d => [d.ubigeo, d]))
     : DEMO_DEPTS;
 
-  const liveProvinces  = liveData?.provinces  || [];
-  const liveDistricts  = liveData?.districts  || [];
+  const liveProvinces    = liveData?.provinces     || [];
+  const liveDistricts    = liveData?.districts     || [];
+  const livePaises       = liveData?.pais_breakdown || [];
   const shiftGranularity = liveData?.shift_granularity ?? null;
 
   // Needle
@@ -716,6 +825,18 @@ export default function LiveResultsTab({ predictions }) {
         </h3>
         <DeptTable deptData={deptData} extranjero={extranjero} isDemo={isDemo} />
       </div>
+
+      {isLive && (
+        <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 12, padding: 16 }}>
+          <h3 style={{ color: '#1C1917', fontSize: 14, fontWeight: 600, margin: '0 0 4px' }}>
+            Voto Exterior · Por País
+          </h3>
+          <div style={{ color: '#8C877F', fontSize: 11, marginBottom: 12 }}>
+            Votos válidos transmitidos en tiempo real — actas del exterior llegan después del cierre nacional
+          </div>
+          <PaisesTable paises={livePaises} />
+        </div>
+      )}
     </div>
   );
 }
