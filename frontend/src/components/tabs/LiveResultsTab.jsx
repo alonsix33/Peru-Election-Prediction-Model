@@ -112,7 +112,7 @@ function StatusBar({ pct_actas, snapshot_ts, isDemo, shiftGranularity }) {
 function CandidateCards({ kf_r2_share, proj_kf_r2_share, ci_low, ci_high, kf_votos, rsp_votos, isDemo }) {
   const rsp_r2_share  = kf_r2_share  != null ? 100 - kf_r2_share  : null;
   const proj_rsp      = proj_kf_r2_share != null ? 100 - proj_kf_r2_share : null;
-  const kfLeads       = kf_r2_share >= 50;
+  const kfLeads       = (proj_kf_r2_share ?? kf_r2_share) >= 50;
 
   const fmtVotos = (v) => v != null ? v.toLocaleString('es-PE') : null;
 
