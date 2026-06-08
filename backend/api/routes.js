@@ -973,8 +973,21 @@ router.get('/live-projection', async (req, res) => {
     if (!latest) return res.json({ status: 'pre_election', pct_actas: 0 });
 
     const { project } = require('../model/electionNightProjector');
+
+    // Fallback: calculate pct_actas from actas counts if the field is missing/zero
+    let pct_actas_val = latest.pct_actas != null ? parseFloat(latest.pct_actas) : 0;
+    if (pct_actas_val < 0.1 && latest.actas_processed > 0 && latest.actas_total > 0) {
+      pct_actas_val = parseFloat((latest.actas_processed / latest.actas_total * 100).toFixed(2));
+    }
+    // Second fallback: sum from dept_breakdown
+    if (pct_actas_val < 0.1 && Array.isArray(latest.dept_breakdown) && latest.dept_breakdown.length > 0) {
+      const sumProc  = latest.dept_breakdown.reduce((s, d) => s + (d.actas_procesadas || 0), 0);
+      const sumTotal = latest.dept_breakdown.reduce((s, d) => s + (d.actas_total      || 0), 0);
+      if (sumTotal > 0) pct_actas_val = parseFloat((sumProc / sumTotal * 100).toFixed(2));
+    }
+
     const snapshot = {
-      pct_actas:          latest.pct_actas         != null ? parseFloat(latest.pct_actas)  : 0,
+      pct_actas:          pct_actas_val,
       keiko_votos:        latest.keiko_votos        != null ? parseInt(latest.keiko_votos)   : 0,
       sanchez_votos:      latest.sanchez_votos      != null ? parseInt(latest.sanchez_votos) : 0,
       dept_breakdown:     Array.isArray(latest.dept_breakdown)     ? latest.dept_breakdown     : [],
