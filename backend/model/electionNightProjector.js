@@ -175,31 +175,42 @@ function _round2(v) {
 
 // ─── Bootstrap CI ─────────────────────────────────────────────────────────────
 
-function _bootstrapCI(obs_kf, obs_rsp, regular_remaining, zda_remaining, reg_proj_kf_r2, national_shift, sigma) {
-  const obs_pair = obs_kf + obs_rsp;
+function _bootstrapCI(obs_kf, obs_rsp, regular_remaining, zda_remaining, reg_proj_kf_r2, national_shift, sigma, ext_remaining_vv, ext_proj_kf_r2) {
+  const obs_pair   = obs_kf + obs_rsp;
   const rem_reg_vv = regular_remaining * VV_PER_MESA;
   const rem_zda_vv = zda_remaining * VV_PER_MESA;
+  const ext_vv     = ext_remaining_vv || 0;
+  const ext_proj   = ext_proj_kf_r2   || 50;
 
-  const sims = new Float64Array(N_SIMS);
+  const sims   = new Float64Array(N_SIMS);
+  let   wins   = 0;
 
   for (let i = 0; i < N_SIMS; i++) {
     const noise = sigma * _tSample(T_DF);
 
-    const reg_proj = _clamp(reg_proj_kf_r2 + noise, 0, 100);
-    const zda_proj = _clamp(ZDA_KF_R2_SHARE_R1 + national_shift + noise, 0, 100);
+    const reg_proj   = _clamp(reg_proj_kf_r2 + noise, 0, 100);
+    const zda_proj   = _clamp(ZDA_KF_R2_SHARE_R1 + national_shift + noise, 0, 100);
+    // Exterior shares domestic systematic risk but is geographically independent;
+    // apply half the noise to capture partial correlation without over-shrinking its CI.
+    const ext_proj_s = _clamp(ext_proj + noise * 0.5, 0, 100);
 
-    const final_kf    = obs_kf + rem_reg_vv * reg_proj / 100 + rem_zda_vv * zda_proj / 100;
-    const final_total = obs_pair + rem_reg_vv + rem_zda_vv;
+    const final_kf    = obs_kf
+      + rem_reg_vv * reg_proj    / 100
+      + rem_zda_vv * zda_proj    / 100
+      + ext_vv     * ext_proj_s  / 100;
+    const final_total = obs_pair + rem_reg_vv + rem_zda_vv + ext_vv;
 
     sims[i] = 100 * final_kf / final_total;
+    if (sims[i] > 50) wins++;
   }
 
   sims.sort();
   return {
-    p2_5:  sims[Math.floor(N_SIMS * 0.025)],
-    p97_5: sims[Math.floor(N_SIMS * 0.975)],
-    p10:   sims[Math.floor(N_SIMS * 0.10)],
-    p90:   sims[Math.floor(N_SIMS * 0.90)],
+    p2_5:        sims[Math.floor(N_SIMS * 0.025)],
+    p97_5:       sims[Math.floor(N_SIMS * 0.975)],
+    p10:         sims[Math.floor(N_SIMS * 0.10)],
+    p90:         sims[Math.floor(N_SIMS * 0.90)],
+    prob_kf_win: Math.round(100 * wins / N_SIMS),
   };
 }
 
@@ -556,7 +567,7 @@ function project(snapshot) {
   // ── Bootstrap CI ─────────────────────────────────────────────────────────
   const pct_remaining = 1 - pct / 100;
   const sigma = Math.max(0.3, SIGMA_BASE * Math.sqrt(pct_remaining));
-  const ci = _bootstrapCI(dom_kf, dom_rsp, regular_remaining, zda_remaining, reg_proj_kf_r2, national_shift, sigma);
+  const ci = _bootstrapCI(dom_kf, dom_rsp, regular_remaining, zda_remaining, reg_proj_kf_r2, national_shift, sigma, ext_remaining_vv, ext_proj_kf_r2);
 
   // ── Phase ─────────────────────────────────────────────────────────────────
   let phase, phaseLabel;
@@ -594,9 +605,10 @@ function project(snapshot) {
       kf_r2_share: _round2(projected_kf_r2_share),
       ci_95: { lo: _round2(ci.p2_5), hi: _round2(ci.p97_5) },
       ci_80: { lo: _round2(ci.p10),  hi: _round2(ci.p90)  },
-      winner:    projected_kf_r2_share > 50 ? 'KF' : 'RSP',
-      margin_pp: _round2(Math.abs(projected_kf_r2_share - 50)),
-      sigma_pp:  _round2(sigma),
+      winner:      projected_kf_r2_share > 50 ? 'KF' : 'RSP',
+      margin_pp:   _round2(Math.abs(projected_kf_r2_share - 50)),
+      sigma_pp:    _round2(sigma),
+      prob_kf_win: ci.prob_kf_win,
     },
 
     zda: {

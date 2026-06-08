@@ -1006,8 +1006,11 @@ router.get('/live-projection', async (req, res) => {
     const domKf  = Math.max(0, (r.observed.keiko_votos  || 0) - extKf);
     const domRsp = Math.max(0, (r.observed.sanchez_votos || 0) - extRsp);
     const domTotal = domKf + domRsp;
-    const sigma    = r.projected.sigma_pp || 3.0;
-    const probWinKF = Math.round(_normalCDF((r.projected.kf_r2_share - 50) / sigma) * 100);
+    const sigma     = r.projected.sigma_pp || 3.0;
+    // Use bootstrap-derived probability (includes exterior, correctly scaled).
+    // Fall back to normal CDF only if projector is old and doesn't expose prob_kf_win.
+    const probWinKF = r.projected.prob_kf_win
+      ?? Math.round(_normalCDF((r.projected.kf_r2_share - 50) / sigma) * 100);
 
     const deptPctMap = {};
     for (const d of snapshot.dept_breakdown) {
