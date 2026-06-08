@@ -32,12 +32,19 @@ export default function ElectionNightEvolutionChart({ history }) {
     return history.filter(h => h.time && new Date(h.time).getTime() >= cutoff);
   }, [history, timeWindow]);
 
-  const { labels, datasets } = useMemo(() => {
-    if (!filtered?.length) return { labels: [], datasets: [] };
+  const { labels, datasets, sorted } = useMemo(() => {
+    if (!filtered?.length) return { labels: [], datasets: [], sorted: [] };
 
     const sorted = [...filtered].sort((a, b) => (a.pct_actas ?? 0) - (b.pct_actas ?? 0));
 
-    const labels   = sorted.map(h => `${(h.pct_actas ?? 0).toFixed(1)}%`);
+    const labels = sorted.map(h => {
+      if (timeWindow != null && h.time) {
+        // Show Lima time (UTC-5) on x-axis when a time window is active
+        const d = new Date(new Date(h.time).getTime() - 5 * 60 * 60 * 1000);
+        return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+      }
+      return `${(h.pct_actas ?? 0).toFixed(1)}%`;
+    });
     const obsKf    = sorted.map(h => h.obs_kf_r2_share  != null ? +h.obs_kf_r2_share.toFixed(2)          : null);
     const obsRsp   = sorted.map(h => h.obs_kf_r2_share  != null ? +(100 - h.obs_kf_r2_share).toFixed(2)  : null);
     const projKf   = sorted.map(h => h.proj_kf_r2_share != null ? +h.proj_kf_r2_share.toFixed(2)         : null);
@@ -45,6 +52,7 @@ export default function ElectionNightEvolutionChart({ history }) {
 
     return {
       labels,
+      sorted,
       datasets: [
         // Observed (solid)
         {
@@ -104,7 +112,7 @@ export default function ElectionNightEvolutionChart({ history }) {
         },
       ],
     };
-  }, [filtered]);
+  }, [filtered, timeWindow]);
 
   if (!history?.length) {
     return (
@@ -124,8 +132,11 @@ export default function ElectionNightEvolutionChart({ history }) {
     h.proj_kf_r2_share != null ? 100 - h.proj_kf_r2_share : null,
   ]).filter(v => v != null);
 
-  const yMin = Math.max(0,   Math.floor(Math.min(...allVals) - 3));
-  const yMax = Math.min(100, Math.ceil (Math.max(...allVals) + 3));
+  const dataMin   = Math.min(...allVals);
+  const dataMax   = Math.max(...allVals);
+  const padding   = Math.max(0.5, (dataMax - dataMin) * 0.5);
+  const yMin = Math.max(0,   Math.floor((dataMin - padding) * 10) / 10);
+  const yMax = Math.min(100, Math.ceil ((dataMax + padding) * 10) / 10);
 
   const options = {
     responsive: true,
@@ -163,7 +174,13 @@ export default function ElectionNightEvolutionChart({ history }) {
         borderColor: '#E5E0D8',
         borderWidth: 1,
         callbacks: {
-          title: ctx => `${ctx[0]?.label} actas`,
+          title: ctx => {
+            if (timeWindow != null && sorted?.length) {
+              const h = sorted[ctx[0]?.dataIndex];
+              return `${ctx[0]?.label} · ${(h?.pct_actas ?? 0).toFixed(1)}% actas`;
+            }
+            return `${ctx[0]?.label} actas`;
+          },
           label: ctx => {
             if (ctx.dataset.label.startsWith('_')) return null;
             return `${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(2)}%`;
@@ -177,7 +194,7 @@ export default function ElectionNightEvolutionChart({ history }) {
         ticks: { color: '#78716C', font: { size: 11 }, maxTicksLimit: 8 },
         title: {
           display: true,
-          text: '% actas procesadas',
+          text: timeWindow != null ? 'Hora Lima' : '% actas procesadas',
           color: '#78716C',
           font: { size: 11 },
         },
