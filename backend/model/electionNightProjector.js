@@ -33,6 +33,7 @@ const TOTAL_MESAS_REGULAR     = 92718;
 const TOTAL_MESAS_ZDA         = 4703;
 const TOTAL_MESAS             = TOTAL_MESAS_REGULAR + TOTAL_MESAS_ZDA; // 97421
 const VV_PER_MESA             = 174;   // valid votes/mesa, calibrated from 6 depts
+const NATIONAL_R1_BILATERAL   = 4892792; // KF(2,877,678) + RSP(2,015,114) in R1
 const SIGMA_BASE              = 3.0;   // pp, from CLAUDE.md calibration
 const T_DF                    = 4;     // t-Student degrees of freedom
 const N_SIMS                  = 10000;
@@ -453,19 +454,27 @@ function project(snapshot) {
     deptShiftMap.set(ubigeo, 100 * (d.keiko_votos || 0) / pair - r1.kf_r2_share);
   }
 
+  // R2 bilateral ≈ 2× R1 bilateral because R2 is binary (all valid votes count).
+  // Old formula (r1_vv - reported_pair) hits 0 for Lima by mid-count, so Lima's
+  // remaining ~43% of votes get projected at the sierra-dominated average instead
+  // of Lima's own 63.6% KF rate.  This alone causes ~4pp RSP overcorrection.
+  // Fix: estimate remaining VV as r1_vv × R2/R1_scale × (1 - dept_pct/100).
+  const r2r1_scale = pct > 0 && dom_pair > 0
+    ? (dom_pair / (pct / 100)) / NATIONAL_R1_BILATERAL
+    : 2.05;
+
   let _da_sum_vv = 0, _da_sum_kf = 0;
   for (const [ubigeo, r1] of Object.entries(_r1ByDept)) {
     const r1_vv = (r1.kfV || 0) + (r1.rspV || 0);
     if (r1_vv === 0) continue;
     const d = deptBreakdownMap.get(ubigeo);
-    const reported_pair = d ? (d.keiko_votos || 0) + (d.sanchez_votos || 0) : 0;
-    const remaining_vv = Math.max(0, r1_vv - reported_pair);
+    const dept_pct_frac = (d?.pct_actas != null && d.pct_actas > 0) ? d.pct_actas / 100 : 0;
+    const remaining_vv = r1_vv * r2r1_scale * (1 - dept_pct_frac);
     if (remaining_vv < 50) continue;
-    // Dampen dept-specific shift by dept coverage to reduce within-dept reporting bias.
-    // Sierra pro-RSP districts report before pro-KF ones → early dept shift is too negative.
-    // Ramp trust from 0 (R1 baseline) at 0% dept coverage to 1.0 at 50%+ coverage.
-    // Do NOT fall back to national_shift — it is Lima-contaminated at early counts.
-    const dept_pct = (d?.pct_actas != null && d.pct_actas > 0) ? d.pct_actas : 0;
+    // Dampen within-dept shift: pro-RSP districts report first within sierra depts,
+    // so the observed dept shift is more negative than the true final shift.
+    // Ramp trust 0→1 as dept goes 0%→50% counted.
+    const dept_pct = dept_pct_frac * 100;
     const raw_shift = deptShiftMap.get(ubigeo) ?? 0;
     const trust = Math.min(1.0, dept_pct / 50);
     const effective_shift = raw_shift * trust;
