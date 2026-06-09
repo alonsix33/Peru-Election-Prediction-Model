@@ -4,7 +4,20 @@ const KEIKO_COLOR   = '#F97316';
 const NEUTRAL_COLOR = '#78716C';
 
 // ─── Methodology modal ────────────────────────────────────────
-function CrossoverModal({ crossover, onClose }) {
+function CrossoverModal({ crossover, pct_actas, onClose }) {
+  const topNames = (crossover?.top_pending ?? [])
+    .slice(0, 3)
+    .map(p => p.nombre.split(' ')[0])  // first word only for brevity
+    .join(', ');
+
+  const shiftStr = crossover?.obs_shift != null
+    ? `${crossover.obs_shift > 0 ? '+' : ''}${crossover.obs_shift}pp`
+    : '—';
+
+  const extKfStr = crossover?.ext_kf_r2_share != null
+    ? `${crossover.ext_kf_r2_share}%`
+    : '—';
+
   return (
     <div
       onClick={onClose}
@@ -25,7 +38,7 @@ function CrossoverModal({ crossover, onClose }) {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#1C1917' }}>
-            Cruce proyectado — Metodología
+            Proyección de cruce KF / RSP
           </h3>
           <button
             onClick={onClose}
@@ -38,46 +51,65 @@ function CrossoverModal({ crossover, onClose }) {
           </button>
         </div>
 
-        <p style={{ fontSize: 13, color: '#78716C', lineHeight: 1.6, margin: '0 0 12px' }}>
-          Proyección del punto en que el conteo crudo de votos de Keiko Fujimori
-          supera al de Roberto Sánchez Palomino a nivel nacional (doméstico + exterior).
+        <p style={{ fontSize: 13, color: '#78716C', lineHeight: 1.6, margin: '0 0 14px' }}>
+          Estimación probabilística del porcentaje de actas en que el conteo crudo
+          de Keiko Fujimori podría superar al de Roberto Sánchez a nivel nacional
+          (doméstico + exterior).
         </p>
 
-        <div style={{ fontSize: 12, color: '#78716C', lineHeight: 1.6, marginBottom: 16 }}>
-          <p style={{ margin: '0 0 8px', fontWeight: 600, color: '#1C1917', fontSize: 13 }}>
-            ¿Por qué KF puede cruzar?
+        {/* Dynamic context */}
+        <div style={{ fontSize: 12, color: '#78716C', lineHeight: 1.7, marginBottom: 16 }}>
+          <p style={{ margin: '0 0 6px', fontWeight: 600, color: '#1C1917', fontSize: 13 }}>
+            Situación actual
           </p>
-          <p style={{ margin: '0 0 8px' }}>
-            El voto exterior favorece a KF (+65% vs RSP), pero solo el{' '}
-            <strong style={{ color: '#1C1917' }}>{crossover?.ext_pct ?? '~35'}%</strong>{' '}
-            ha sido contabilizado. El grueso del exterior restante (España, Chile, Argentina, Italia,
-            USA) continúa entrando con fuerte ventaja para KF.
-          </p>
-          <p style={{ margin: 0 }}>
-            El voto doméstico ya está casi completo ({">"} 96%) y RSP lidera por{' '}
-            <strong style={{ color: '#1C1917' }}>{crossover?.nat_rsp_lead?.toLocaleString('es-PE') ?? '—'}</strong>{' '}
-            votos. La proyección estima cuándo el flujo exterior nivelará esa ventaja.
-          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <span>
+              Doméstico ({pct_actas != null ? `${pct_actas.toFixed(1)}% procesado` : 'casi completo'}):
+              RSP lidera por{' '}
+              <strong style={{ color: '#1C1917' }}>
+                {crossover?.nat_rsp_lead?.toLocaleString('es-PE') ?? '—'}
+              </strong>{' '}
+              votos netos.
+            </span>
+            <span>
+              Exterior ({crossover?.ext_pct != null ? `${crossover.ext_pct}% procesado` : 'parcial'}):
+              KF al{' '}
+              <strong style={{ color: '#1C1917' }}>{extKfStr}</strong>{' '}
+              en lo contabilizado hasta ahora.
+            </span>
+            {topNames && (
+              <span>
+                Países con mayor volumen pendiente: <strong style={{ color: '#1C1917' }}>{topNames}</strong>{' '}
+                y otros.
+              </span>
+            )}
+          </div>
         </div>
 
+        {/* Model description */}
         <div style={{
           background: '#F7F4EF', borderRadius: 8, padding: '10px 14px',
           fontSize: 12, color: '#78716C', lineHeight: 1.6, marginBottom: 16,
         }}>
-          <p style={{ margin: '0 0 6px', fontWeight: 600, color: '#1C1917' }}>Modelo</p>
+          <p style={{ margin: '0 0 6px', fontWeight: 600, color: '#1C1917' }}>Cómo se calcula</p>
           <p style={{ margin: '0 0 4px' }}>
-            Monte Carlo de <strong style={{ color: '#1C1917' }}>800 simulaciones</strong>.
-            Para cada país con datos parciales se usa el % KF observado hasta el momento.
-            Para países sin datos se aplica el shift observado (diferencia R2 vs R1
-            entre países ya llegados).
+            Monte Carlo de{' '}
+            <strong style={{ color: '#1C1917' }}>
+              {(crossover?.n_sims ?? 2000).toLocaleString()} simulaciones
+            </strong>.
+            Para países parcialmente contados se usa el % KF observado en sus actas ya llegadas.
+            Para países sin datos se aplica el shift promedio observado entre R1 y R2
+            en los países ya reportados.
           </p>
           <p style={{ margin: 0 }}>
-            Shift global observado:{' '}
-            <strong style={{ color: '#1C1917' }}>{crossover?.obs_shift != null ? `${crossover.obs_shift > 0 ? '+' : ''}${crossover.obs_shift}pp` : '—'}</strong>{' '}
-            vs R1. Dispersión por país: ±{crossover?.sigma_shift ?? '—'}pp.
+            Shift observado:{' '}
+            <strong style={{ color: '#1C1917' }}>{shiftStr}</strong>{' '}
+            vs R1 · Dispersión inter-país:{' '}
+            <strong style={{ color: '#1C1917' }}>±{crossover?.sigma_shift ?? '—'}pp</strong>
           </p>
         </div>
 
+        {/* Pending countries table */}
         {crossover?.top_pending?.length > 0 && (
           <div style={{ marginBottom: 16 }}>
             <p style={{ margin: '0 0 8px', fontWeight: 600, color: '#1C1917', fontSize: 13 }}>
@@ -88,31 +120,45 @@ function CrossoverModal({ crossover, onClose }) {
                 <tr style={{ color: '#A8A29E', textAlign: 'left' }}>
                   <th style={{ fontWeight: 500, paddingBottom: 4 }}>País</th>
                   <th style={{ fontWeight: 500, paddingBottom: 4, textAlign: 'right' }}>% cont.</th>
-                  <th style={{ fontWeight: 500, paddingBottom: 4, textAlign: 'right' }}>KF%</th>
+                  <th style={{ fontWeight: 500, paddingBottom: 4, textAlign: 'right' }}>KF% obs./est.</th>
                   <th style={{ fontWeight: 500, paddingBottom: 4, textAlign: 'right' }}>Votos pend.</th>
                 </tr>
               </thead>
               <tbody>
-                {crossover.top_pending.map((p, i) => (
-                  <tr key={i} style={{ borderTop: '1px solid #F0EDE8' }}>
-                    <td style={{ padding: '4px 0', color: '#1C1917' }}>{p.nombre}</td>
-                    <td style={{ padding: '4px 0', textAlign: 'right', color: '#78716C' }}>{p.pctDone?.toFixed(0)}%</td>
-                    <td style={{ padding: '4px 0', textAlign: 'right', color: p.r2KfPct != null && p.r2KfPct >= 50 ? KEIKO_COLOR : '#78716C' }}>
-                      {p.r2KfPct != null ? `${p.r2KfPct.toFixed(1)}%` : `~${(p.r1Kf + (crossover.obs_shift ?? -21)).toFixed(1)}%`}
-                    </td>
-                    <td style={{ padding: '4px 0', textAlign: 'right', color: '#78716C' }}>
-                      {p.estRemaining?.toLocaleString('es-PE')}
-                    </td>
-                  </tr>
-                ))}
+                {crossover.top_pending.map((p, i) => {
+                  const kfPctDisplay = p.r2KfPct != null
+                    ? `${p.r2KfPct.toFixed(1)}%`
+                    : `~${Math.max(0, p.r1Kf + (crossover.obs_shift ?? 0)).toFixed(1)}%`;
+                  const isObs = p.r2KfPct != null;
+                  return (
+                    <tr key={i} style={{ borderTop: '1px solid #F0EDE8' }}>
+                      <td style={{ padding: '4px 0', color: '#1C1917' }}>{p.nombre}</td>
+                      <td style={{ padding: '4px 0', textAlign: 'right', color: '#78716C' }}>
+                        {p.pctDone?.toFixed(0)}%
+                      </td>
+                      <td style={{ padding: '4px 0', textAlign: 'right' }}>
+                        <span style={{ color: p.r2KfPct != null && p.r2KfPct >= 50 ? KEIKO_COLOR : '#78716C' }}>
+                          {kfPctDisplay}
+                        </span>
+                        {!isObs && (
+                          <span style={{ color: '#A8A29E', fontSize: 10, marginLeft: 3 }}>est.</span>
+                        )}
+                      </td>
+                      <td style={{ padding: '4px 0', textAlign: 'right', color: '#78716C' }}>
+                        {p.estRemaining?.toLocaleString('es-PE')}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
 
         <p style={{ fontSize: 11, color: '#A8A29E', margin: 0, lineHeight: 1.5 }}>
-          Este indicador muestra el cruce del conteo crudo, no la proyección final a 100% de actas.
-          El resultado final proyectado por el modelo se muestra en las barras superiores y en The Needle.
+          Esta proyección estima el cruce del conteo crudo (voto a voto), no el resultado
+          final del modelo. El resultado oficial y la proyección a 100% de actas se
+          muestran en las cards superiores y en The Needle.
         </p>
       </div>
     </div>
@@ -263,7 +309,7 @@ export default function CrossoverCard({ crossover, pct_actas }) {
       </div>
 
       {showModal && (
-        <CrossoverModal crossover={crossover} onClose={() => setShowModal(false)} />
+        <CrossoverModal crossover={crossover} pct_actas={pct_actas} onClose={() => setShowModal(false)} />
       )}
     </>
   );

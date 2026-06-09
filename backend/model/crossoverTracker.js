@@ -198,18 +198,21 @@ function computeCrossover(liveData) {
     const kfNetDet  = extNetDet(obsShift);
     const finalLead = natRspLead + domRemRsp - kfNetDet;
 
+    const extTotVotes = extKf + extRsp;
     return {
-      status:       crossoverPct != null ? 'projected' : 'no_crossover',
-      crossover_pct:  crossoverPct,
-      ci_lo:          ciLo,
-      ci_hi:          ciHi,
+      status:          crossoverPct != null ? 'projected' : 'no_crossover',
+      crossover_pct:   crossoverPct,
+      ci_lo:           ciLo,
+      ci_hi:           ciHi,
       confidence,
-      obs_shift:      _round1(obsShift),
-      sigma_shift:    _round1(sigmaShift),
-      nat_rsp_lead:   Math.round(natRspLead),
+      n_sims:          N_SIMS,
+      obs_shift:       _round1(obsShift),
+      sigma_shift:     _round1(sigmaShift),
+      nat_rsp_lead:    Math.round(natRspLead),
       proj_final_lead: Math.round(finalLead),  // negative = KF wins
-      ext_pct:        _round1(extPct),
-      top_pending:    topPending,
+      ext_pct:         _round1(extPct),
+      ext_kf_r2_share: extTotVotes > 0 ? _round1(100 * extKf / extTotVotes) : null,
+      top_pending:     topPending,
     };
   } catch (err) {
     return { status: 'error', error: err.message, confidence: 0 };
