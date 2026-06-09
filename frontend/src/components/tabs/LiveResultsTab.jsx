@@ -3,6 +3,7 @@ import { getPartyColor } from '../../config/partyColors';
 import WinProbabilityNeedle from '../WinProbabilityNeedle';
 import PeruDeptMap from '../PeruDeptMap';
 import ElectionNightEvolutionChart from '../ElectionNightEvolutionChart';
+import CrossoverCard from '../CrossoverCard';
 
 const KEIKO_COLOR   = getPartyColor('Keiko Fujimori').primary;           // #F97316
 const SANCHEZ_COLOR = getPartyColor('Roberto Sánchez Palomino').primary; // #16A34A
@@ -792,6 +793,13 @@ export default function LiveResultsTab({ predictions }) {
         rsp_votos={data?.rsp_votos}
         isDemo={isDemo}
       />
+
+      {isLive && (
+        <CrossoverCard
+          crossover={liveData?.crossover}
+          pct_actas={data?.pct_actas}
+        />
+      )}
 
       <div style={{ background: '#FFFFFF', border: '1px solid #E5E0D8', borderRadius: 14, padding: '24px 16px 20px' }}>
         <div style={{ color: '#8C877F', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'center', marginBottom: 4 }}>
