@@ -1022,10 +1022,21 @@ router.get('/live-projection', async (req, res) => {
     }
 
     const { rows: projHistory } = await db.query(
-      `SELECT projected_at, pct_actas, obs_kf_r2_share,
-              proj_kf_r2_share, proj_ci95_lo, proj_ci95_hi
-       FROM r2_election_projections
-       ORDER BY projected_at ASC`
+      `SELECT rp.projected_at, rp.pct_actas,
+              CASE WHEN s.id IS NOT NULL AND (s.keiko_votos + s.sanchez_votos + ext.ext_kf + ext.ext_rsp) > 0
+                THEN ROUND((s.keiko_votos + ext.ext_kf)::numeric /
+                           (s.keiko_votos + s.sanchez_votos + ext.ext_kf + ext.ext_rsp) * 100, 2)
+                ELSE rp.obs_kf_r2_share
+              END AS obs_kf_r2_share,
+              rp.proj_kf_r2_share, rp.proj_ci95_lo, rp.proj_ci95_hi
+       FROM r2_election_projections rp
+       LEFT JOIN onpe_live_snapshots s ON s.id = rp.snapshot_id
+       LEFT JOIN LATERAL (
+         SELECT COALESCE(SUM((e->>'keiko_votos')::numeric), 0)   AS ext_kf,
+                COALESCE(SUM((e->>'sanchez_votos')::numeric), 0) AS ext_rsp
+         FROM jsonb_array_elements(COALESCE(s.ext_breakdown, '[]'::jsonb)) e
+       ) ext ON true
+       ORDER BY rp.projected_at ASC`
     );
     const pf = v => (v != null ? parseFloat(v) : null);
 
