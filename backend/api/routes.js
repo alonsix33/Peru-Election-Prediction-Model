@@ -1001,11 +1001,15 @@ router.get('/live-projection', async (req, res) => {
     const r = project(snapshot);
     if (r.status !== 'ok') return res.json({ status: r.status, pct_actas: 0 });
 
-    const extKf  = r.exterior?.obs_kf_votos  || 0;
-    const extRsp = r.exterior?.obs_rsp_votos || 0;
-    const domKf  = Math.max(0, (r.observed.keiko_votos  || 0) - extKf);
-    const domRsp = Math.max(0, (r.observed.sanchez_votos || 0) - extRsp);
+    const extKf    = r.exterior?.obs_kf_votos  || 0;
+    const extRsp   = r.exterior?.obs_rsp_votos || 0;
+    // obs_kf/obs_rsp come from AMBITO_NAC=1 (domestic only) — exterior is tracked separately
+    const domKf    = r.observed.keiko_votos   || 0;
+    const domRsp   = r.observed.sanchez_votos || 0;
     const domTotal = domKf + domRsp;
+    const natKf    = domKf + extKf;
+    const natRsp   = domRsp + extRsp;
+    const natTotal = natKf + natRsp;
     const sigma     = r.projected.sigma_pp || 3.0;
     // Use bootstrap-derived probability (includes exterior, correctly scaled).
     // Fall back to normal CDF only if projector is old and doesn't expose prob_kf_win.
@@ -1033,22 +1037,22 @@ router.get('/live-projection', async (req, res) => {
       phaseLabel:       r.phaseLabel,
 
       // Top-level national fields (for CandidateCards + StatusBar)
-      kf_r2_share:      r.observed.kf_r2_share,
+      kf_r2_share:      natTotal > 0 ? Math.round(natKf / natTotal * 10000) / 100 : r.observed.kf_r2_share,
       proj_kf_r2_share: r.projected.kf_r2_share,
       ci_low:           r.projected.ci_95.lo,
       ci_high:          r.projected.ci_95.hi,
-      kf_votos:         r.observed.keiko_votos,
-      rsp_votos:        r.observed.sanchez_votos,
+      kf_votos:         natKf,
+      rsp_votos:        natRsp,
       prob_win_kf:      probWinKF,
 
       // Nested objects for VoteBars
       national: {
-        kf_r2_share: r.observed.kf_r2_share,
-        kf_votos:    r.observed.keiko_votos,
-        rsp_votos:   r.observed.sanchez_votos,
+        kf_r2_share: natTotal > 0 ? Math.round(natKf / natTotal * 10000) / 100 : r.observed.kf_r2_share,
+        kf_votos:    natKf,
+        rsp_votos:   natRsp,
       },
       nacional: {
-        kf_r2_share: domTotal > 0 ? Math.round(100 * domKf / domTotal * 100) / 100 : null,
+        kf_r2_share: domTotal > 0 ? Math.round(domKf / domTotal * 10000) / 100 : null,
         kf_votos:    domKf,
         rsp_votos:   domRsp,
       },
