@@ -13,7 +13,7 @@ function _loadR1() {
 const EXT_ACTAS   = 2543;
 const DOM_ACTAS   = 90223;
 const TOTAL_ACTAS = 92766;
-const N_SIMS      = 800;
+const N_SIMS      = 2000;
 
 function _randn() {
   const u1 = Math.max(1e-10, Math.random());
