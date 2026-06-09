@@ -8,6 +8,7 @@ const { HOUSE_EFFECTS } = require('../model/aggregator');
 const { runFullPipeline } = require('../model/pipeline');
 const { handleError } = require('../errors/errorHandler');
 const { scrapePolymarket } = require('../scraper/polymarket');
+const { computeCrossover } = require('../model/crossoverTracker');
 const db = require('../db');
 
 // ─── GET /api/status ────────────────────────────────────────
@@ -1122,6 +1123,14 @@ router.get('/live-projection', async (req, res) => {
       shift_granularity: r.shift_granularity,
 
       pais_breakdown: snapshot.pais_breakdown || [],
+
+      // Crossover projection — at what % of actas does KF raw count cross RSP
+      crossover: computeCrossover({
+        pct_actas: r.pct_actas,
+        nacional:  { kf_votos: domKf, rsp_votos: domRsp },
+        extranjero: { kf_votos: extKf, rsp_votos: extRsp },
+        pais_breakdown: snapshot.pais_breakdown,
+      }),
 
       history: projHistory.map(h => ({
         time:             h.projected_at,
