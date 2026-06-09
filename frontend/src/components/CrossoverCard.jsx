@@ -109,6 +109,32 @@ function CrossoverModal({ crossover, pct_actas, onClose }) {
           </p>
         </div>
 
+        {/* Confidence explanation */}
+        <div style={{
+          background: '#F7F4EF', borderRadius: 8, padding: '10px 14px',
+          fontSize: 12, color: '#78716C', lineHeight: 1.6, marginBottom: 16,
+        }}>
+          <p style={{ margin: '0 0 4px', fontWeight: 600, color: '#1C1917' }}>Qué significa "Confianza"</p>
+          <p style={{ margin: 0 }}>
+            Fracción de las {(crossover?.n_sims ?? 2000).toLocaleString()} simulaciones en que KF
+            logra superar a RSP antes del 100% de actas. Con un{' '}
+            <strong style={{ color: '#1C1917' }}>
+              {crossover?.confidence != null ? `${crossover.confidence}%` : '—'}
+            </strong>{' '}
+            de confianza, en{' '}
+            <strong style={{ color: '#1C1917' }}>
+              {crossover?.confidence != null && crossover?.n_sims != null
+                ? Math.round(crossover.confidence / 100 * crossover.n_sims).toLocaleString()
+                : '—'}
+            </strong>{' '}
+            escenarios los votos del exterior son suficientes para revertir la ventaja
+            doméstica actual de RSP. No es la probabilidad de ganar la elección, sino
+            de cruzar en conteo crudo. El IC{' '}
+            <strong style={{ color: '#1C1917' }}>[{crossover?.ci_lo ?? '—'}%–{crossover?.ci_hi ?? '—'}%]</strong>{' '}
+            muestra el rango de actas en que podría ocurrir el cruce (asumiendo que ocurre).
+          </p>
+        </div>
+
         {/* Pending countries table */}
         {crossover?.top_pending?.length > 0 && (
           <div style={{ marginBottom: 16 }}>
@@ -168,9 +194,10 @@ function CrossoverModal({ crossover, pct_actas, onClose }) {
 // ─── Progress bar ─────────────────────────────────────────────
 function CrossoverBar({ pctNow, crossoverPct, ciLo, ciHi }) {
   const toX = (pct) => `${Math.min(100, Math.max(0, pct))}%`;
+  const tooClose = crossoverPct != null && pctNow != null && Math.abs(crossoverPct - pctNow) < 6;
 
   return (
-    <div style={{ position: 'relative', height: 10, borderRadius: 5, background: '#F0EDE8', overflow: 'visible', margin: '10px 0 20px' }}>
+    <div style={{ position: 'relative', height: 10, borderRadius: 5, background: '#F0EDE8', overflow: 'visible', margin: tooClose ? '10px 0 32px' : '10px 0 22px' }}>
       {/* CI band */}
       {ciLo != null && ciHi != null && (
         <div style={{
@@ -196,15 +223,20 @@ function CrossoverBar({ pctNow, crossoverPct, ciLo, ciHi }) {
           background: KEIKO_COLOR, borderRadius: 1,
         }} />
       )}
-      {/* Labels */}
+      {/* Labels — stagger vertically when the two markers would overlap */}
       <div style={{ position: 'absolute', top: 14, left: 0, right: 0 }}>
-        <span style={{ position: 'absolute', left: toX(pctNow), transform: 'translateX(-50%)', fontSize: 10, color: '#A8A29E', whiteSpace: 'nowrap' }}>
+        <span style={{
+          position: 'absolute', left: toX(pctNow), transform: 'translateX(-50%)',
+          fontSize: 10, color: '#A8A29E', whiteSpace: 'nowrap',
+          top: tooClose ? 14 : 0,
+        }}>
           {pctNow?.toFixed(1)}%
         </span>
         {crossoverPct != null && (
           <span style={{
             position: 'absolute', left: toX(crossoverPct), transform: 'translateX(-50%)',
             fontSize: 10, color: KEIKO_COLOR, fontWeight: 600, whiteSpace: 'nowrap',
+            top: 0,
           }}>
             {crossoverPct}%
           </span>
