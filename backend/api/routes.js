@@ -989,6 +989,7 @@ router.get('/live-projection', async (req, res) => {
 
     const snapshot = {
       pct_actas:          pct_actas_val,
+      actas_total:        latest.actas_total        != null ? parseInt(latest.actas_total)   : null,
       keiko_votos:        latest.keiko_votos        != null ? parseInt(latest.keiko_votos)   : 0,
       sanchez_votos:      latest.sanchez_votos      != null ? parseInt(latest.sanchez_votos) : 0,
       dept_breakdown:     Array.isArray(latest.dept_breakdown)     ? latest.dept_breakdown     : [],
@@ -1222,6 +1223,7 @@ router.post('/admin/inject-snapshot', async (req, res) => {
       try {
         const pr = project({
           pct_actas:          snap.pct_actas          ?? 0,
+          actas_total:        snap.actas_total         ?? null,
           keiko_votos:        snap.keiko_votos         ?? 0,
           sanchez_votos:      snap.sanchez_votos       ?? 0,
           dept_breakdown:     Array.isArray(snap.dept_breakdown)     ? snap.dept_breakdown     : [],
@@ -1240,7 +1242,8 @@ router.post('/admin/inject-snapshot', async (req, res) => {
                 proj_winner, proj_margin_pp, proj_sigma_pp,
                 zda_correction_applied, zda_remaining_mesas, zda_proj_kf_r2_share, zda_effect_pp,
                 national_shift_pp, shift_granularity, dept_shifts, province_shifts, district_shifts, full_result)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)`,
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
+             ON CONFLICT (snapshot_id) DO NOTHING`,
             [
               snapshotId, pr.pct_actas, pr.phase,
               pr.observed.kf_r2_share, pr.observed.keiko_votos, pr.observed.sanchez_votos,
@@ -1302,6 +1305,7 @@ router.post('/admin/re-project-all', async (req, res) => {
 
       const snap = {
         pct_actas:          pct,
+        actas_total:        s.actas_total   != null ? parseInt(s.actas_total)   : null,
         keiko_votos:        s.keiko_votos   != null ? parseInt(s.keiko_votos)   : 0,
         sanchez_votos:      s.sanchez_votos != null ? parseInt(s.sanchez_votos) : 0,
         dept_breakdown:     Array.isArray(s.dept_breakdown)     ? s.dept_breakdown     : [],
@@ -1324,7 +1328,8 @@ router.post('/admin/re-project-all', async (req, res) => {
             proj_winner, proj_margin_pp, proj_sigma_pp,
             zda_correction_applied, zda_remaining_mesas, zda_proj_kf_r2_share, zda_effect_pp,
             national_shift_pp, shift_granularity, dept_shifts, province_shifts, district_shifts, full_result)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)`,
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)
+         ON CONFLICT (snapshot_id) DO NOTHING`,
         [
           s.id, s.captured_at, pr.pct_actas, pr.phase,
           pr.observed.kf_r2_share, pr.observed.keiko_votos, pr.observed.sanchez_votos,
