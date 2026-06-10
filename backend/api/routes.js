@@ -1349,6 +1349,39 @@ router.post('/admin/re-project-all', async (req, res) => {
   res.json({ ok: true, total: snapshots.length, updated, skipped, failed });
 });
 
+// ─── DELETE /api/admin/snapshots/last ───────────────────────
+// Elimina los últimos N snapshots (y sus proyecciones). ?n=2 por defecto.
+router.delete('/admin/snapshots/last', async (req, res) => {
+  const adminSecret = process.env.ADMIN_SECRET;
+  if (!adminSecret) return res.status(503).json({ error: 'ADMIN_SECRET not configured' });
+  const token = (req.headers['authorization'] || '').replace('Bearer ', '');
+  let authorized = false;
+  try {
+    authorized = token.length > 0 && token.length === adminSecret.length &&
+      crypto.timingSafeEqual(Buffer.from(token), Buffer.from(adminSecret));
+  } catch { authorized = false; }
+  if (!authorized) return res.status(401).json({ error: 'Unauthorized' });
+
+  const n = Math.min(50, Math.max(1, parseInt(req.query.n) || 2));
+  try {
+    const { rows: ids } = await db.query(
+      `SELECT id FROM onpe_live_snapshots ORDER BY captured_at DESC LIMIT $1`, [n]
+    );
+    if (ids.length === 0) return res.json({ ok: true, snapshots_deleted: 0, projections_deleted: 0 });
+    const idList = ids.map(r => r.id);
+    const { rowCount: p } = await db.query(
+      `DELETE FROM r2_election_projections WHERE snapshot_id = ANY($1)`, [idList]
+    );
+    const { rowCount: s } = await db.query(
+      `DELETE FROM onpe_live_snapshots WHERE id = ANY($1)`, [idList]
+    );
+    console.log(`🧹 Admin: deleted last ${s} snapshots (ids: ${idList.join(',')}), ${p} projections`);
+    res.json({ ok: true, snapshots_deleted: s, projections_deleted: p, ids: idList });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── DELETE /api/admin/snapshots ────────────────────────────
 // Limpia snapshots de prueba antes del 7J. Requiere ADMIN_SECRET.
 router.delete('/admin/snapshots', async (req, res) => {
