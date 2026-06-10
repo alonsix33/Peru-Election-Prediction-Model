@@ -1318,15 +1318,15 @@ router.post('/admin/re-project-all', async (req, res) => {
       await db.query(`DELETE FROM r2_election_projections WHERE snapshot_id = $1`, [s.id]);
       await db.query(
         `INSERT INTO r2_election_projections
-           (snapshot_id, pct_actas, phase,
+           (snapshot_id, projected_at, pct_actas, phase,
             obs_kf_r2_share, obs_keiko_votos, obs_sanchez_votos,
             proj_kf_r2_share, proj_ci95_lo, proj_ci95_hi, proj_ci80_lo, proj_ci80_hi,
             proj_winner, proj_margin_pp, proj_sigma_pp,
             zda_correction_applied, zda_remaining_mesas, zda_proj_kf_r2_share, zda_effect_pp,
             national_shift_pp, shift_granularity, dept_shifts, province_shifts, district_shifts, full_result)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)`,
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25)`,
         [
-          s.id, pr.pct_actas, pr.phase,
+          s.id, s.captured_at, pr.pct_actas, pr.phase,
           pr.observed.kf_r2_share, pr.observed.keiko_votos, pr.observed.sanchez_votos,
           pr.projected.kf_r2_share, pr.projected.ci_95.lo, pr.projected.ci_95.hi,
           pr.projected.ci_80.lo, pr.projected.ci_80.hi,
