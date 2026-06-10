@@ -335,6 +335,14 @@ export default function CrossoverCard({ crossover, pct_actas }) {
               <span style={{ fontSize: 11, color: '#A8A29E' }}>
                 Ext. contabilizado: {crossover.ext_pct}%
               </span>
+              {crossover.prob_pre_jee != null && (
+                <span style={{ fontSize: 11, color: '#78716C' }}>
+                  P(cruce antes del JEE):{' '}
+                  <strong style={{ color: crossover.prob_pre_jee >= 70 ? '#15803D' : '#D97706' }}>
+                    {crossover.prob_pre_jee}%
+                  </strong>
+                </span>
+              )}
             </div>
           </>
         )}

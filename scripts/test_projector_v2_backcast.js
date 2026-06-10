@@ -101,4 +101,49 @@ for (const [name, ok, detail] of checks) {
   if (!ok) failed++;
 }
 console.log(`\nEstado final: ${last.proj}% CI[${last.ci_lo}, ${last.ci_hi}] prob=${last.prob}% @ ${last.pct}% actas`);
+
+// ── Crossover v2 — checks de consistencia ────────────────────────────────────
+const { computeCrossover } = require(path.join(__dirname, '..', 'backend', 'model', 'crossoverTracker.js'));
+
+const valid = rows.filter(r => r.pct_actas && r.keiko_votos);
+const lastSnap = valid[valid.length - 1];
+const lastT = new Date(lastSnap.captured_at).getTime();
+let prevSnap = null;
+for (const r of valid) {
+  if (lastT - new Date(r.captured_at).getTime() >= 3 * 3600 * 1000) prevSnap = r;
+}
+const extOf = s => ({
+  kf:  (s.ext_breakdown || []).reduce((a, c) => a + (c.keiko_votos  || 0), 0),
+  rsp: (s.ext_breakdown || []).reduce((a, c) => a + (c.sanchez_votos || 0), 0),
+});
+const e = extOf(lastSnap);
+const cx = computeCrossover({
+  pct_actas:   parseFloat(lastSnap.pct_actas),
+  actas_total: lastSnap.actas_total != null ? parseInt(lastSnap.actas_total) : null,
+  nacional:    { kf_votos: parseInt(lastSnap.keiko_votos), rsp_votos: parseInt(lastSnap.sanchez_votos) },
+  extranjero:  { kf_votos: e.kf, rsp_votos: e.rsp },
+  pais_breakdown:      lastSnap.pais_breakdown || [],
+  prev_pais_breakdown: prevSnap?.pais_breakdown || [],
+  dept_breakdown:      lastSnap.dept_breakdown || [],
+});
+
+console.log(`\nCrossover v2: status=${cx.status} pct=${cx.crossover_pct} CI[${cx.ci_lo},${cx.ci_hi}]`
+  + ` conf=${cx.confidence}% preJEE=${cx.prob_pre_jee}% lead=${cx.proj_final_lead}`
+  + ` activos=${cx.active_countries} congelados=${cx.frozen_countries}`);
+
+// lead implícito del projector híbrido (share final → votos sobre universo estimado)
+const projLeadKF = -cx.proj_final_lead; // positivo = KF
+const cxChecks = [
+  ['crossover status válido',          cx.status === 'projected' || cx.status === 'crossed', cx.status],
+  ['crossover_pct ∈ [97.4, 99.8]',     cx.status !== 'projected' || (cx.crossover_pct >= 97.4 && cx.crossover_pct <= 99.8), `pct=${cx.crossover_pct}`],
+  ['confidence ≥ 90%',                 cx.confidence >= 90,                       `conf=${cx.confidence}`],
+  ['lead final KF ∈ [+10k, +70k]',     projLeadKF >= 10000 && projLeadKF <= 70000, `lead=${projLeadKF}`],
+  ['prob_pre_jee ∈ [30, 100]',         cx.prob_pre_jee >= 30 && cx.prob_pre_jee <= 100, `p=${cx.prob_pre_jee}`],
+];
+console.log('\nCHECKS CROSSOVER');
+for (const [name, ok, detail] of cxChecks) {
+  console.log(`  ${ok ? '✅' : '❌'} ${name}  (${detail})`);
+  if (!ok) failed++;
+}
+
 process.exit(failed ? 1 : 0);

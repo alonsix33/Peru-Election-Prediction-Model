@@ -928,4 +928,4 @@ function project(snapshot) {
   };
 }
 
-module.exports = { project };
+module.exports = { project, _jeeBlocks };
