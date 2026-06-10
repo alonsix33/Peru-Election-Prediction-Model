@@ -193,13 +193,14 @@ manualmente. La deduplicación es idempotente (IF NOT EXISTS por pollster + fiel
 | `backend/model/bayesian.js` | Blend polls+PM, Φ⁻¹ conversion |
 | `backend/model/montecarlo.js` | 10k sims, shocks, voto oculto |
 | `backend/model/weights.js` | α schedule, λ decay |
-| `backend/model/electionNightProjector.js` | Motor de proyección noche electoral — shift estratificado district→province→dept→naive; `_computeStratifiedShift()`, `_computeProvShifts()`, `_computeDistShifts()` |
+| `backend/model/electionNightProjector.js` | Motor de proyección noche electoral — HÍBRIDO: shift estratificado (v1) hasta 88% actas + cola JEE desde 92% (`_jeeBlocks()`, `_bootstrapJEE()`, blend `tail_w`). Contabilidad real: universo 92,766 actas, VV/acta vivo, exterior por actas-país |
+| `scripts/test_projector_v2_backcast.js` | Suite de aceptación del híbrido: backcast sobre los 711 snapshots reales R2 (`scripts/data/snapshots_export_r2_2026.json.gz`). Correr SIEMPRE antes de tocar el projector |
 | `backend/db/seed_r2.sql` | Pesos encuestadoras R2 |
 | `backend/db/r2_projections.sql` | Tabla proyecciones noche electoral |
 | `backend/data/r1_exterior.json` | Baseline exterior R1 (86.78% KF, 77 países) |
 | `backend/data/r1_zda_dept_model.json` | Modelo ZDA por dept (25 depts, fuentes A/B/C/D) |
 | `backend/data/r1_province_baseline.json` | Baseline provincial R1 (196 provincias, 100% cobertura) |
-| `backend/data/r1_districts_flat.json` | Baseline distrital R1 (1886/1892 con datos — 368 rellenados con proxy 2021 R2) |
+| `backend/data/r1_districts_flat.json` | Baseline distrital R1 (1886/1892 con datos reales r1_2026 — el proxy 2021 fue reemplazado) |
 | `frontend/public/r1_districts_flat.json` | Copia pública para panel distrital del mapa (lazy-load) |
 | `scripts/verify_r2_onpe.js` | Verificación pre-electoral (correr 7J ~19:45 PET) |
 | `scripts/onpe_bookmarklet.js` | Script de noche electoral — correr en browser ONPE para relay a Railway. Recoge nacional + 25 depts + 196 provincias + **1886 distritos** + exterior. PROV_CATALOG y DIST_CATALOG hardcodeados (evita bug `/ubigeos/provincias`). |
@@ -308,10 +309,33 @@ el cron siempre obtendrá HTML y `has_data` se mantendrá `false`.
 
 ### Cobertura distrital (panel mapa)
 `frontend/public/r1_districts_flat.json`: 1892 distritos, **1886 con kf_r2_share (99.7%)**.
-Los 368 antes faltantes fueron rellenados con proxy 2021 R2 (`source: '2021_r2_proxy'`).
-Solo 6 distritos sin datos: 4 creados post-2021 (nuevos ubigeos) + 2 con cero votos en 2021.
-Esos 6 usan fallback provincia/dept en el proyector — correcto.
+Los 368 antes faltantes fueron re-colectados con datos reales R1 2026 (`source: 'r1_2026'`)
+— ya NO se usa proxy 2021. Solo 6 distritos con cero votos bilaterales; usan fallback
+provincia/dept en el proyector — correcto.
 DIST_CATALOG en bookmarklet extendido de 1518 → 1886 ubigeos para colectar datos en vivo el 7J.
+
+### Projector híbrido (implementado 10-jun, validado con backcast de 711 snapshots)
+- **Universo real de actas R2 2026: 92,766** (90,223 dom + 2,543 ext, ONPE oficial) —
+  NO los 97,421+2,543 en mesas del plan pre-electoral. VV/acta real ≈ 200 (no 174).
+  El projector usa `snapshot.actas_total` con fallback a la constante `ACTAS_TOTAL_R2`.
+- **Cola JEE** (`tail_w`: 0 hasta 88% de actas, 1 desde 92%): a ese nivel el restante
+  doméstico es el pool de actas observadas en JEE (2026: ~1,580; Lima 919 + Callao 69 +
+  Piura 68 — 67% en plazas KF). Son errores formales urbanos → se proyectan a
+  cum local + h(−1pp) con merma f(10%). Precedente 2021: el tramo 99.888%→100% rompió
+  a nivel local o por encima (gap 50,989→44,058 pro-KF).
+- **Penalización de actas tardías** (medida con votos exactos, ventana 92→97%): la cola
+  RURAL corre muy por debajo del cum del dept (Piura −29pp, Amazonas −25pp, mediana −7pp).
+  NO confundir con las observadas JEE — son poblaciones distintas. El marginal de Lima
+  93→96.8% fue 56.7% (cola rural), pero sus 919 observadas urbanas ≈ cum 63.5%.
+- **Exterior**: restante por actas-país (`pais.totalActas × ext_vpam_live × (1−pct)`),
+  no constante global. Países sin datos heredan el shift EXTERIOR medido en vivo
+  (−22.5pp en 2026), no el doméstico (−11.5pp). Deriva tardía intra-país −2pp×(1−pct).
+- prob_win capeado a 99 — nunca afirmar 100% con actas pendientes.
+- Validación: `node scripts/test_projector_v2_backcast.js` (6 checks de aceptación).
+  Al 97.16%: híbrido **50.11% CI[50.03, 50.19] prob 99** vs v1 50.02 CI[50.00,50.05]
+  (banda verdad modelo JEE: 50.08-50.12; DATAdaf 50.16).
+- DB: unique index `idx_r2_proj_snapshot_unique` + dedupe en `startup.js` (los duplicados
+  1-18× del historial venían de corridas concurrentes de `re-project-all`).
 
 ### API endpoints nuevos (7J)
 | Endpoint | Propósito |

@@ -45,6 +45,23 @@ const PHASE_B_THRESHOLD = 30;
 const PHASE_C_THRESHOLD = 80;
 const PHASE_D_THRESHOLD = 95;
 
+// ─── Cola JEE (híbrido v2) ───────────────────────────────────────────────────
+// Universo real de actas R2 2026 (ONPE oficial, confirmado 7J via totales endpoint):
+// 92,766 actas totales = 90,223 domésticas + 2,543 exterior.
+// (TOTAL_MESAS=97,421 era el plan pre-electoral en mesas; el conteo público va en actas.)
+const ACTAS_TOTAL_R2 = 92766;
+const ACTAS_EXT_R2   = 2543;
+// A partir de ~88% de actas el restante doméstico deja de ser cola de reporte y pasa a
+// ser el pool de actas observadas en JEE (2026: ~1,580 actas, 62% Lima+Callao).
+// Validado contra backcast 711 snapshots: las observadas son errores formales urbanos
+// que se resuelven cerca del promedio de su circunscripción (precedente 2021:
+// 99.888%→100% rompió a nivel local o por encima).
+const TAIL_W_START = 88;   // inicio transición v1 → cola JEE
+const TAIL_W_FULL  = 92;   // peso 1 — restante = pool JEE puro
+const H_JEE        = -1.0; // haircut pp sobre el cum local (mesas con error ~cuasi-aleatorias)
+const F_JEE        = 0.10; // merma esperada: fracción de actas que el JEE anula
+const PEN_EXT_LATE = -2.0; // deriva tardía pp dentro de países exteriores (medida: España estable)
+
 // Minimum R1 vote-mass (bilateral KF+RSP) needed at each granularity level
 // to trust the stratified shift. Higher granularity = lower mass needed per unit.
 const MIN_VV_DIST = 2000;   // ~10+ small districts reporting
@@ -379,6 +396,91 @@ function _computeDistShifts(district_breakdown) {
     .sort((a, b) => Math.abs(b.shift_pp) - Math.abs(a.shift_pp));
 }
 
+// ─── Cola JEE: bloques por departamento ──────────────────────────────────────
+// Restante doméstico por dept desde dept_breakdown.pct_actas (actas reales),
+// normalizado a target_vv. Tasa del bloque = cum local + H_JEE.
+// Fallback sin pct por dept: reparto por masa bilateral R1 del dept.
+
+function _jeeBlocks(dept_breakdown, target_vv) {
+  const blocks = [];
+  let sum_known = 0;
+  for (const d of (dept_breakdown || [])) {
+    const kf = d.keiko_votos || 0, rsp = d.sanchez_votos || 0;
+    const pair = kf + rsp;
+    if (pair <= 0) continue;
+    const p = d.pct_actas;
+    if (p != null && p >= 100) continue;
+    let rem = null;
+    if (p != null && p > 0) {
+      rem = pair * (100 - p) / p;
+      sum_known += rem;
+    }
+    blocks.push({ ubigeo: d.ubigeo, rem, cum: 100 * kf / pair });
+  }
+  if (!blocks.length) return [];
+  if (sum_known > 0) {
+    const k = target_vv / sum_known;
+    for (const b of blocks) b.rem = (b.rem || 0) * k;
+  } else {
+    let mass = 0;
+    for (const b of blocks) {
+      const r1 = _r1ByDept[b.ubigeo];
+      mass += (r1?.kfV || 0) + (r1?.rspV || 0);
+    }
+    for (const b of blocks) {
+      const r1 = _r1ByDept[b.ubigeo];
+      const m = (r1?.kfV || 0) + (r1?.rspV || 0);
+      b.rem = mass > 0 ? target_vv * m / mass : target_vv / blocks.length;
+    }
+  }
+  return blocks;
+}
+
+// ─── Bootstrap del modelo de cola JEE ────────────────────────────────────────
+// Incertidumbre honesta: h~N(H_JEE,2), merma f~N(F_JEE,0.08), ruido por dept,
+// ruido por país exterior con σ que escala con la fracción no contada.
+
+function _bootstrapJEE(base_kf, base_rsp, blocks, extItems, ext_shift_prior) {
+  const sims = new Float64Array(N_SIMS);
+  let wins = 0;
+  for (let i = 0; i < N_SIMS; i++) {
+    const h       = H_JEE + 2.0 * _normalSample();
+    const f       = _clamp(F_JEE + 0.08 * _normalSample(), 0, 0.6);
+    const common  = 0.5 * _normalSample();
+    const vvScale = Math.max(0.3, 1 + 0.08 * _normalSample());
+    let fk = base_kf, fr = base_rsp;
+    for (const b of blocks) {
+      const rate = _clamp(b.cum + h + common + 2.0 * _normalSample(), 0, 100);
+      const vv   = b.rem * (1 - f) * vvScale;
+      fk += vv * rate / 100;
+      fr += vv * (1 - rate / 100);
+    }
+    const extScale = Math.max(0.3, 1 + 0.10 * _normalSample());
+    const penLate  = PEN_EXT_LATE + 2.0 * _normalSample();
+    const shiftS   = ext_shift_prior + 5.0 * _normalSample();
+    for (const x of extItems) {
+      const sd   = 5.0 * Math.max(0.15, 1 - x.pct_done / 100);
+      const rate = _clamp(
+        (x.obs_rate != null
+          ? x.obs_rate + penLate * (1 - x.pct_done / 100)
+          : x.r1_share + shiftS) + sd * _normalSample(), 0, 100);
+      const vv = x.rem_vv * extScale;
+      fk += vv * rate / 100;
+      fr += vv * (1 - rate / 100);
+    }
+    sims[i] = 100 * fk / (fk + fr);
+    if (fk > fr) wins++;
+  }
+  sims.sort();
+  return {
+    p2_5:        sims[Math.floor(N_SIMS * 0.025)],
+    p97_5:       sims[Math.floor(N_SIMS * 0.975)],
+    p10:         sims[Math.floor(N_SIMS * 0.10)],
+    p90:         sims[Math.floor(N_SIMS * 0.90)],
+    prob_kf_win: Math.round(100 * wins / N_SIMS),
+  };
+}
+
 // ─── Main projection function ─────────────────────────────────────────────────
 
 /**
@@ -401,6 +503,7 @@ function project(snapshot) {
     pct_actas,
     keiko_votos,
     sanchez_votos,
+    actas_total: snap_actas_total,
     dept_breakdown     = [],
     province_breakdown = [],
     district_breakdown = [],
@@ -438,6 +541,29 @@ function project(snapshot) {
   const obs_kf_r2_share = 100 * obs_kf / (obs_kf + obs_rsp);
   const dom_kf_r2_share = dom_pair > 0 ? 100 * dom_kf / dom_pair : obs_kf_r2_share;
   const obs_pair        = obs_kf + obs_rsp;
+
+  // ── Contabilidad real de actas (universo ONPE 92,766) ─────────────────────
+  // El pct_actas de ONPE va sobre actas totales (domésticas + exterior).
+  // Actas exteriores contadas: ponderando actas R1 por pct de cada país.
+  const actas_total = (snap_actas_total > 0) ? Number(snap_actas_total) : ACTAS_TOTAL_R2;
+  let ext_done_actas = 0;
+  if (_r1Exterior?.byPais && Array.isArray(pais_breakdown) && pais_breakdown.length > 0) {
+    for (const p of pais_breakdown) {
+      const r1p = _r1Exterior.byPais[String(p.ubigeo)];
+      if (r1p?.totalActas) ext_done_actas += r1p.totalActas * (p.pct_actas || 0) / 100;
+    }
+  }
+  if (ext_done_actas === 0 && (ext_kf + ext_rsp) > 0) {
+    ext_done_actas = (ext_kf + ext_rsp) / VV_PER_MESA_EXT;
+  }
+  const dom_done_actas   = Math.max(1, (pct / 100) * actas_total - ext_done_actas);
+  const vv_per_acta_live = (dom_pair > 100000 && dom_done_actas > 500)
+    ? dom_pair / dom_done_actas
+    : VV_PER_MESA;
+  const dom_rem_actas    = Math.max(0, (actas_total - ACTAS_EXT_R2) - dom_done_actas);
+  const ext_vpam_live    = ext_done_actas > 50
+    ? (ext_kf + ext_rsp) / ext_done_actas
+    : VV_PER_MESA_EXT;
 
   // ── Mesa estimates ────────────────────────────────────────────────────────
   // pct_actas from ONPE nacional embeds exterior mesas in the percentage.
@@ -532,6 +658,9 @@ function project(snapshot) {
   // ext_obs_frac: fraction of remaining exterior weight backed by observed R2 votes.
   // Initialized to 0 (fully uncertain); updated in the country-level path below.
   let ext_obs_frac = 0;
+  // extItems: por-país para bootstrap JEE y restante exterior por actas reales
+  const extItems = [];
+  let ext_shift_live = null;
 
   if (_r1Exterior?.byPais && Array.isArray(pais_breakdown) && pais_breakdown.length > 0) {
     // Build live lookup: ubigeo → {kf, rsp, pct_done}
@@ -546,30 +675,45 @@ function project(snapshot) {
       });
     }
 
+    // Shift exterior MEDIDO (obs − R1 ponderado por votos vivos) — los países sin
+    // datos heredan este shift, no el doméstico (en 2026: ext ≈ −22pp vs dom ≈ −11pp).
+    let sh_num = 0, sh_w = 0;
+    for (const [ubigeo, pais] of Object.entries(_r1Exterior.byPais)) {
+      const live = livePais.get(ubigeo);
+      const tot  = (live?.kf || 0) + (live?.rsp || 0);
+      if (tot > 0 && pais.kf_r2_share != null) {
+        sh_num += (100 * live.kf / tot - pais.kf_r2_share) * tot;
+        sh_w   += tot;
+      }
+    }
+    if (sh_w > 2000) ext_shift_live = sh_num / sh_w;
+
     let sum_vv = 0, sum_kf_proj = 0, obs_vv = 0;
     for (const [ubigeo, pais] of Object.entries(_r1Exterior.byPais)) {
-      const r1_bilateral = (pais.kfV || 0) + (pais.rspV || 0);
-      if (r1_bilateral === 0) continue;
-
       const live      = livePais.get(ubigeo);
       const pct_done  = live?.pct ?? 0;
-      if (pct_done >= 100) continue; // fully counted — already in obs_kf, skip
+      if (pct_done >= 100) continue; // fully counted — already in obs, skip
 
-      const remaining_frac = 1 - pct_done / 100;
+      // Restante real del país: actas R1 × VV/acta vivo × fracción no contada
+      const rem_vv = (pais.totalActas || 0) * ext_vpam_live * (1 - pct_done / 100);
+      if (rem_vv < 50) continue;
 
-      // Use observed R2 KF% when the country has reported votes; otherwise R1 prior + domestic shift
       const live_total = (live?.kf || 0) + (live?.rsp || 0);
-      const kf_pct = live_total > 0
-        ? 100 * (live.kf || 0) / live_total
-        : _clamp((pais.kf_r2_share ?? r1_ext_kf_r2_global) + national_shift, 0, 100);
+      const obs_rate   = live_total > 0 ? 100 * (live.kf || 0) / live_total : null;
+      // Observado: tasa del país + deriva tardía escalada por lo no contado.
+      // Sin datos: prior R1 + shift exterior medido (fallback: shift doméstico).
+      const kf_pct = obs_rate != null
+        ? _clamp(obs_rate + PEN_EXT_LATE * (1 - pct_done / 100), 0, 100)
+        : _clamp((pais.kf_r2_share ?? r1_ext_kf_r2_global) + (ext_shift_live ?? national_shift), 0, 100);
 
-      // Weight proportional to R1 bilateral × remaining fraction
-      const weight = r1_bilateral * remaining_frac;
-      sum_vv      += weight;
-      sum_kf_proj += weight * kf_pct;
-      // Track weight of countries with observed R2 data — these drive ext_proj
-      // and need far less domestic-correlated noise in the bootstrap.
-      if (live_total > 0) obs_vv += weight;
+      extItems.push({
+        ubigeo, rem_vv, pct_done, obs_rate,
+        r1_share: pais.kf_r2_share ?? r1_ext_kf_r2_global ?? 86.78,
+      });
+
+      sum_vv      += rem_vv;
+      sum_kf_proj += rem_vv * kf_pct;
+      if (live_total > 0) obs_vv += rem_vv;
     }
     if (sum_vv > 0) ext_proj_kf_r2 = sum_kf_proj / sum_vv;
     // Fraction of remaining ext weight backed by observed R2 votes (not just R1 prior).
@@ -595,7 +739,11 @@ function project(snapshot) {
 
   const R2_EXT_BILATERAL_EST = Math.round(TOTAL_MESAS_EXT * VV_PER_MESA_EXT); // 307,194
   const ext_reported_pair  = ext_kf + ext_rsp;
-  const ext_remaining_vv   = Math.max(0, R2_EXT_BILATERAL_EST - ext_reported_pair);
+  // Restante exterior: por actas-país cuando hay pais_breakdown (preciso);
+  // fallback al estimado global por constante.
+  const ext_remaining_vv = extItems.length > 0
+    ? extItems.reduce((s, x) => s + x.rem_vv, 0)
+    : Math.max(0, R2_EXT_BILATERAL_EST - ext_reported_pair);
 
   // ── Point estimate ────────────────────────────────────────────────────────
   const rem_reg_vv = regular_remaining * VV_PER_MESA;
@@ -611,16 +759,71 @@ function project(snapshot) {
     + rem_reg_vv * (1 - reg_proj_kf_r2 / 100)
     + rem_zda_vv * (1 - zda_proj_kf_r2 / 100)
     + ext_remaining_vv * (1 - ext_proj_kf_r2 / 100);
-  const projected_kf_r2_share = 100 * final_kf / (final_kf + final_rsp);
+  const share_v1 = 100 * final_kf / (final_kf + final_rsp);
+
+  // ── Cola JEE + blend híbrido ───────────────────────────────────────────────
+  // tail_w: 0 hasta 88% de actas (v1 estratificado puro, el mejor de la noche),
+  // 1 desde 92% (restante = pool JEE: observadas a cum local + h, merma f).
+  // La transición lineal elimina los saltos de régimen de los umbrales 94/95%.
+  const tail_w = _clamp((pct - TAIL_W_START) / (TAIL_W_FULL - TAIL_W_START), 0, 1);
+
+  let jeeBlocks = [];
+  let share_jee = null;
+  let jeeExtItems = extItems;
+  if (tail_w > 0) {
+    jeeBlocks = _jeeBlocks(dept_breakdown, dom_rem_actas * vv_per_acta_live);
+    if (jeeExtItems.length === 0 && ext_remaining_vv > 0) {
+      // sin pais_breakdown: un solo bloque exterior agregado con la proyección v1
+      jeeExtItems = [{
+        ubigeo: 'EXT', rem_vv: ext_remaining_vv,
+        pct_done: 100 * (1 - ext_remaining_vv / Math.max(1, R2_EXT_BILATERAL_EST)),
+        obs_rate: ext_proj_kf_r2, r1_share: r1_ext_kf_r2_global ?? 86.78,
+      }];
+    }
+    if (jeeBlocks.length > 0) {
+      let jk = dom_kf + ext_kf, jr = dom_rsp + ext_rsp;
+      for (const b of jeeBlocks) {
+        const rate = _clamp(b.cum + H_JEE, 0, 100);
+        const vv   = b.rem * (1 - F_JEE);
+        jk += vv * rate / 100;
+        jr += vv * (1 - rate / 100);
+      }
+      jk += ext_remaining_vv * ext_proj_kf_r2 / 100;
+      jr += ext_remaining_vv * (1 - ext_proj_kf_r2 / 100);
+      share_jee = 100 * jk / (jk + jr);
+    }
+  }
+
+  const projected_kf_r2_share = share_jee != null
+    ? (1 - tail_w) * share_v1 + tail_w * share_jee
+    : share_v1;
 
   const zda_effect_pp = zda_remaining > 0
     ? rem_zda_vv * (zda_proj_kf_r2 - reg_proj_kf_r2) / 100 / (obs_pair + rem_reg_vv + rem_zda_vv + ext_remaining_vv) * 100
     : 0;
 
-  // ── Bootstrap CI ─────────────────────────────────────────────────────────
+  // ── Bootstrap CI (híbrido: blend lineal de los dos modelos) ──────────────
   const pct_remaining = 1 - pct / 100;
   const sigma = Math.max(0.3, SIGMA_BASE * Math.sqrt(pct_remaining));
-  const ci = _bootstrapCI(dom_kf + ext_kf, dom_rsp + ext_rsp, regular_remaining, zda_remaining, reg_proj_kf_r2, national_shift, sigma, ext_remaining_vv, ext_proj_kf_r2, ext_obs_frac);
+  let ci;
+  const ci_v1 = (tail_w < 1 || jeeBlocks.length === 0)
+    ? _bootstrapCI(dom_kf + ext_kf, dom_rsp + ext_rsp, regular_remaining, zda_remaining, reg_proj_kf_r2, national_shift, sigma, ext_remaining_vv, ext_proj_kf_r2, ext_obs_frac)
+    : null;
+  const ci_jee = (tail_w > 0 && jeeBlocks.length > 0)
+    ? _bootstrapJEE(dom_kf + ext_kf, dom_rsp + ext_rsp, jeeBlocks, jeeExtItems, ext_shift_live ?? national_shift)
+    : null;
+  if (ci_v1 && ci_jee) {
+    const mix = (a, b) => (1 - tail_w) * a + tail_w * b;
+    ci = {
+      p2_5:        mix(ci_v1.p2_5,  ci_jee.p2_5),
+      p97_5:       mix(ci_v1.p97_5, ci_jee.p97_5),
+      p10:         mix(ci_v1.p10,   ci_jee.p10),
+      p90:         mix(ci_v1.p90,   ci_jee.p90),
+      prob_kf_win: Math.round(mix(ci_v1.prob_kf_win, ci_jee.prob_kf_win)),
+    };
+  } else {
+    ci = ci_jee || ci_v1;
+  }
 
   // ── Phase ─────────────────────────────────────────────────────────────────
   let phase, phaseLabel;
@@ -661,7 +864,8 @@ function project(snapshot) {
       winner:      projected_kf_r2_share > 50 ? 'KF' : 'RSP',
       margin_pp:   _round2(Math.abs(projected_kf_r2_share - 50)),
       sigma_pp:    _round2(sigma),
-      prob_kf_win: ci.prob_kf_win,
+      // cap 99: nunca afirmar certeza absoluta con actas pendientes
+      prob_kf_win: Math.min(99, Math.max(1, ci.prob_kf_win)),
     },
 
     zda: {
@@ -696,6 +900,16 @@ function project(snapshot) {
       r1_domestic_baseline:    R1_KF_R2_SHARE_DOMESTIC,
       r1_national_baseline:    R1_KF_R2_SHARE_NATIONAL,
       dom_kf_r2_share:         _round2(dom_kf_r2_share),
+      tail_w:                  _round2(tail_w),
+      share_v1:                _round2(share_v1),
+      share_jee:               share_jee != null ? _round2(share_jee) : null,
+      jee_params:              { h: H_JEE, f: F_JEE },
+      actas_total:             Math.round(actas_total),
+      dom_done_actas:          Math.round(dom_done_actas),
+      dom_rem_actas:           Math.round(dom_rem_actas),
+      ext_done_actas:          Math.round(ext_done_actas),
+      vv_per_acta_live:        _round2(vv_per_acta_live),
+      ext_shift_live:          ext_shift_live != null ? _round2(ext_shift_live) : null,
       shift_granularity:       shift_level,
       shift_unit_count:        shiftResult?.unit_count ?? 0,
       shift_r1_vv_mass:        Math.round(shiftResult?.sum_vv ?? 0),

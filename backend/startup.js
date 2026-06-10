@@ -175,6 +175,19 @@ async function autoMigrate() {
     console.warn('⚠️  Province/district granularity migration falló (no fatal):', e.message);
   }
 
+  // Dedupe + unique constraint en proyecciones (corridas concurrentes de
+  // re-project-all duplicaron filas; el chart evolutivo las mostraba repetidas)
+  try {
+    await db.query(`DELETE FROM r2_election_projections a
+                    USING r2_election_projections b
+                    WHERE a.snapshot_id = b.snapshot_id AND a.id < b.id`);
+    await db.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_r2_proj_snapshot_unique
+                    ON r2_election_projections(snapshot_id)`);
+    console.log('   ✅ Proyecciones dedupe + unique(snapshot_id): verificado');
+  } catch (e) {
+    console.warn('⚠️  Dedupe proyecciones falló (no fatal):', e.message);
+  }
+
   return false;
 }
 
