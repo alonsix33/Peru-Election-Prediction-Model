@@ -177,12 +177,16 @@ function _round2(v) {
 
 // ─── Bootstrap CI ─────────────────────────────────────────────────────────────
 
-function _bootstrapCI(obs_kf, obs_rsp, regular_remaining, zda_remaining, reg_proj_kf_r2, national_shift, sigma, ext_remaining_vv, ext_proj_kf_r2) {
+function _bootstrapCI(obs_kf, obs_rsp, regular_remaining, zda_remaining, reg_proj_kf_r2, national_shift, sigma, ext_remaining_vv, ext_proj_kf_r2, ext_obs_frac = 0) {
   const obs_pair   = obs_kf + obs_rsp;
   const rem_reg_vv = regular_remaining * VV_PER_MESA;
   const rem_zda_vv = zda_remaining * VV_PER_MESA;
   const ext_vv     = ext_remaining_vv || 0;
   const ext_proj   = ext_proj_kf_r2   || 50;
+  // Only the unobserved fraction of remaining exterior carries domestic-correlated
+  // shift uncertainty. Countries with observed R2 votes anchor their remaining
+  // contribution — their noise is independent of Peru's domestic shift.
+  const ext_noise_scale = 0.5 * (1 - ext_obs_frac);
 
   const sims   = new Float64Array(N_SIMS);
   let   wins   = 0;
@@ -192,9 +196,9 @@ function _bootstrapCI(obs_kf, obs_rsp, regular_remaining, zda_remaining, reg_pro
 
     const reg_proj   = _clamp(reg_proj_kf_r2 + noise, 0, 100);
     const zda_proj   = _clamp(ZDA_KF_R2_SHARE_R1 + national_shift + noise, 0, 100);
-    // Exterior shares domestic systematic risk but is geographically independent;
-    // apply half the noise to capture partial correlation without over-shrinking its CI.
-    const ext_proj_s = _clamp(ext_proj + noise * 0.5, 0, 100);
+    // Exterior: domestic-correlated noise scaled by the unobserved fraction.
+    // At ext_obs_frac=0.86: noise_scale = 0.5×0.14 = 0.07 (vs 0.5 before).
+    const ext_proj_s = _clamp(ext_proj + noise * ext_noise_scale, 0, 100);
 
     const final_kf    = obs_kf
       + rem_reg_vv * reg_proj    / 100
@@ -508,6 +512,10 @@ function project(snapshot) {
     : obs_kf_r2_share;
 
   // Country-level (most precise) → continent-level fallback
+  // ext_obs_frac: fraction of remaining exterior weight backed by observed R2 votes.
+  // Initialized to 0 (fully uncertain); updated in the country-level path below.
+  let ext_obs_frac = 0;
+
   if (_r1Exterior?.byPais && Array.isArray(pais_breakdown) && pais_breakdown.length > 0) {
     // Build live lookup: ubigeo → {kf, rsp, pct_done}
     const livePais = new Map();
@@ -521,7 +529,7 @@ function project(snapshot) {
       });
     }
 
-    let sum_vv = 0, sum_kf_proj = 0;
+    let sum_vv = 0, sum_kf_proj = 0, obs_vv = 0;
     for (const [ubigeo, pais] of Object.entries(_r1Exterior.byPais)) {
       const r1_bilateral = (pais.kfV || 0) + (pais.rspV || 0);
       if (r1_bilateral === 0) continue;
@@ -542,8 +550,14 @@ function project(snapshot) {
       const weight = r1_bilateral * remaining_frac;
       sum_vv      += weight;
       sum_kf_proj += weight * kf_pct;
+      // Track weight of countries with observed R2 data — these drive ext_proj
+      // and need far less domestic-correlated noise in the bootstrap.
+      if (live_total > 0) obs_vv += weight;
     }
     if (sum_vv > 0) ext_proj_kf_r2 = sum_kf_proj / sum_vv;
+    // Fraction of remaining ext weight backed by observed R2 votes (not just R1 prior).
+    // Only the unobserved fraction has genuine domestic-correlated shift uncertainty.
+    ext_obs_frac = sum_vv > 0 ? obs_vv / sum_vv : 0;
   } else if (_r1Exterior?.byContinente && Array.isArray(ext_breakdown) && ext_breakdown.length > 0) {
     const reportedCont = new Set(
       ext_breakdown
@@ -587,7 +601,7 @@ function project(snapshot) {
   // ── Bootstrap CI ─────────────────────────────────────────────────────────
   const pct_remaining = 1 - pct / 100;
   const sigma = Math.max(0.3, SIGMA_BASE * Math.sqrt(pct_remaining));
-  const ci = _bootstrapCI(obs_kf, obs_rsp, regular_remaining, zda_remaining, reg_proj_kf_r2, national_shift, sigma, ext_remaining_vv, ext_proj_kf_r2);
+  const ci = _bootstrapCI(obs_kf, obs_rsp, regular_remaining, zda_remaining, reg_proj_kf_r2, national_shift, sigma, ext_remaining_vv, ext_proj_kf_r2, ext_obs_frac);
 
   // ── Phase ─────────────────────────────────────────────────────────────────
   let phase, phaseLabel;
@@ -648,6 +662,8 @@ function project(snapshot) {
       obs_kf_r2_share:       ext_kf + ext_rsp > 0 ? _round2(100 * ext_kf / (ext_kf + ext_rsp)) : null,
       remaining_vv_est:      Math.round(ext_remaining_vv),
       proj_kf_r2_share:      _round2(ext_proj_kf_r2),
+      ext_obs_frac:          _round2(ext_obs_frac * 100),  // % of remaining ext weight with observed R2 data
+      ext_noise_scale:       _round2(0.5 * (1 - ext_obs_frac)),
     },
 
     national_shift_pp: _round2(national_shift),
