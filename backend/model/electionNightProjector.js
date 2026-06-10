@@ -422,14 +422,16 @@ function project(snapshot) {
   }
 
   // ── Exterior adjustment ───────────────────────────────────────────────────
+  // obs_kf / obs_rsp come from idAmbitoGeografico=1 (domestic only).
+  // ext_breakdown holds the exterior portion separately.
+  // dom_kf = obs_kf (already domestic — no subtraction needed).
   let dom_kf = obs_kf, dom_rsp = obs_rsp;
   let ext_kf = 0, ext_rsp = 0;
 
   if (Array.isArray(ext_breakdown) && ext_breakdown.length > 0) {
     ext_kf  = ext_breakdown.reduce((s, c) => s + (c.keiko_votos  || 0), 0);
     ext_rsp = ext_breakdown.reduce((s, c) => s + (c.sanchez_votos || 0), 0);
-    dom_kf  = Math.max(0, obs_kf  - ext_kf);
-    dom_rsp = Math.max(0, obs_rsp - ext_rsp);
+    // dom_kf/dom_rsp stay as obs_kf/obs_rsp (already domestic)
   }
 
   const dom_pair        = dom_kf + dom_rsp;
@@ -599,11 +601,13 @@ function project(snapshot) {
   const rem_reg_vv = regular_remaining * VV_PER_MESA;
   const rem_zda_vv = zda_remaining     * VV_PER_MESA;
 
-  const final_kf  = obs_kf
+  // Base = domestic already counted (dom_kf) + exterior already counted (ext_kf).
+  // obs_kf is domestic-only; ext_kf comes from ext_breakdown.
+  const final_kf  = (dom_kf + ext_kf)
     + rem_reg_vv * reg_proj_kf_r2 / 100
     + rem_zda_vv * zda_proj_kf_r2 / 100
     + ext_remaining_vv * ext_proj_kf_r2 / 100;
-  const final_rsp = obs_rsp
+  const final_rsp = (dom_rsp + ext_rsp)
     + rem_reg_vv * (1 - reg_proj_kf_r2 / 100)
     + rem_zda_vv * (1 - zda_proj_kf_r2 / 100)
     + ext_remaining_vv * (1 - ext_proj_kf_r2 / 100);
@@ -616,7 +620,7 @@ function project(snapshot) {
   // ── Bootstrap CI ─────────────────────────────────────────────────────────
   const pct_remaining = 1 - pct / 100;
   const sigma = Math.max(0.3, SIGMA_BASE * Math.sqrt(pct_remaining));
-  const ci = _bootstrapCI(obs_kf, obs_rsp, regular_remaining, zda_remaining, reg_proj_kf_r2, national_shift, sigma, ext_remaining_vv, ext_proj_kf_r2, ext_obs_frac);
+  const ci = _bootstrapCI(dom_kf + ext_kf, dom_rsp + ext_rsp, regular_remaining, zda_remaining, reg_proj_kf_r2, national_shift, sigma, ext_remaining_vv, ext_proj_kf_r2, ext_obs_frac);
 
   // ── Phase ─────────────────────────────────────────────────────────────────
   let phase, phaseLabel;
