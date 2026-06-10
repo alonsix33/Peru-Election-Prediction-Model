@@ -438,9 +438,14 @@ function project(snapshot) {
   const obs_pair        = obs_kf + obs_rsp;
 
   // ── Mesa estimates ────────────────────────────────────────────────────────
-  const obs_mesas = (pct / 100) * TOTAL_MESAS;
+  // pct_actas from ONPE nacional embeds exterior mesas in the percentage.
+  // ZDAs are domestic-only — subtract exterior already counted to get true
+  // domestic obs_mesas, which drives ZDA remaining estimation.
+  const ext_mesas_done = (ext_kf + ext_rsp) / VV_PER_MESA_EXT;
+  const obs_mesas_all  = (pct / 100) * (TOTAL_MESAS + TOTAL_MESAS_EXT);
+  const obs_mesas      = Math.min(TOTAL_MESAS, Math.max(0, obs_mesas_all - ext_mesas_done));
 
-  const zda_reported_proportional = Math.round((pct / 100) * TOTAL_MESAS_ZDA);
+  const zda_reported_proportional = Math.round((obs_mesas / TOTAL_MESAS) * TOTAL_MESAS_ZDA);
   const zda_reported_cliff        = Math.max(0, obs_mesas - TOTAL_MESAS_REGULAR);
   const reported_zda_approx       = Math.max(zda_reported_proportional, zda_reported_cliff);
   const zda_remaining             = Math.max(0, TOTAL_MESAS_ZDA - reported_zda_approx);
