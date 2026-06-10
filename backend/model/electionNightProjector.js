@@ -509,9 +509,15 @@ function project(snapshot) {
   }
 
   // ── Projected kf_r2_share for remaining strata ───────────────────────────
-  const reg_proj_kf_r2 = _da_sum_vv > 0
-    ? _clamp(_da_sum_kf / _da_sum_vv, 0, 100)
-    : _clamp(R1_KF_R2_SHARE_DOMESTIC + national_shift, 0, 100);
+  // At ≥95% (Phase D) remaining domestic mesas (~1900) are so few and scattered
+  // that per-dept shift estimates become noisy. The current observed domestic
+  // rate is the best unbiased estimate for the tail — consistent with crossover
+  // tracker which shows KF winning once remaining exterior is applied.
+  const reg_proj_kf_r2 = pct >= 95
+    ? dom_kf_r2_share
+    : (_da_sum_vv > 0
+        ? _clamp(_da_sum_kf / _da_sum_vv, 0, 100)
+        : _clamp(R1_KF_R2_SHARE_DOMESTIC + national_shift, 0, 100));
   const zda_proj_kf_r2 = _clamp(ZDA_KF_R2_SHARE_R1 + national_shift, 0, 100);
 
   // ── Exterior projection ───────────────────────────────────────────────────
