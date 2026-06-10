@@ -1382,6 +1382,28 @@ router.delete('/admin/snapshots/last', async (req, res) => {
   }
 });
 
+// ─── GET /api/admin/snapshots/export ────────────────────────
+// Exporta todos los snapshots con datos para análisis post-electoral.
+// Excluye province_breakdown y district_breakdown (demasiado pesados).
+router.get('/admin/snapshots/export', async (req, res) => {
+  const adminSecret = process.env.ADMIN_SECRET;
+  if (!adminSecret || req.headers.authorization !== `Bearer ${adminSecret}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  try {
+    const { rows } = await db.query(
+      `SELECT id, captured_at, pct_actas, keiko_votos, sanchez_votos,
+              dept_breakdown, ext_breakdown, pais_breakdown
+       FROM onpe_live_snapshots
+       WHERE has_data = true
+       ORDER BY captured_at ASC`
+    );
+    res.json({ count: rows.length, snapshots: rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── DELETE /api/admin/snapshots ────────────────────────────
 // Limpia snapshots de prueba antes del 7J. Requiere ADMIN_SECRET.
 router.delete('/admin/snapshots', async (req, res) => {
