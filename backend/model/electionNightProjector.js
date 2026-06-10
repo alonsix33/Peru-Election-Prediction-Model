@@ -33,6 +33,8 @@ const TOTAL_MESAS_REGULAR     = 92718;
 const TOTAL_MESAS_ZDA         = 4703;
 const TOTAL_MESAS             = TOTAL_MESAS_REGULAR + TOTAL_MESAS_ZDA; // 97421
 const VV_PER_MESA             = 174;   // valid votes/mesa, calibrated from 6 depts
+const TOTAL_MESAS_EXT         = 2543;  // exterior mesas R2 (ONPE)
+const VV_PER_MESA_EXT         = 120.8; // exterior valid votes/mesa (calibrated with crossoverTracker)
 const NATIONAL_R1_BILATERAL   = 4892792; // KF(2,877,678) + RSP(2,015,114) in R1
 const SIGMA_BASE              = 3.0;   // pp, from CLAUDE.md calibration
 const T_DF                    = 4;     // t-Student degrees of freedom
@@ -507,19 +509,39 @@ function project(snapshot) {
 
   // Country-level (most precise) → continent-level fallback
   if (_r1Exterior?.byPais && Array.isArray(pais_breakdown) && pais_breakdown.length > 0) {
-    const reportedPais = new Set(
-      pais_breakdown
-        .filter(p => (p.keiko_votos || 0) + (p.sanchez_votos || 0) > 0)
-        .map(p => String(p.ubigeo))
-    );
+    // Build live lookup: ubigeo → {kf, rsp, pct_done}
+    const livePais = new Map();
+    for (const p of pais_breakdown) {
+      const ub = String(p.ubigeo);
+      const prev = livePais.get(ub) || { kf: 0, rsp: 0, pct: 0 };
+      livePais.set(ub, {
+        kf:  prev.kf  + (p.keiko_votos  || 0),
+        rsp: prev.rsp + (p.sanchez_votos || 0),
+        pct: Math.max(prev.pct, p.pct_actas || 0),
+      });
+    }
+
     let sum_vv = 0, sum_kf_proj = 0;
     for (const [ubigeo, pais] of Object.entries(_r1Exterior.byPais)) {
-      if (reportedPais.has(ubigeo)) continue;
       const r1_bilateral = (pais.kfV || 0) + (pais.rspV || 0);
       if (r1_bilateral === 0) continue;
-      const pais_kf_r2 = pais.kf_r2_share ?? r1_ext_kf_r2_global;
-      sum_vv      += r1_bilateral;
-      sum_kf_proj += r1_bilateral * _clamp(pais_kf_r2 + national_shift, 0, 100);
+
+      const live      = livePais.get(ubigeo);
+      const pct_done  = live?.pct ?? 0;
+      if (pct_done >= 100) continue; // fully counted — already in obs_kf, skip
+
+      const remaining_frac = 1 - pct_done / 100;
+
+      // Use observed R2 KF% when the country has reported votes; otherwise R1 prior + domestic shift
+      const live_total = (live?.kf || 0) + (live?.rsp || 0);
+      const kf_pct = live_total > 0
+        ? 100 * (live.kf || 0) / live_total
+        : _clamp((pais.kf_r2_share ?? r1_ext_kf_r2_global) + national_shift, 0, 100);
+
+      // Weight proportional to R1 bilateral × remaining fraction
+      const weight = r1_bilateral * remaining_frac;
+      sum_vv      += weight;
+      sum_kf_proj += weight * kf_pct;
     }
     if (sum_vv > 0) ext_proj_kf_r2 = sum_kf_proj / sum_vv;
   } else if (_r1Exterior?.byContinente && Array.isArray(ext_breakdown) && ext_breakdown.length > 0) {
@@ -540,9 +562,7 @@ function project(snapshot) {
     if (sum_vv > 0) ext_proj_kf_r2 = sum_kf_proj / sum_vv;
   }
 
-  const R2_EXT_BILATERAL_EST = _r1Exterior
-    ? Math.round(_r1Exterior.kfV / 0.199)
-    : 265000;
+  const R2_EXT_BILATERAL_EST = Math.round(TOTAL_MESAS_EXT * VV_PER_MESA_EXT); // 307,194
   const ext_reported_pair  = ext_kf + ext_rsp;
   const ext_remaining_vv   = Math.max(0, R2_EXT_BILATERAL_EST - ext_reported_pair);
 
@@ -567,7 +587,7 @@ function project(snapshot) {
   // ── Bootstrap CI ─────────────────────────────────────────────────────────
   const pct_remaining = 1 - pct / 100;
   const sigma = Math.max(0.3, SIGMA_BASE * Math.sqrt(pct_remaining));
-  const ci = _bootstrapCI(dom_kf, dom_rsp, regular_remaining, zda_remaining, reg_proj_kf_r2, national_shift, sigma, ext_remaining_vv, ext_proj_kf_r2);
+  const ci = _bootstrapCI(obs_kf, obs_rsp, regular_remaining, zda_remaining, reg_proj_kf_r2, national_shift, sigma, ext_remaining_vv, ext_proj_kf_r2);
 
   // ── Phase ─────────────────────────────────────────────────────────────────
   let phase, phaseLabel;
@@ -649,7 +669,7 @@ function project(snapshot) {
       regular_remaining:       Math.round(regular_remaining),
       zda_remaining:           Math.round(zda_remaining),
       ext_remaining_vv:        Math.round(ext_remaining_vv),
-      r2_ext_bilateral_est:    _r1Exterior ? Math.round(_r1Exterior.kfV / 0.199) : 265000,
+      r2_ext_bilateral_est:    Math.round(TOTAL_MESAS_EXT * VV_PER_MESA_EXT),
       rem_reg_vv:              Math.round(rem_reg_vv),
       rem_zda_vv:              Math.round(rem_zda_vv),
       dept_count:              dept_breakdown.filter(d => (d.keiko_votos||0)+(d.sanchez_votos||0) > 0).length,
