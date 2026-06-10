@@ -448,8 +448,12 @@ function project(snapshot) {
   const zda_reported_proportional = Math.round((obs_mesas / TOTAL_MESAS) * TOTAL_MESAS_ZDA);
   const zda_reported_cliff        = Math.max(0, obs_mesas - TOTAL_MESAS_REGULAR);
   const reported_zda_approx       = Math.max(zda_reported_proportional, zda_reported_cliff);
-  const zda_remaining             = Math.max(0, TOTAL_MESAS_ZDA - reported_zda_approx);
-  const regular_remaining         = Math.max(0, TOTAL_MESAS - obs_mesas - zda_remaining);
+  // At ≥94% coverage ZDAs have fully reported (election-night plan: ~94% threshold).
+  // Their votes are already in obs_kf/obs_rsp — projecting any remaining ZDAs at
+  // 19.54% KF would add phantom RSP votes on top of votes already counted.
+  const zda_done      = pct >= 94 ? TOTAL_MESAS_ZDA : reported_zda_approx;
+  const zda_remaining = Math.max(0, TOTAL_MESAS_ZDA - zda_done);
+  const regular_remaining = Math.max(0, TOTAL_MESAS_REGULAR - (obs_mesas - zda_done));
 
   // ── Stratified shift — uses most granular level available ─────────────────
   const shiftResult = _computeStratifiedShift(dept_breakdown, province_breakdown, district_breakdown);
