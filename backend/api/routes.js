@@ -1042,6 +1042,19 @@ router.get('/live-projection', async (req, res) => {
     );
     const pf = v => (v != null ? parseFloat(v) : null);
 
+    // Snapshot de ~3h atrás: el crossover v2 detecta qué países exteriores
+    // están ACTIVOS comparando su pct contra esta referencia
+    let prevPaisBreakdown = [];
+    try {
+      const { rows: [prevSnap] } = await db.query(
+        `SELECT pais_breakdown FROM onpe_live_snapshots
+         WHERE has_data = true AND captured_at <= $1::timestamptz - interval '3 hours'
+         ORDER BY captured_at DESC LIMIT 1`,
+        [latest.captured_at]
+      );
+      if (Array.isArray(prevSnap?.pais_breakdown)) prevPaisBreakdown = prevSnap.pais_breakdown;
+    } catch { /* sin historial — el tracker usa fallback */ }
+
     res.json({
       status:           'ok',
       pct_actas:        r.pct_actas,
@@ -1128,9 +1141,12 @@ router.get('/live-projection', async (req, res) => {
       // Crossover projection — at what % of actas does KF raw count cross RSP
       crossover: computeCrossover({
         pct_actas: r.pct_actas,
+        actas_total: snapshot.actas_total,
         nacional:  { kf_votos: domKf, rsp_votos: domRsp },
         extranjero: { kf_votos: extKf, rsp_votos: extRsp },
         pais_breakdown: snapshot.pais_breakdown,
+        prev_pais_breakdown: prevPaisBreakdown,
+        dept_breakdown: snapshot.dept_breakdown,
       }),
 
       history: projHistory.map(h => ({
