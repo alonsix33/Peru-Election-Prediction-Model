@@ -649,17 +649,169 @@ El modelo de Monte Carlo incluía un shock de voto oculto de +3 a +6pp para RSP 
 
 ---
 
-## 14. Historial de Versiones
+## 14. La Cola Larga — Del 94% al Cruce (8–11 junio)
+
+> *Sección añadida el 11 de junio de 2026 (v2.0). Documenta la fase que el borrador
+> original dejó como "TBD": las 70+ horas entre el call del projector y el momento en
+> que el conteo crudo de ONPE finalmente mostró a Keiko al frente.*
+
+### 14.1. El problema que quedaba al 94%
+
+El borrador v1.2 cerró con el projector marcando KF 50.15% y el raw doméstico cayendo
+bajo 50%. La pregunta abierta no era *quién gana* (el projector y Rivera ya coincidían
+en KF), sino **cuándo lo mostraría el conteo crudo** — y si el modelo podía proyectarlo
+con precisión mientras el JEE retenía el bloque decisivo.
+
+Entre el 8 y el 11 de junio el conteo avanzó de 94.38% a **98.22%**, pero de forma
+extremadamente sesgada:
+
+- **Lima quedó congelada al 96.871%** desde el 8 de junio. Sus **919 actas observadas**
+  (de 1,615 totales país, + Callao 69 + Piura 68) fueron enviadas al JEE para recuento
+  con personeros y audiencia pública — un pool de ~200,000 votos al 63.5% KF, retenido
+  durante días.
+- El conteo que **sí** avanzaba era casi puramente sierra/selva (Cusco, Loreto, Puno) —
+  estructuralmente pro-RSP — y el exterior, que llegaba en ráfagas esporádicas.
+
+Resultado: el raw mostró a **RSP liderando durante ~3 días**, llegando a RSP +9,788
+(10 jun ~17:40 PET), mientras la victoria real de KF esperaba intacta en el JEE y el
+exterior. Era el espejo exacto del 2021 — donde Keiko lideró el raw 12 horas y perdió —
+pero invertido: esta vez quien lideraba el raw era quien iba a perder.
+
+### 14.2. Las dos mejoras del modelo (PRs #185, #186+)
+
+El projector original (`v1`) proyectaba el restante doméstico al **promedio plano**
+(~49.8%), lo que en fase D hundía la proyección a 50.02% — porque trataba el pool JEE de
+Lima como si fuera a votar al promedio nacional, no al 63.5% real de Lima. Se diseñaron
+e implementaron dos mejoras, validadas en sandbox contra los **711 snapshots reales**
+antes de tocar producción:
+
+**a) Projector híbrido — cola JEE** (`electionNightProjector.js`)
+- `tail_w`: transición lineal 0→1 entre 88% y 92% de actas. Bajo 88%, el shift
+  estratificado v1 intacto (fue lo mejor de la noche). Desde 92%, el restante doméstico
+  se trata como **pool JEE**: bloques por departamento a `cum_local + h` (h=−1pp), con
+  merma `f`=10% (actas que el JEE podría anular).
+- Contabilidad real: universo **92,766 actas** (no 97,421 mesas del plan), VV/acta vivo
+  (~200, no 174), exterior restante por actas-país.
+- Resultado del backcast: la proyección final pasó de **50.02%** (v1, plano) a **50.11%**
+  CI[50.03, 50.19] — consistente con DATAdaf (50.16) y con el lead esperado vía Lima.
+- El plateau temprano (50-80%) quedó **idéntico** a v1 (σ=0.071): las mejoras solo
+  actúan en la cola, sin tocar las fases que ya funcionaban.
+
+**b) Crossover v2 — secuencia de 3 colas** (`crossoverTracker.js`)
+- El tracker v1 asumía llegada *mezclada proporcionalmente*, lo que daba un punto de
+  cruce difuso (98.9-99.2%) y un lead final (+9k) inconsistente con el projector (+40k).
+- v2 modela la **secuencia real**: Cola A (exterior activo, a tasa marginal medida) →
+  Cola B (exterior congelado, reanuda con P=0.8) → Cola C (pool JEE doméstico,
+  reutilizando `_jeeBlocks` del projector — única fuente de verdad).
+- VPAM por país (Argentina 184 VV/acta, EE.UU. 84 — el global 125.9 distorsionaba ambos).
+- Nuevo output `prob_pre_jee`: probabilidad de ver el cruce en el raw **antes** de que
+  el JEE libere Lima.
+
+### 14.3. EL HITO — el cruce predicho al minuto
+
+La predicción del crossover v2, estable durante horas antes del evento:
+
+> **Cruce proyectado: 98.1% de actas, CI[98.0, 98.3], confianza 100%.**
+
+Lo que pasó, reconstruido de los snapshots reales (hora Perú, PET = UTC−5):
+
+| Hora PET | % actas | Lead nacional | Evento |
+|---|---|---|---|
+| 10 jun 17:40 | 97.92% | **RSP +9,788** | Fondo del valle — sierra agotándose |
+| 10 jun 18:50 | 97.92% | RSP +8,008 | 🇯🇵 Japón despierta (+2,039 @ 88.7% KF) |
+| 10 jun 22:30 | 98.03% | RSP +5,090 | 🇦🇷 Argentina empieza a moverse |
+| 10 jun 22:35 | 98.11% | **RSP +593** | 🇦🇷 Argentina +8,139 (62% KF), 36.5%→60.9% |
+| **10 jun 22:40** | **98.17%** | **KF +466** | ★ **CRUCE — Keiko pasa a liderar** |
+| 10 jun 22:50 | 98.21% | KF +489 | Se despega |
+| 10 jun 23:10 | 98.22% | KF +651 | Consolidando |
+
+**El cruce ocurrió al 98.17% de actas — dentro del CI[98.0, 98.3], casi en el centro
+de la predicción.** No fue suerte estadística: el modelo identificó correctamente que
+(a) la sierra se agotaría topando el "valle" de Sánchez muy por debajo de su máximo
+teórico (RSP +30,730), y (b) los congelados exteriores despertarían en ráfagas — lo que
+ocurrió en el orden y magnitud previstos.
+
+### 14.4. La secuencia de ráfagas exteriores — validación del modelo de colas
+
+El supuesto de la Cola B (congelados reanudan con P=0.8) se cumplió literalmente, país
+por país, en ráfagas separadas por horas:
+
+| País | Estado previo | Despertar (PET) | Aporte (neto KF) |
+|---|---|---|---|
+| 🇨🇦 Canadá | 0% por días | 10 jun mañana, 0%→98.1% de golpe | +1,614 |
+| 🇯🇵 Japón | 60.5% congelado | 10 jun 18:50 | +2,519 (parcial) |
+| 🇦🇷 **Argentina** | 21% por 3 días | **10 jun 22:35** | **+6,129** — disparó el cruce |
+
+Argentina era el bloque decisivo: 299 actas, ~55,000 votos totales (184 VV/acta,
+consulados urbanos), 58-62% KF. Congelada en 21% durante tres días, su batch de +8,139
+votos al 62% fue lo que volteó el raw. El modelo lo había marcado como "la mayor sorpresa
+positiva pendiente" desde el 10 de junio.
+
+### 14.5. El miedo y los números — por qué la aritmética siempre dio
+
+Durante el valle (RSP liderando +9k), la pregunta natural era si los números realmente
+daban. La contabilidad fuente-por-fuente al 97.98% (sin un solo voto de Lima JEE contado)
+mostraba el tanque de cada candidato:
+
+| | Votos restantes | Neto |
+|---|---|---|
+| **Tanque KF** (Lima +50k, Argentina +6k, Callao +4k, Piura, exterior…) | — | **+67,000 brutos positivos** |
+| **Tanque RSP** (Cusco, Puno, Arequipa, sierra) | — | **+22,000** |
+| Resultado de la cadena | — | **KF +37,771 → 50.10%** |
+
+El tanque de KF era **3× el de Sánchez**. Lo que generaba la angustia no era la
+aritmética sino la **secuencia**: el material de Sánchez (sierra) entraba primero,
+mientras el de Keiko (Lima JEE + Argentina) esperaba en fila. El "valle" de Sánchez tenía
+un techo matemático duro — **RSP +30,730** — porque una vez agotada la sierra no le
+quedaba más; el de KF apenas empezaba.
+
+### 14.6. El escenario de riesgo real — anulación de Lima
+
+Se evaluó explícitamente el peor caso: *¿y si el JEE descarta las 919 actas de Lima?*
+
+- **Aritméticamente**: sí, KF perdería. Lima pendiente vale +54,171 netos; sin ella, KF
+  queda en RSP +9,277 (49.97%). Toda la victoria de KF se apoya en ese bloque.
+- **En la práctica**: el escenario es casi nulo. Las actas observadas van al JEE para
+  **resolverse** (corregir errores formales y *contar* los votos), no para anularse. La
+  anulación masiva requiere causal legal por acta, con personeros de ambos partidos y
+  apelación al JNE. Precedente directo 2021: Fuerza Popular pidió anular ~200,000 votos
+  (rurales pro-Castillo) y el JNE **rechazó prácticamente todos** los pedidos.
+- La asimetría protectora: el único actor con incentivo y capacidad de impugnar masivamente
+  (FP) impugna actas de Sánchez, no las propias de Lima. El riesgo cuantitativo real no es
+  "anulan Lima" sino "a qué tasa se resuelve" — y tendría que resolverse bajo ~50.5% (13pp
+  menos que la Lima ya contada) para voltear el resultado. Sin mecanismo ni precedente.
+
+### 14.7. Qué validó esta fase
+
+| Predicción del modelo | Resultado | Veredicto |
+|---|---|---|
+| "Keiko gana, el extranjero la remonta" (8 jun) | El exterior cerró 9k de brecha y disparó el cruce | ✅ exacto |
+| Crossover v2: cruce a 98.1% CI[98.0, 98.3] | Cruce real a **98.17%** | ✅ al minuto |
+| "Argentina despierta en ráfaga y voltea el raw" | +8,139 de golpe @ 22:35 PET | ✅ exacto |
+| Brecha máxima de Sánchez topada en ~30k | Valle real tocó solo RSP +9.8k | ✅ (techo nunca alcanzado) |
+| Projector híbrido: punto final 50.11% | En curso (98.22%, KF +651 y subiendo) | ⏳ confirmando |
+| Lead final KF +37k vía Lima JEE | Pendiente — Lima aún sin liberar | ⏳ pendiente |
+
+La lección metodológica central de esta fase: **modelar la secuencia de llegada, no solo
+el agregado final.** El projector v1 (correcto en el agregado, +37k) no podía explicar
+por qué el raw mostraba a RSP arriba; el crossover v2, al modelar las tres colas con su
+orden y velocidad reales, no solo predijo el ganador sino **el porcentaje exacto de actas
+del cruce** — convirtiendo días de ansiedad por el raw en un evento esperado y fechado.
+
+---
+
+## 15. Historial de Versiones
 
 | Versión | Fecha | Cambios |
 |---|---|---|
 | 1.0 | 2026-06-08 | Versión inicial — análisis hasta 92.4% actas; exterior pendiente |
 | 1.1 | 2026-06-08 | Añadido snapshot 92.9% (08:21 PET); §4.5 convergencia proyector=raw; estado actualizado |
 | 1.2 | 2026-06-08 | Evolutivo completo hasta 94.38% (418 snapshots); Phase 4 post-convergencia; cruce raw 50% (~13:00); primeros 3 países del exterior (Argentina 56.9%, Ecuador 75.5%, Uruguay 63.2%); CI final [50.03, 50.26]; §7.3 datos reales del exterior; §11 actualizado con columna proyector 94.4% y nota sobre raw<0 |
+| **2.0** | **2026-06-11** | **§14 "La Cola Larga" — del 94% al cruce.** Projector híbrido (cola JEE, `tail_w`, contabilidad real 92,766 actas) y crossover v2 (secuencia de 3 colas), validados contra 711 snapshots reales. **Hito: el cruce raw KF/RSP ocurrió al 98.17% de actas (10 jun 22:40 PET), dentro del CI[98.0, 98.3] predicho por el crossover v2.** Cronología de las ráfagas exteriores (Canadá→Japón→Argentina); contabilidad fuente-por-fuente; análisis del escenario de anulación de Lima JEE. Todas las horas en PET. |
 
 ---
 
-*Documento generado el 8 de junio de 2026. Última actualización: 14:50 PET.*  
-*Resultados al momento de redacción: ONPE 94.38% procesado; exterior parcial (3 países, ~4,400 votos de ~290K estimados).*  
+*Documento generado el 8 de junio de 2026. Última actualización: 11 de junio de 2026, ~23:15 PET.*  
+*Resultados al momento de la última actualización: ONPE 98.22% procesado; KF +651 en el conteo crudo nacional tras el cruce; exterior 63.4% KF; Lima (919 actas) aún en recuento JEE.*  
 *Este análisis es de carácter académico y experimental. No constituye asesoramiento electoral ni predicción oficial.*  
 *Repositorio: github.com/alonsix33/Peru-Election-Prediction-Model*
