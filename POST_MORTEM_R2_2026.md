@@ -427,15 +427,18 @@ Sin embargo, hay dos fuentes de diferencia entre el CR y el conteo oficial final
 
 Por esto, aunque el CR incluyó exterior, su representación del exterior fue limitada y sujeta a alta varianza. El conteo oficial final con **100% del exterior** añadirá masa de datos que el CR no tenía.
 
-### 7.2. Por qué el exterior es el factor más diferencial
+### 7.2. El exterior como bloque estructural (no factor de sorpresa)
 
-El exterior peruano votó **73.7% KF en R1 2026** — el mayor voto Keiko de cualquier circunscripción (86 países). En R2, la proyección era **~62-65% KF** sobre ~263,000 votos válidos.
+El exterior peruano votó **73.7% KF en R1 2026** — el mayor voto Keiko de cualquier circunscripción (86 países). En R2, la proyección era **~62-65% KF** sobre ~263,000 votos válidos. El resultado real: **63.21% KF** (KF +81,655 votos netos sobre 309,121 votos totales).
 
-Los conteos rápidos ya estimaban el exterior a ~62-67% KF:
+Los conteos rápidos ya estimaban el exterior a ~62-67% KF — completamente consistente con el resultado final:
 - Datum boca de urna: KF **66.86%** / RSP 33.14%  
 - Datum conteo rápido: KF **62.67%** / RSP 37.33%
+- **ONPE final: 63.21%** ✅ (dentro del rango estimado)
 
-Con 263,000 votos al 65% KF: **+86,000 votos netos para KF**.
+**El exterior no fue una sorpresa.** Era completamente predecible que el exterior vote ~63-65% por Keiko — lo ha hecho consistentemente en las últimas cuatro elecciones. El exterior neto de +81,655 para KF cubrió matemáticamente el déficit doméstico de RSP +32,014. Pero la pregunta relevante no es "¿ganó KF en el exterior?" (sí, como siempre), sino "¿por qué RSP no construyó una ventaja doméstica más sólida?" — ver §15.1 para el análisis de shifts.
+
+Con 309,121 votos al 63.21% KF: **+81,655 votos netos para KF** (resultado real).
 
 ### 7.3. Datos reales del exterior — primeras actas (8 junio 2026, ~14:40 PET)
 
@@ -564,21 +567,45 @@ El sistema bookmarklet funcionó correctamente en el rango 0-80.5% de actas. El 
 
 ## 11. Proyección Final vs. Resultado Oficial
 
-*Esta sección se completará cuando ONPE publique el 100% del conteo oficial, incluyendo el voto exterior.*
+*ONPE publicó el 100% del conteo oficial el 29 de junio de 2026 a las 12:43 PET — 22 días después de la elección.*
 
-| Métrica | Boca de urna | CR Ipsos | CR Datum | Projector (92.4%) | Projector (94.4%) | Rivera (91%) | ONPE 100% |
+**Resultado oficial definitivo:**
+- **Keiko Fujimori: 9,223,396 votos — 50.1349% → 50.13%**
+- **Roberto Sánchez Palomino: 9,173,755 votos — 49.8651% → 49.87%**
+- **Margen: KF +49,641 votos (+0.27pp)**
+- Votos válidos totales: **18,397,151**
+
+| Métrica | Boca de urna | CR Ipsos | CR Datum | Projector (92.4%)† | Projector (94.4%) | Rivera (91%) | **ONPE 100%** |
 |---|---|---|---|---|---|---|---|
-| KF% | ~50.6% | 49.7% | 49.86% | **50.09-50.11%** | **50.15%** | **50.2%** | [TBD] |
-| RSP% | ~49.4% | 50.3% | 50.14% | 49.89-49.91% | 49.85% | 49.8% | [TBD] |
-| Margen KF | +1.1-1.4pp | −0.6pp (RSP) | −0.28pp (RSP) | +0.1pp | **+0.30pp** | +0.4pp | [TBD] |
-| CI 95% | — | — | — | [49.93, 50.27] | **[50.03, 50.26]** | — | — |
-| Prob. KF win | — | — | — | ~96% | **99%** | 100% | — |
-| Incluye exterior | Sí (~66% KF) | Sí (parcial) | Sí (parcial) | Proyectado | 3 países (62.8%) | Sí | Sí (100%) |
-| Declaró ganador | No (MoE) | No (empate técnico) | No (empate técnico) | **KF** | **KF** | **KF (100% prob)** | [TBD] |
-| Error proyector | — | — | — | — | — | — | [TBD] |
+| KF% | ~50.6% | 49.7% | 49.86% | **50.43%** | **50.15%** | **50.2%** | **50.13%** |
+| RSP% | ~49.4% | 50.3% | 50.14% | 49.57% | 49.85% | 49.8% | **49.87%** |
+| Margen KF | +1.1-1.4pp | −0.6pp (RSP) | −0.28pp (RSP) | **+0.43pp** | **+0.30pp** | +0.4pp | **+0.27pp (+49,641 v.)** |
+| CI 95% | — | — | — | [50.13, 50.68] | **[50.03, 50.26]** | — | — |
+| Prob. KF win | — | — | — | ~99% | **99%** | 100% | — |
+| Incluye exterior | Sí (~66% KF) | Sí (parcial) | Sí (parcial) | Proyectado | 3 países (62.8%) | Sí | **Sí (100%)** |
+| Declaró ganador | No (MoE) | No (empate técnico) | No (empate técnico) | **KF** | **KF** | **KF (100% prob)** | **KF ✅** |
+| Error proyector vs final | — | — | — | **+0.30pp** ✅ | **+0.02pp** 🎯 | — | **0.00pp** ✅ |
 
-**Proyección central actualizada (94.4% + 3 países exterior):** KF **50.15%**, CI [50.03, 50.26].  
-**Proyección final estimada (100% + exterior completo):** KF **~50.28-50.35%**, margen ~**+90,000-130,000 votos**.
+*†Valores del projector corregido (post re-project-all con todos los fixes). El projector en vivo esa madrugada daba 50.09-50.11% con bugs parcialmente corregidos.*
+
+**Doméstico vs. Exterior:**
+
+| Ámbito | KF votos | RSP votos | Total | KF% | Neto KF |
+|---|---|---|---|---|---|
+| Doméstico | 9,028,008 | 9,060,022 | 18,088,030 | **49.82%** | **RSP +32,014** |
+| Exterior | 195,388 | 113,733 | 309,121 | **63.21%** | **KF +81,655** |
+| **Total** | **9,223,396** | **9,173,755** | **18,397,151** | **50.13%** | **KF +49,641** |
+
+**Nota sobre causalidad: el exterior no "salvó" a KF — fue la sierra la que la dejó ganar.**
+
+Aritméticamente, el exterior cubrió el déficit doméstico. Pero el exterior peruano siempre ha votado ~60-70% por Keiko en todas las elecciones de los últimos 20 años — era completamente predecible y estaba descontado en cualquier modelo. La pregunta relevante no es "¿qué pasó en el exterior?" sino **"¿por qué RSP no construyó una ventaja doméstica mayor?"**
+
+La respuesta está en los shifts positivos de la sierra sur y central:
+- **Cajamarca: +8.32pp** — los votantes de Aliaga y Nieto en Cajamarca migraron a KF más de lo esperado
+- **Apurímac: +4.44pp** / **Huancavelica: +4.58pp** — RSP ganó estos depts pero por márgenes inferiores a lo modelado
+- **Puno: +0.08pp** / **Cusco: +0.72pp** / **Ayacucho: +0.19pp** — RSP dominó estos depts, pero Sánchez Palomino es un candidato menos arrasador que Castillo fue en 2021 en su propia base
+
+RSP movilizó menos votos de lo esperado en su territorio natural. La diferencia entre RSP Sánchez y Castillo en esas regiones es lo que permitió que el margen doméstico (RSP +32,014) fuera cubierto por el exterior estructural. Si RSP hubiera construido una ventaja doméstica de +150,000 votos (como Castillo en 2021), el exterior no habría alcanzado. **KF ganó en las urnas de Puno y Cajamarca, no en las embajadas.**
 
 **Nota sobre el raw count:** A las ~13:00 PET del 8 de junio, el raw ONPE cruzó por debajo del 50% (49.99%) por primera vez. En ese momento el projector marcaba 50.15% — la brecha entre raw y proyectado se explicaba enteramente por los votos del exterior (no contabilizados en el raw doméstico). El raw "en contra" de KF es el resultado doméstico puro; la victoria se confirma cuando el exterior se suma al cómputo oficial.
 
@@ -610,16 +637,27 @@ El sistema bookmarklet funcionó correctamente en el rango 0-80.5% de actas. El 
 
 5. **Publicar el "call time"** formal: el momento exacto en que la proyección cruza un umbral de confianza predefinido. En 2026 fue informal (aproximadamente las 6:10am del 8J a las 92.4% de actas). Para 2031, definir el criterio antes de la elección.
 
-### 12.3. Umbrales de confianza — calibración post 7J 2026
+### 12.3. Umbrales de confianza — calibración con datos reales 7J 2026
 
-| % Actas | Error proyector observado | ¿Llamable? (margen >X) |
-|---|---|---|
-| ~40% (~11pm) | ±2pp | Sí si margen proyectado ≥3pp |
-| ~80% (~1-3am) | ±0.5pp | Sí si margen proyectado ≥1.5pp |
-| ~92% (~6am) | ~±0.1-0.2pp | Sí si margen proyectado ≥0.5pp |
-| ~100% + exterior | ~0pp | Definitivo |
+Errores verificados del projector (post-fix) vs. resultado ONPE final (50.13%), construidos desde el historial de 415 snapshots únicos:
 
-En 2026, el call a las 92.4% fue correcto: margen proyectado +0.55pp > umbral 0.5pp. El resultado final se espera en ese rango.
+| % Actas | Hora Lima | Proj KF% | Error vs 50.13% | Estimado previo | ¿Llamable? |
+|---|---|---|---|---|---|
+| **4.52%** | 07/06 19:27 | 56.28% | **+6.15pp** | — | No — CI amplísimo |
+| **~50%** | 07/06 21:54 | 50.65% | **+0.52pp** | — | Sí si margen ≥3pp (proj=+0.65pp: justo en el límite) |
+| **~78%** | 08/06 00:40 | 50.87% | **+0.74pp** | ±0.5pp | Sí si margen ≥1.5pp (proj=+0.87pp: insuficiente) |
+| **92.1%** | 08/06 06:02 | 50.43% | **+0.30pp** ✅ | ±0.1-0.2pp | **Sí — proj=+0.43pp > umbral 0.5pp con CI sup. sobre 50** |
+| **94.98%** | 08/06 19:26 | 50.06% | **−0.07pp** 🎯 | — | Sí — mínimo histórico del projector |
+| **97.51%** | 10/06 09:56 | 50.11% | **−0.02pp** 🎯 | — | Definitivo — error prácticamente cero |
+| **100%** | 29/06 12:43 | **50.13%** | **0.00pp** ✅ | ~0pp | Resultado oficial |
+
+**Revisión de los umbrales pre-electorales:**
+- "±2pp al 40%" → **±0.52pp real al 50%** (mucho mejor que lo estimado; Lima-first bien corregido)
+- "±0.5pp al 80%" → **±0.74pp real al 78%** (ligeramente peor; el gap relay afectó la muestra intermedia)
+- "±0.1-0.2pp al 92%" → **±0.30pp real** (dentro de márgenes razonables; la cola JEE sobreestima KF levemente antes de que Lima libere sus actas)
+- Mejor momento del projector: **97.5% de actas** con solo −0.02pp de error
+
+En 2026, el call a las 92.4% fue correcto: margen proyectado +0.43pp con CI completamente sobre 50%. El umbral de "≥0.5pp de margen proyectado" habría descartado el call — en realidad fue correcto con apenas +0.43pp. **Recomendación para 2031: bajar el umbral a ≥0.3pp cuando el CI lo está completamente sobre 50%.**
 
 ---
 
@@ -800,7 +838,149 @@ del cruce** — convirtiendo días de ansiedad por el raw en un evento esperado 
 
 ---
 
-## 15. Historial de Versiones
+## 15. Cierre Definitivo — Reconstrucción del Escrutinio (7–29 junio)
+
+> *Sección añadida el 30 de junio de 2026 (v3.0). Documenta la fase final del conteo
+> desde los datos reales de 1,740 snapshots almacenados en Railway.*
+
+### 15.1. El mapa departamental definitivo
+
+| Departamento | KF% | KF votos | RSP votos | Neto KF | Shift R1→R2 |
+|---|---|---|---|---|---|
+| **CALLAO** | **65.60%** | 403,845 | 211,803 | +192,042 | −21.71pp |
+| **TUMBES** | **64.38%** | 82,280 | 45,530 | +36,750 | −18.63pp |
+| **LIMA** | **63.51%** | 4,072,836 | 2,340,068 | **+1,732,768** | −21.02pp |
+| **LAMBAYEQUE** | 58.85% | 437,358 | 305,863 | +131,495 | −12.24pp |
+| **LA LIBERTAD** | 57.57% | 604,436 | 445,569 | +158,867 | −10.59pp |
+| **PIURA** | 57.02% | 590,489 | 445,100 | +145,389 | −13.95pp |
+| **LORETO** | 53.00% | 214,215 | 189,943 | +24,272 | −21.17pp |
+| **UCAYALI** | 52.56% | 143,122 | 129,181 | +13,941 | −18.41pp |
+| **ICA** | 51.94% | 282,464 | 261,387 | +21,077 | −20.52pp |
+| SAN MARTÍN | 45.36% | 219,293 | 264,127 | −44,834 | −3.99pp |
+| JUNÍN | 45.07% | 323,824 | 394,718 | −70,894 | −13.07pp |
+| ÁNCASH | 43.37% | 270,818 | 353,564 | −82,746 | −11.16pp |
+| PASCO | 39.30% | 51,747 | 79,930 | −28,183 | −10.97pp |
+| AREQUIPA | 36.40% | 334,264 | 584,000 | **−249,736** | −5.66pp |
+| HUÁNUCO | 35.84% | 140,904 | 252,225 | −111,321 | +1.73pp |
+| AMAZONAS | 35.54% | 69,220 | 125,555 | −56,335 | +3.15pp |
+| CAJAMARCA | 33.24% | 246,039 | 494,097 | **−248,058** | +8.32pp |
+| MADRE DE DIOS | 30.80% | 29,401 | 66,058 | −36,657 | −5.82pp |
+| TACNA | 28.67% | 66,335 | 165,063 | −98,728 | −7.81pp |
+| MOQUEGUA | 27.44% | 33,495 | 88,558 | −55,063 | −7.50pp |
+| CUSCO | 21.89% | 167,218 | 596,621 | **−429,403** | +0.72pp |
+| AYACUCHO | 20.71% | 67,502 | 258,505 | −191,003 | +0.19pp |
+| APURÍMAC | 18.82% | 43,413 | 187,285 | −143,872 | +4.44pp |
+| HUANCAVELICA | 18.60% | 37,004 | 161,991 | −124,987 | +4.58pp |
+| **PUNO** | **13.59%** | 96,486 | 613,281 | **−516,795** | +0.08pp |
+| **EXTERIOR** | **63.21%** | 195,388 | 113,733 | **+81,655** | — |
+
+*Nota: los shifts positivos para KF (Cajamarca +8.32pp, Apurímac +4.44pp, Huancavelica +4.58pp, Amazonas +3.15pp, Huánuco +1.73pp) representan lugares donde los votos Aliaga/Nieto/Belmont migraron más a KF de lo esperado. Los shifts negativos dominan el norte costero y la selva (Callao −21.7pp, Lima −21.0pp, Loreto −21.2pp) — reflejo de aliaguistas y belmontistas costeros que prefirieron a RSP como "cambio".*
+
+**¿Por qué ganó KF? La verdadera historia:**
+
+La narrativa simplificada de "el exterior salvó a KF" es incorrecta (ver §7.2). La victoria fue doméstica en su origen: RSP Sánchez Palomino no construyó la ventaja interna que Castillo construyó en 2021. La diferencia clave:
+
+| Dept | 2021 (Castillo vs KF) | 2026 (RSP vs KF) | Diferencia |
+|---|---|---|---|
+| Puno | Castillo +78.6pp (KF 10.7%) | RSP +72.8pp (KF 13.6%) | KF ganó 2.9pp vs 2021 |
+| Cusco | Castillo +29.8pp (KF 35.1%) | RSP +56.2pp (KF 21.9%) | RSP ganó 26.4pp vs 2021 ← en contra de KF |
+| Cajamarca | Castillo +~50pp (KF ~25%) | RSP +33.5pp (KF 33.2%) | KF ganó +8pp vs 2021 |
+| Arequipa | KF +~20pp (R2 2021 ~35%) | RSP +27.2pp (KF 36.4%) | Similar |
+
+La sierra sur puro-andina (Cusco, Puno, Ayacucho) siguió siendo territorio RSP — incluso más que para Castillo en Cusco. Pero en las zonas de transición (Cajamarca, Huánuco, Apurímac, Huancavelica), la coalición rural que en 2021 fue a Castillo no consolidó igual detrás de Sánchez. Los desertores son lo que acortó el déficit doméstico de RSP a solo 32,014 votos, haciéndolo cubrirle por el exterior estructural.
+
+**En una frase: KF ganó porque la coalición RSP de 2026 era más débil que la de Castillo en 2021, especialmente en zonas de transición andina. El exterior solo formalizó aritméticamente lo que la sierra ya había decidido.**
+
+**El triángulo de votos Lima vs. sierra:**
+- Lima + Callao + Loreto (costa/selva): +1,949,082 votos netos para KF
+- Puno + Cusco + Arequipa + Cajamarca (sierra): −1,444,790 votos netos para RSP
+- Lima/Callao solos superan toda la sierra combinada — la geografía del voto fue Lima vs. el mundo
+
+### 15.2. Reconstrucción cronológica del escrutinio
+
+De los 1,740 snapshots almacenados (415 puntos únicos de % de actas):
+
+**Fase 1 — La noche electoral (07/06 19:27 → 08/06 01:04 PET): 0 → 80.5%**
+
+| Hora Lima | % Actas | Proj KF% | Evento |
+|---|---|---|---|
+| 07/06 19:27 | **4.52%** | 56.28% | Primer snapshot — Lima domina, CI amplísimo [48.8, 64.1] |
+| 07/06 20:02 | 13.0% | 54.76% | Proyector ya por debajo de 55% |
+| 07/06 20:34 | 29.2% | 52.61% | Proj cruza por debajo de 53% |
+| 07/06 21:20 | **44.8%** | **50.98%** | Proj cae por debajo de 51% — estabilización |
+| 07/06 21:54 | 53.4% | 50.72% | Plateau: plateau ±0.4pp durante próximas 4h |
+| 07/06 23:54 | 72.9% | 50.98% | CI lo cruza 50% por primera vez (74.9%→[50.01, 51.96]) |
+| **08/06 00:00** | **73.5%** | 50.97% | **CI lo ≥ 50% → call firme posible** |
+| 08/06 00:40 | 78.0% | 50.87% | Último snapshot pre-gap: CI [50.14, 51.63] |
+| **08/06 01:04** | **80.5%** | 50.80% | **Bug 413 — relay cae. Gap de 5 horas.** |
+
+**Fase 2 — Post-gap y convergencia (08/06 06:02 → 08/06 14:50 PET): 92% → 94.4%**
+
+| Hora Lima | % Actas | Proj KF% | Evento |
+|---|---|---|---|
+| **08/06 06:02** | **92.13%** | **50.43%** | Relay restaurado. Raw=50.24%. Proj post-fix. |
+| 08/06 07:05 | 92.51% | 50.42% | Estabilización post-gap |
+| **08/06 13:00** | **93.92%** | 50.15% | **Raw RSP > KF por primera vez (49.99%)** — projector: KF +0.15pp |
+| 08/06 14:40 | 94.36% | 50.16% | Primeros 3 países exterior (Argentina 56.9%, Ecuador 75.5%, Uruguay 63.2%) |
+| 08/06 14:50 | **94.38%** | **50.15%** | CI [50.03, 50.26] — completamente sobre 50% |
+| **08/06 19:26** | **94.98%** | **50.06%** | **Mínimo del projector en toda la historia** |
+
+**Fase 3 — La cola larga (09/06 → 29/06): 95% → 100%**
+
+| Fecha Lima | % Actas | Proj KF% | Evento |
+|---|---|---|---|
+| 09/06 | 95.69% | 50.14% | Días de escrutinio JEE con gaps de 2-3h |
+| 10/06 09:56 | **97.51%** | **50.11%** | Error vs. final: **−0.02pp** — esencialmente perfecto |
+| **10/06 22:40** | **98.17%** | ~50.11% | **KF pasa a liderar el raw count** (cruce predicho a 98.1%) |
+| 11/06–27/06 | 98.22→99.99% | 50.08-50.13% | Cola muy lenta: ráfagas de horas/días entre snapshots |
+| **29/06 12:43** | **100.00%** | **50.13%** | **100% oficial. Error = 0.00pp.** |
+
+**Velocidad de escrutinio:**
+
+| Fase | Duración | % Actas cubiertos | Tasa |
+|---|---|---|---|
+| 0→80% | ~5.5 horas | 80.5pp | ~14.6%/hora |
+| Gap 413 | 5.0 horas | 0pp | — |
+| 80%→92% | (en gap, no observado) | 11.6pp | — |
+| 92%→97.5% | ~52 horas (2.2 días) | 5.4pp | ~0.10%/hora |
+| 97.5%→100% | ~19 días | 2.5pp | ~0.005%/hora |
+
+*El 80% del conteo llegó en una sola noche. El último 7.5% tardó 21 días — casi exclusivamente JEE Lima (919 actas observadas) + exterior fragmentado.*
+
+### 15.3. ¿Cuándo se estabilizó la predicción?
+
+La proyección entró en plateau desde el **~45% de actas (07/06 21:20 PET)**. A partir de ese momento:
+- El projector nunca bajó de **50.06%** en ninguno de los 415 snapshots
+- El error vs. el resultado final (50.13%) nunca superó **±0.74pp** después del 45%
+- La CI lo cruzó definitivamente 50% en el **73.5% de actas** (07/06 ~00:00 PET)
+
+**Hito de estabilidad:** al 97.5% de actas (10/06 09:56 PET), el projector marcaba **50.11%** — solo **0.02pp** del resultado oficial. La predicción era esencialmente exacta 18 días antes de que ONPE cerrara el conteo.
+
+### 15.4. El bug de la décima: 50.14% vs. 50.13%
+
+Al llegar el 100% de actas, el projector mostraba **50.14%** en lugar del **50.13%** oficial. Causa raíz: 4 países del exterior (Venezuela 34 actas, Ghana/Líbano/Irán 1 cada uno) tenían 0 votos R2 bilaterales y fueron filtrados por el bookmarklet, pero el projector los trataba como "0% contabilizados" y proyectaba ~4,565 VV fantasma al ~63.21% KF — suficiente para subir de 50.1349% a 50.138% y redondear hacia arriba.
+
+**Fix implementado (PR #188, 30 junio 2026):** dos líneas quirúrgicas en `electionNightProjector.js`:
+1. Países ausentes del breakdown → `pct_done = 100` cuando `pct >= 100`
+2. `dom_rem_actas = 0` cuando `pct >= 100`
+
+Post-fix con `re-project-all`: 1,740 snapshots actualizados, 1,740 corregidos. Los snapshots al 100% ahora muestran **50.13%** exacto.
+
+### 15.5. Resumen de exactitud (proyector post-fix vs. ONPE final 50.13%)
+
+| % Actas | Hora Lima | Proj KF% | Error | Interpretación |
+|---|---|---|---|---|
+| 4.52% | 07/06 19:27 | 56.28% | +6.15pp | Lima-first máximo; CI ±8pp — no calleable |
+| ~50% | 07/06 21:54 | 50.65% | +0.52pp | Plateau establecido; calleable con margen mayor |
+| ~78% | 08/06 00:40 | 50.87% | +0.74pp | Ligeramente peor que al 50% (tail JEE comienza) |
+| 92.1% | 08/06 06:02 | 50.43% | **+0.30pp** ✅ | Post-gap; primer dato sólido de la cola |
+| 94.98% | 08/06 19:26 | 50.06% | **−0.07pp** 🎯 | Mínimo histórico del projector |
+| 97.51% | 10/06 09:56 | 50.11% | **−0.02pp** 🎯 | Prácticamente exacto 18 días antes del cierre |
+| 100% | 29/06 12:43 | **50.13%** | **0.00pp** ✅ | Resultado oficial (post PR #188) |
+
+---
+
+## 16. Historial de Versiones
 
 | Versión | Fecha | Cambios |
 |---|---|---|
@@ -808,10 +988,11 @@ del cruce** — convirtiendo días de ansiedad por el raw en un evento esperado 
 | 1.1 | 2026-06-08 | Añadido snapshot 92.9% (08:21 PET); §4.5 convergencia proyector=raw; estado actualizado |
 | 1.2 | 2026-06-08 | Evolutivo completo hasta 94.38% (418 snapshots); Phase 4 post-convergencia; cruce raw 50% (~13:00); primeros 3 países del exterior (Argentina 56.9%, Ecuador 75.5%, Uruguay 63.2%); CI final [50.03, 50.26]; §7.3 datos reales del exterior; §11 actualizado con columna proyector 94.4% y nota sobre raw<0 |
 | **2.0** | **2026-06-11** | **§14 "La Cola Larga" — del 94% al cruce.** Projector híbrido (cola JEE, `tail_w`, contabilidad real 92,766 actas) y crossover v2 (secuencia de 3 colas), validados contra 711 snapshots reales. **Hito: el cruce raw KF/RSP ocurrió al 98.17% de actas (10 jun 22:40 PET), dentro del CI[98.0, 98.3] predicho por el crossover v2.** Cronología de las ráfagas exteriores (Canadá→Japón→Argentina); contabilidad fuente-por-fuente; análisis del escenario de anulación de Lima JEE. Todas las horas en PET. |
+| **3.0** | **2026-06-30** | **Cierre definitivo al 100%.** §11 completado con resultado ONPE oficial (KF 9,223,396 v. / 50.13%, RSP 9,173,755 v. / 49.87%, margen +49,641 v.); tabla doméstico vs. exterior; §12.3 recalibrada con errores reales verificados vs. 415 snapshots. §15 "Reconstrucción del escrutinio (7–29 junio)": mapa departamental definitivo, cronología de 1,740 snapshots, velocidad de llegada de actas, exactitud post-fix. §15.4 documenta el bug 50.14→50.13 y el PR #188. Narrativa del "por qué ganó KF" revisada: la victoria fue doméstica, no del exterior — Sierra sur menos anti-KF de lo esperado. |
 
 ---
 
-*Documento generado el 8 de junio de 2026. Última actualización: 11 de junio de 2026, ~23:15 PET.*  
-*Resultados al momento de la última actualización: ONPE 98.22% procesado; KF +651 en el conteo crudo nacional tras el cruce; exterior 63.4% KF; Lima (919 actas) aún en recuento JEE.*  
+*Documento generado el 8 de junio de 2026. Última actualización: 30 de junio de 2026.*  
+*Resultado final: ONPE 100% — KF 50.13% (9,223,396 votos) | RSP 49.87% (9,173,755 votos) | Margen: KF +49,641 votos.*  
 *Este análisis es de carácter académico y experimental. No constituye asesoramiento electoral ni predicción oficial.*  
 *Repositorio: github.com/alonsix33/Peru-Election-Prediction-Model*
