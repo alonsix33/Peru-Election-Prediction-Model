@@ -560,7 +560,9 @@ function project(snapshot) {
   const vv_per_acta_live = (dom_pair > 100000 && dom_done_actas > 500)
     ? dom_pair / dom_done_actas
     : VV_PER_MESA;
-  const dom_rem_actas    = Math.max(0, (actas_total - ACTAS_EXT_R2) - dom_done_actas);
+  const dom_rem_actas    = pct >= 100
+    ? 0
+    : Math.max(0, (actas_total - ACTAS_EXT_R2) - dom_done_actas);
   const ext_vpam_live    = ext_done_actas > 50
     ? (ext_kf + ext_rsp) / ext_done_actas
     : VV_PER_MESA_EXT;
@@ -691,7 +693,7 @@ function project(snapshot) {
     let sum_vv = 0, sum_kf_proj = 0, obs_vv = 0;
     for (const [ubigeo, pais] of Object.entries(_r1Exterior.byPais)) {
       const live      = livePais.get(ubigeo);
-      const pct_done  = live?.pct ?? 0;
+      const pct_done  = live?.pct ?? (pct >= 100 ? 100 : 0);
       if (pct_done >= 100) continue; // fully counted — already in obs, skip
 
       // Restante real del país: actas R1 × VV/acta vivo × fracción no contada
